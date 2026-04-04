@@ -3,7 +3,7 @@
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Loader2 } from "lucide-react";
 
 interface ImageUploadProps {
     value?: string;
@@ -21,18 +21,49 @@ export function ImageUpload({
     label = "Upload Image"
 }: ImageUploadProps) {
     const [preview, setPreview] = useState<string | undefined>(value);
+    const [isUploading, setIsUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                const result = reader.result as string;
-                setPreview(result);
-                onChange?.(result); // In a real app, this would be the URL from storage
-            };
-            reader.readAsDataURL(file);
+        if (!file) return;
+
+        // Show local preview immediately
+        const reader = new FileReader();
+        reader.onloadend = () => {
+            setPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+
+        // Upload file to server
+        try {
+            setIsUploading(true);
+            const formData = new FormData();
+            formData.append("file", file);
+
+            const response = await fetch("/api/upload", {
+                method: "POST",
+                body: formData,
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || "Failed to upload image");
+            }
+
+            const data = await response.json();
+
+            // Call onChange with the public URL from the server
+            onChange?.(data.url);
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            // Revert preview on failure
+            setPreview(value);
+            if (fileInputRef.current) {
+                fileInputRef.current.value = "";
+            }
+        } finally {
+            setIsUploading(false);
         }
     };
 
@@ -58,18 +89,22 @@ export function ImageUpload({
                     type="button"
                     variant="outline"
                     size="sm"
-                    disabled={disabled}
+                    disabled={disabled || isUploading}
                     onClick={() => fileInputRef.current?.click()}
                 >
-                    <Upload className="w-4 h-4 mr-2" />
-                    {label}
+                    {isUploading ? (
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                        <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    {isUploading ? "Uploading..." : label}
                 </Button>
                 {preview && (
                     <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        disabled={disabled}
+                        disabled={disabled || isUploading}
                         onClick={handleRemove}
                         className="text-destructive hover:text-destructive/90"
                     >
@@ -83,7 +118,7 @@ export function ImageUpload({
                     className="hidden"
                     accept="image/*"
                     onChange={handleFileChange}
-                    disabled={disabled}
+                    disabled={disabled || isUploading}
                 />
             </div>
         </div>
