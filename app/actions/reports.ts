@@ -162,13 +162,13 @@ export async function downloadReport(
             }
         } else {
             if (type === 'business') {
-                blob = generateBusinessReportExcel({
+                blob = await generateBusinessReportExcel({
                     ...reportData.business,
                     period: reportData.period,
                 });
                 filename = `relatorio-negocio-${Date.now()}.xlsx`;
             } else if (type === 'productivity') {
-                blob = generateProductivityReportExcel({
+                blob = await generateProductivityReportExcel({
                     ...reportData.productivity,
                     period: reportData.period,
                 });

@@ -1,4 +1,4 @@
-import * as XLSX from 'xlsx';
+import ExcelJS from 'exceljs';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -21,44 +21,59 @@ export interface ExcelReportData {
 /**
  * Generate an Excel workbook with multiple sheets
  */
-export function generateReportExcel(data: ExcelReportData): Blob {
-    const workbook = XLSX.utils.book_new();
+export async function generateReportExcel(data: ExcelReportData): Promise<Blob> {
+    const workbook = new ExcelJS.Workbook();
 
     // Set workbook properties
-    workbook.Props = {
-        Title: data.metadata?.title || 'Relatório ArchFlow',
-        Author: data.metadata?.author || 'ArchFlow ERP',
-        CreatedDate: data.metadata?.createdAt || new Date(),
-    };
+    workbook.creator = data.metadata?.author || 'ArchFlow ERP';
+    workbook.lastModifiedBy = data.metadata?.author || 'ArchFlow ERP';
+    workbook.created = data.metadata?.createdAt || new Date();
+    workbook.modified = data.metadata?.createdAt || new Date();
+    workbook.title = data.metadata?.title || 'Relatório ArchFlow';
 
     // Create sheets
-    for (const sheet of data.sheets) {
-        // Combine headers and rows
-        const sheetData = [sheet.headers, ...sheet.rows];
+    for (const sheetData of data.sheets) {
+        const worksheet = workbook.addWorksheet(sheetData.name.substring(0, 31)); // Excel sheet name limit
 
-        const worksheet = XLSX.utils.aoa_to_sheet(sheetData);
+        // Add headers
+        worksheet.addRow(sheetData.headers);
 
-        // Style header row (column widths)
-        const colWidths = sheet.headers.map((header, index) => {
-            const maxContentLength = Math.max(
-                header.length,
-                ...sheet.rows.map(row => String(row[index] || '').length)
-            );
-            return { wch: Math.min(Math.max(maxContentLength + 2, 10), 50) };
+        // Style headers
+        const headerRow = worksheet.getRow(1);
+        headerRow.font = { bold: true };
+
+        // Calculate max widths for columns
+        const colWidths = sheetData.headers.map((header, index) => {
+            let maxContentLength = header.length;
+            for (const row of sheetData.rows) {
+                const cellValue = row[index];
+                if (cellValue !== null && cellValue !== undefined) {
+                    let cellLength = 0;
+                    if (cellValue instanceof Date) {
+                        cellLength = 10; // approximate date length
+                    } else {
+                        cellLength = String(cellValue).length;
+                    }
+                    if (cellLength > maxContentLength) {
+                        maxContentLength = cellLength;
+                    }
+                }
+            }
+            return Math.min(Math.max(maxContentLength + 2, 10), 50);
         });
-        worksheet['!cols'] = colWidths;
 
-        XLSX.utils.book_append_sheet(workbook, worksheet, sheet.name.substring(0, 31)); // Excel sheet name limit
+        worksheet.columns = colWidths.map(width => ({ width }));
+
+        // Add rows
+        for (const row of sheetData.rows) {
+            worksheet.addRow(row);
+        }
     }
 
     // Generate binary
-    const excelBuffer = XLSX.write(workbook, {
-        bookType: 'xlsx',
-        type: 'array',
-        compression: true,
-    });
+    const buffer = await workbook.xlsx.writeBuffer();
 
-    return new Blob([excelBuffer], {
+    return new Blob([buffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     });
 }
@@ -66,13 +81,13 @@ export function generateReportExcel(data: ExcelReportData): Blob {
 /**
  * Generate Business Report Excel
  */
-export function generateBusinessReportExcel(data: {
+export async function generateBusinessReportExcel(data: {
     totalRevenue: number;
     profitMargin: number;
     newClients: number;
     monthlyPerformance: { month: string; revenue: number; expenses: number; profit: number }[];
     period: string;
-}): Blob {
+}): Promise<Blob> {
     const formatCurrency = (value: number) =>
         new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
@@ -113,14 +128,14 @@ export function generateBusinessReportExcel(data: {
 /**
  * Generate Productivity Report Excel
  */
-export function generateProductivityReportExcel(data: {
+export async function generateProductivityReportExcel(data: {
     totalHours: number;
     billableHours: number;
     nonBillableHours: number;
     averageUtilization: number;
     userRanking: { name: string; totalHours: number; billableHours: number; utilization: number }[];
     period: string;
-}): Blob {
+}): Promise<Blob> {
     return generateReportExcel({
         filename: `relatorio-produtividade-${format(new Date(), 'yyyy-MM-dd')}.xlsx`,
         metadata: {
@@ -159,12 +174,12 @@ export function generateProductivityReportExcel(data: {
 /**
  * Generate Financial Report Excel (placeholder for future implementation)
  */
-export function generateFinancialReportExcel(data: {
+export async function generateFinancialReportExcel(data: {
     period: string;
     revenue: number;
     expenses: number;
     profit: number;
-}): Blob {
+}): Promise<Blob> {
     return generateReportExcel({
         filename: `relatorio-financeiro-${format(new Date(), 'yyyy-MM-dd')}.xlsx`,
         metadata: {
