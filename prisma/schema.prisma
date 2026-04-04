@@ -141,6 +141,7 @@ enum RelatedEntityType {
 // Models
 
 model User {
+  role         Role      @default(VIEWER)
   id           String    @id @default(uuid())
   fullName     String    @map("full_name")
   email        String    @unique
@@ -150,49 +151,49 @@ model User {
   deletedAt    DateTime? @map("deleted_at")
 
   // Relations
-  ownedProjects    Project[]       @relation("ProjectOwner")
-  assignedTasks    Task[]          @relation("TaskAssignee")
-  memberships      ProjectMember[]
-  auditLogs        AuditLog[]
-  notifications    Notification[]
-  createdActivity  Activity[]      @relation("ActivityCreator")
-  createdDeliv     Deliverable[]   @relation("DeliverableCreator")
-  approvedDeliv    Deliverable[]   @relation("DeliverableApprover")
-  timeLogs         TimeLog[]
-  clients          Client[]        @relation("ClientOwner")
+  ownedProjects   Project[]       @relation("ProjectOwner")
+  assignedTasks   Task[]          @relation("TaskAssignee")
+  memberships     ProjectMember[]
+  auditLogs       AuditLog[]
+  notifications   Notification[]
+  createdActivity Activity[]      @relation("ActivityCreator")
+  createdDeliv    Deliverable[]   @relation("DeliverableCreator")
+  approvedDeliv   Deliverable[]   @relation("DeliverableApprover")
+  timeLogs        TimeLog[]
+  clients         Client[]        @relation("ClientOwner")
 
   @@map("users")
 }
 
 model Client {
-  id                 String            @id @default(uuid())
-  name               String
-  email              String            @unique
-  phone              String?
-  website            String?
-  legalType          ClientLegalType?  @map("legal_type")
-  document           String?           @unique
-  razaoSocial        String?           @map("razao_social")
-  inscricaoEstadual  String?           @map("inscricao_estadual")
-  address            Json?
-  geoLocation        Json?             @map("geo_location")
-  category           ClientCategory?
-  status             ClientStatus      @default(PROSPECT)
-  rating             Float?
-  totalSpent         Decimal?          @map("total_spent") @db.Decimal(10, 2)
-  avatar             String?
-  notes              String?           @db.Text
-  contactPreference  ContactPreference? @map("contact_preference")
-  userId             String?           @map("user_id")
-  tags               String[]
-  metadata           Json?
-  createdAt          DateTime          @default(now()) @map("created_at")
-  updatedAt          DateTime          @default(now()) @updatedAt @map("updated_at")
-  deletedAt          DateTime?         @map("deleted_at")
-  lastInteractionAt  DateTime?         @map("last_interaction_at")
+  id                String             @id @default(uuid())
+  name              String
+  email             String             @unique
+  phone             String?
+  website           String?
+  legalType         ClientLegalType?   @map("legal_type")
+  document          String?            @unique
+  razaoSocial       String?            @map("razao_social")
+  inscricaoEstadual String?            @map("inscricao_estadual")
+  address           Json?
+  geoLocation       Json?              @map("geo_location")
+  category          ClientCategory?
+  status            ClientStatus       @default(PROSPECT)
+  rating            Float?
+  totalSpent        Decimal?           @map("total_spent") @db.Decimal(10, 2)
+  avatar            String?
+  notes             String?            @db.Text
+  contactPreference ContactPreference? @map("contact_preference")
+  userId            String?            @map("user_id")
+  tags              String[]
+  metadata          Json?
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @default(now()) @updatedAt @map("updated_at")
+  deletedAt         DateTime?          @map("deleted_at")
+  lastInteractionAt DateTime?          @map("last_interaction_at")
 
   // Relations
-  owner      User?       @relation("ClientOwner", fields: [userId], references: [id])
+  owner      User?      @relation("ClientOwner", fields: [userId], references: [id])
   projects   Project[]
   activities Activity[]
   timeLogs   TimeLog[]
@@ -205,14 +206,14 @@ model Client {
 }
 
 model Project {
-  id           String    @id @default(uuid())
-  name         String
-  clientName   String?   @map("client_name")
-  status       String
-  imageUrl     String?   @map("image_url")
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
-  deletedAt    DateTime? @map("deleted_at")
+  id         String    @id @default(uuid())
+  name       String
+  clientName String?   @map("client_name")
+  status     String
+  imageUrl   String?   @map("image_url")
+  createdAt  DateTime  @default(now()) @map("created_at")
+  updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")
+  deletedAt  DateTime? @map("deleted_at")
 
   // Architecture Specifics
   address      String?
@@ -222,33 +223,33 @@ model Project {
   projectType  String?   @map("project_type")
 
   // Phase 3: Architectural Fields
-  architecturalStyle ArchitecturalStyle? @map("architectural_style")
-  constructionType   ConstructionType?   @map("construction_type")
-  numberOfFloors     Int?                @map("number_of_floors")
-  numberOfRooms      Int?                @map("number_of_rooms")
-  hasBasement        Boolean             @default(false) @map("has_basement")
-  hasGarage          Boolean             @default(false) @map("has_garage")
-  parkingSpots       Int?                @map("parking_spots")
-  landscapingArea    Float?              @map("landscaping_area")
-  environmentalLicenseRequired Boolean   @default(false) @map("environmental_license_required")
-  
+  architecturalStyle           ArchitecturalStyle? @map("architectural_style")
+  constructionType             ConstructionType?   @map("construction_type")
+  numberOfFloors               Int?                @map("number_of_floors")
+  numberOfRooms                Int?                @map("number_of_rooms")
+  hasBasement                  Boolean             @default(false) @map("has_basement")
+  hasGarage                    Boolean             @default(false) @map("has_garage")
+  parkingSpots                 Int?                @map("parking_spots")
+  landscapingArea              Float?              @map("landscaping_area")
+  environmentalLicenseRequired Boolean             @default(false) @map("environmental_license_required")
+
   // Phase 3: Dates & Cost Extended
-  estimatedEndDate   DateTime?           @map("estimated_end_date")
-  actualEndDate      DateTime?           @map("actual_end_date")
-  plannedCost        Decimal?            @map("planned_cost") @db.Decimal(12, 2)
-  actualCost         Decimal?            @map("actual_cost") @db.Decimal(12, 2)
-  
+  estimatedEndDate DateTime? @map("estimated_end_date")
+  actualEndDate    DateTime? @map("actual_end_date")
+  plannedCost      Decimal?  @map("planned_cost") @db.Decimal(12, 2)
+  actualCost       Decimal?  @map("actual_cost") @db.Decimal(12, 2)
+
   // Phase 3: Complex Structures
-  phases             Json?               // [{name, order, startDate, endDate, status}]
-  attachedDocuments  Json?               @map("attached_documents")
-  projectTags        String[]            @map("project_tags")
-  visibility         ProjectVisibility   @default(TEAM)
+  phases            Json? // [{name, order, startDate, endDate, status}]
+  attachedDocuments Json?             @map("attached_documents")
+  projectTags       String[]          @map("project_tags")
+  visibility        ProjectVisibility @default(TEAM)
 
-  ownerId      String    @map("owner_id")
-  owner        User      @relation("ProjectOwner", fields: [ownerId], references: [id])
+  ownerId String @map("owner_id")
+  owner   User   @relation("ProjectOwner", fields: [ownerId], references: [id])
 
-  clientId     String?   @map("client_id")
-  client       Client?   @relation(fields: [clientId], references: [id])
+  clientId String? @map("client_id")
+  client   Client? @relation(fields: [clientId], references: [id])
 
   stages       Stage[]
   tasks        Task[]
@@ -257,9 +258,9 @@ model Project {
   activities   Activity[]
   deliverables Deliverable[]
   timeLogs     TimeLog[]
-  
-  estimate     Estimate?
-  budget       Budget?
+
+  estimate Estimate?
+  budget   Budget?
 
   @@map("projects")
 }
@@ -300,10 +301,10 @@ model Stage {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  projectId String   @map("project_id")
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
-  tasks     Task[]
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  tasks Task[]
 
   @@unique([projectId, name])
   @@map("stages")
@@ -318,27 +319,27 @@ model Task {
   createdAt   DateTime  @default(now()) @map("created_at")
   updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
   deletedAt   DateTime? @map("deleted_at")
-  
+
   // JSONB fields
-  tags        String[]  @map("tag")
+  tags        String[] @map("tag")
   attachments Json?
   comments    Json?
   checklist   Json?
   historico   Json?
 
-  projectId   String    @map("project_id")
-  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
-  stageId     String    @map("stage_id")
-  stage       Stage     @relation(fields: [stageId], references: [id])
+  stageId String @map("stage_id")
+  stage   Stage  @relation(fields: [stageId], references: [id])
 
-  assigneeId  String?   @map("assignee_id")
-  assignee    User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId String? @map("assignee_id")
+  assignee   User?   @relation("TaskAssignee", fields: [assigneeId], references: [id])
 
   // Kanban Fields
-  position       Int       @default(0)
+  position       Int     @default(0)
   metadata       Json?
-  approvalStatus String?   @default("PENDING")
+  approvalStatus String? @default("PENDING")
 
   // Relations
   activities   Activity[]
@@ -349,33 +350,33 @@ model Task {
 }
 
 model Activity {
-  id           String         @id @default(uuid())
+  id           String       @id @default(uuid())
   type         ActivityType
   title        String
-  description  String?        @db.Text
-  duration     Int?           // in minutes
-  startTime    DateTime       @map("start_time")
-  endTime      DateTime?      @map("end_time")
+  description  String?      @db.Text
+  duration     Int? // in minutes
+  startTime    DateTime     @map("start_time")
+  endTime      DateTime?    @map("end_time")
   location     String?
   participants String[]
-  
-  clientId     String?        @map("client_id")
-  client       Client?        @relation(fields: [clientId], references: [id])
-  
-  projectId    String?        @map("project_id")
-  project      Project?       @relation(fields: [projectId], references: [id])
-  
-  taskId       String?        @map("task_id")
-  task         Task?          @relation(fields: [taskId], references: [id])
-  
-  createdById  String         @map("created_by_id")
-  createdBy    User           @relation("ActivityCreator", fields: [createdById], references: [id])
-  
-  attachments  Json[]
-  notes        String?        @db.Text
-  status       ActivityStatus @default(SCHEDULED)
-  createdAt    DateTime       @default(now()) @map("created_at")
-  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  clientId String? @map("client_id")
+  client   Client? @relation(fields: [clientId], references: [id])
+
+  projectId String?  @map("project_id")
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  taskId String? @map("task_id")
+  task   Task?   @relation(fields: [taskId], references: [id])
+
+  createdById String @map("created_by_id")
+  createdBy   User   @relation("ActivityCreator", fields: [createdById], references: [id])
+
+  attachments Json[]
+  notes       String?        @db.Text
+  status      ActivityStatus @default(SCHEDULED)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
 
   @@index([clientId])
   @@index([projectId])
@@ -385,36 +386,36 @@ model Activity {
 }
 
 model Deliverable {
-  id            String            @id @default(uuid())
-  name          String
-  type          DeliverableType
-  description   String?           @db.Text
-  fileUrl       String            @map("file_url")
-  fileSize      Int?              @map("file_size")
-  mimeType      String?           @map("mime_type")
-  version       Int               @default(1)
-  status        DeliverableStatus @default(DRAFT)
-  
-  taskId        String            @map("task_id")
-  task          Task              @relation(fields: [taskId], references: [id])
-  
-  projectId     String            @map("project_id")
-  project       Project           @relation(fields: [projectId], references: [id])
-  
-  createdById   String            @map("created_by_id")
-  createdBy     User              @relation("DeliverableCreator", fields: [createdById], references: [id])
-  
-  approvedById  String?           @map("approved_by_id")
-  approvedBy    User?             @relation("DeliverableApprover", fields: [approvedById], references: [id])
-  
-  reviewComments Json[]           @map("review_comments")
-  revisionCount  Int              @default(0) @map("revision_count")
-  dueDates       String[]         @map("due_dates")
+  id          String            @id @default(uuid())
+  name        String
+  type        DeliverableType
+  description String?           @db.Text
+  fileUrl     String            @map("file_url")
+  fileSize    Int?              @map("file_size")
+  mimeType    String?           @map("mime_type")
+  version     Int               @default(1)
+  status      DeliverableStatus @default(DRAFT)
+
+  taskId String @map("task_id")
+  task   Task   @relation(fields: [taskId], references: [id])
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id])
+
+  createdById String @map("created_by_id")
+  createdBy   User   @relation("DeliverableCreator", fields: [createdById], references: [id])
+
+  approvedById String? @map("approved_by_id")
+  approvedBy   User?   @relation("DeliverableApprover", fields: [approvedById], references: [id])
+
+  reviewComments Json[]    @map("review_comments")
+  revisionCount  Int       @default(0) @map("revision_count")
+  dueDates       String[]  @map("due_dates")
   tags           String[]
   metadata       Json?
-  createdAt      DateTime         @default(now()) @map("created_at")
-  updatedAt      DateTime         @updatedAt @map("updated_at")
-  deletedAt      DateTime?        @map("deleted_at")
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @updatedAt @map("updated_at")
+  deletedAt      DateTime? @map("deleted_at")
 
   @@index([projectId])
   @@index([taskId])
@@ -425,31 +426,31 @@ model Deliverable {
 
 model TimeLog {
   id          String          @id @default(uuid())
-  duration    Float           // in hours
+  duration    Float // in hours
   category    TimeLogCategory
   description String?         @db.Text
   date        DateTime        @db.Date
   startTime   DateTime?       @map("start_time") @db.Time
   endTime     DateTime?       @map("end_time") @db.Time
-  
-  userId      String          @map("user_id")
-  user        User            @relation(fields: [userId], references: [id])
-  
-  projectId   String          @map("project_id")
-  project     Project         @relation(fields: [projectId], references: [id])
 
-  taskId      String?         @map("task_id")
-  task        Task?           @relation(fields: [taskId], references: [id])
-  
-  clientId    String?         @map("client_id")
-  client      Client?         @relation(fields: [clientId], references: [id])
-  
-  billable    Boolean         @default(false)
-  billRate    Decimal?        @map("bill_rate") @db.Decimal(10, 2)
-  invoiceId   String?         @map("invoice_id")
-  tags        String[]
-  createdAt   DateTime        @default(now()) @map("created_at")
-  updatedAt   DateTime        @updatedAt @map("updated_at")
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id])
+
+  taskId String? @map("task_id")
+  task   Task?   @relation(fields: [taskId], references: [id])
+
+  clientId String? @map("client_id")
+  client   Client? @relation(fields: [clientId], references: [id])
+
+  billable  Boolean  @default(false)
+  billRate  Decimal? @map("bill_rate") @db.Decimal(10, 2)
+  invoiceId String?  @map("invoice_id")
+  tags      String[]
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([userId])
   @@index([projectId])
@@ -459,11 +460,11 @@ model TimeLog {
 }
 
 model Estimate {
-  id             String         @id @default(uuid())
-  
-  projectId      String         @unique @map("project_id")
-  project        Project        @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
+  id String @id @default(uuid())
+
+  projectId String  @unique @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
   estimatedHours Float?         @map("estimated_hours")
   estimatedCost  Decimal?       @map("estimated_cost") @db.Decimal(10, 2)
   actualHours    Float?         @map("actual_hours")
@@ -478,11 +479,11 @@ model Estimate {
 }
 
 model Budget {
-  id              String       @id @default(uuid())
-  
-  projectId       String       @unique @map("project_id")
-  project         Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  
+  id String @id @default(uuid())
+
+  projectId String  @unique @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
   totalBudget     Decimal      @map("total_budget") @db.Decimal(10, 2)
   spentAmount     Decimal      @default(0) @map("spent_amount") @db.Decimal(10, 2)
   remainingAmount Decimal      @default(0) @map("remaining_amount") @db.Decimal(10, 2)
@@ -495,37 +496,37 @@ model Budget {
 }
 
 model ProjectMember {
-  id        String   @id @default(uuid())
-  role      Role     @default(VIEWER)
-  joinedAt  DateTime @default(now()) @map("joined_at")
+  id       String   @id @default(uuid())
+  role     Role     @default(VIEWER)
+  joinedAt DateTime @default(now()) @map("joined_at")
 
-  userId    String   @map("user_id")
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  projectId String   @map("project_id")
-  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId String  @map("project_id")
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   @@unique([userId, projectId])
   @@map("project_members")
 }
 
 model Notification {
-  id              String            @id @default(uuid())
-  userId          String            @map("user_id")
-  user            User              @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  type            NotificationType
-  title           String
-  message         String
-  relatedEntityId String            @map("related_entity_id")
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type              NotificationType
+  title             String
+  message           String
+  relatedEntityId   String            @map("related_entity_id")
   relatedEntityType RelatedEntityType @map("related_entity_type")
-  read            Boolean           @default(false)
-  readAt          DateTime?         @map("read_at")
-  actionUrl       String?           @map("action_url")
-  createdAt       DateTime          @default(now()) @map("created_at")
+  read              Boolean           @default(false)
+  readAt            DateTime?         @map("read_at")
+  actionUrl         String?           @map("action_url")
+  createdAt         DateTime          @default(now()) @map("created_at")
 
   // Legacy fields mapping support (if needed, otherwise remove)
-  link            String?           @ignore 
+  link String? @ignore
 
   @@index([userId])
   @@index([read])
@@ -534,10 +535,10 @@ model Notification {
 }
 
 model AuditLog {
-  id         String      @id @default(uuid())
-  userId     String      @map("user_id")
-  user       User        @relation(fields: [userId], references: [id])
-  
+  id     String @id @default(uuid())
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id])
+
   action     AuditAction
   entityType String      @map("entity_type") // Explicit string as per subtask 1.1.8
   entityId   String      @map("entity_id")
@@ -546,12 +547,12 @@ model AuditLog {
   userAgent  String?     @map("user_agent")
   createdAt  DateTime    @default(now()) @map("created_at")
 
-  projectId  String?     @map("project_id")
-  project    Project?    @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  projectId String?  @map("project_id")
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   // Legacy fields mapping support
-  entity    String?     @ignore
-  details   Json?       @ignore
+  entity  String? @ignore
+  details Json?   @ignore
 
   @@index([userId])
   @@index([entityType])
@@ -569,4 +570,3 @@ model PasswordResetToken {
   @@unique([email, token])
   @@map("password_reset_tokens")
 }
-
