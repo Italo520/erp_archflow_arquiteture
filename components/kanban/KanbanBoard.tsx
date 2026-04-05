@@ -6,6 +6,8 @@ import {
     DragOverlay,
     closestCorners,
     KeyboardSensor,
+    MouseSensor,
+    TouchSensor,
     PointerSensor,
     useSensor,
     useSensors,
@@ -25,6 +27,7 @@ import { updateStageOrder } from '@/actions/stage';
 import Link from 'next/link';
 import { KanbanColumn } from './Column';
 import { TaskCard } from './TaskCard';
+import { ArrowLeft } from 'lucide-react';
 import { TaskDetails } from './TaskDetails';
 import { createPortal } from 'react-dom';
 
@@ -47,7 +50,17 @@ export default function KanbanBoard({ project }) {
     const stagesIds = useMemo(() => stages.map((stage) => stage.id), [stages]);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+        useSensor(MouseSensor, {
+            activationConstraint: {
+                distance: 10,
+            },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 250,
+                tolerance: 5,
+            },
+        }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
@@ -235,7 +248,7 @@ export default function KanbanBoard({ project }) {
                 <header className="h-16 flex-none bg-white dark:bg-surface-dark border-b border-gray-200 dark:border-border-dark flex items-center justify-between px-6 lg:px-10">
                     <div className="flex flex-col">
                         <Link href="/dashboard" className="text-xs text-gray-500 hover:text-primary mb-1 flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[14px]">arrow_back</span>
+                            <ArrowLeft className="h-3.5 w-3.5" />
                             Voltar para Dashboard
                         </Link>
                         <h1 className="text-xl font-bold text-slate-900 dark:text-white">{project.name}</h1>

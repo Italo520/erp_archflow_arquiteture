@@ -262,6 +262,9 @@ model Project {
   estimate Estimate?
   budget   Budget?
 
+  @@index([status])
+  @@index([ownerId])
+  @@index([createdAt])
   @@map("projects")
 }
 

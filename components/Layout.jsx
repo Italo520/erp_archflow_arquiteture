@@ -5,7 +5,19 @@ import { useRouter, usePathname } from 'next/navigation';
 import { ModeToggle } from './ModeToggle';
 import { signOut, useSession } from 'next-auth/react';
 import NotificationBell from '@/components/NotificationBell';
-import { Menu, X, Architecture } from 'lucide-react';
+import { 
+    Menu, 
+    X, 
+    LayoutDashboard, 
+    Building2, 
+    Calendar, 
+    Users, 
+    Folder, 
+    Settings, 
+    LogOut,
+    Search,
+    PencilRuler
+} from 'lucide-react';
 
 const Layout = ({ children }) => {
     const router = useRouter();
@@ -15,12 +27,12 @@ const Layout = ({ children }) => {
     const currentPath = pathname;
 
     const menuItems = [
-        { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-        { path: '/projects', label: 'Projetos', icon: 'apartment' },
-        { path: '/schedule', label: 'Cronograma', icon: 'calendar_month' },
-        { path: '/clients', label: 'Clientes', icon: 'group' },
-        { path: '/documents', label: 'Documentos', icon: 'folder' },
-        { path: '/settings', label: 'Configurações', icon: 'settings' },
+        { path: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { path: '/projects', label: 'Projetos', icon: Building2 },
+        { path: '/schedule', label: 'Cronograma', icon: Calendar },
+        { path: '/clients', label: 'Clientes', icon: Users },
+        { path: '/documents', label: 'Documentos', icon: Folder },
+        { path: '/settings', label: 'Configurações', icon: Settings },
     ];
 
     const getPageTitle = (path) => {
@@ -37,7 +49,7 @@ const Layout = ({ children }) => {
                 <div className="flex h-full flex-col p-4">
                     <div className="flex gap-3 items-center px-2 py-4 mb-6">
                         <div className="bg-center bg-no-repeat bg-cover rounded-full size-10 bg-primary flex items-center justify-center text-primary-foreground">
-                            <span className="material-symbols-outlined text-2xl notranslate" translate="no">architecture</span>
+                            <PencilRuler className="size-6" />
                         </div>
                         <div className="flex flex-col">
                             <h1 className="text-foreground text-lg font-bold leading-normal font-display tracking-tight truncate notranslate" translate="no">ArchManager</h1>
@@ -55,9 +67,7 @@ const Layout = ({ children }) => {
                                     : 'hover:bg-secondary/50 text-muted-foreground hover:text-foreground'
                                     }`}
                             >
-                                <span className={`material-symbols-outlined ${currentPath === item.path ? 'text-primary filled' : 'group-hover:text-primary'}`}>
-                                    {item.icon}
-                                </span>
+                                <item.icon className={`size-5 ${currentPath === item.path ? 'text-primary' : 'group-hover:text-primary'}`} />
                                 <p className={`font-medium text-sm leading-normal`}>
                                     {item.label}
                                 </p>
@@ -75,7 +85,7 @@ const Layout = ({ children }) => {
                             }}
                             className="flex w-full items-center gap-3 px-3 py-3 rounded-xl hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive group"
                         >
-                            <span className="material-symbols-outlined">logout</span>
+                            <LogOut className="size-5" />
                             <span className="text-sm font-medium">Sair</span>
                         </button>
                     </div>
@@ -96,7 +106,7 @@ const Layout = ({ children }) => {
                         <div className="flex justify-between items-center mb-10">
                             <div className="flex gap-3 items-center">
                                 <div className="bg-primary rounded-xl size-10 flex items-center justify-center text-primary-foreground">
-                                    <span className="material-symbols-outlined notranslate" translate="no">architecture</span>
+                                    <PencilRuler className="size-6" />
                                 </div>
                                 <h2 className="text-xl font-bold font-display tracking-tight text-foreground notranslate" translate="no">ArchFlow</h2>
                             </div>
@@ -104,7 +114,7 @@ const Layout = ({ children }) => {
                                 onClick={() => setIsMenuOpen(false)}
                                 className="p-2 rounded-lg hover:bg-secondary transition-colors"
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                <X className="size-6" />
                             </button>
                         </div>
 
@@ -121,7 +131,7 @@ const Layout = ({ children }) => {
                                         : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
                                         }`}
                                 >
-                                    <span className="material-symbols-outlined notranslate" translate="no">{item.icon}</span>
+                                    <item.icon className="size-6" />
                                     <span className="font-medium text-sm truncate">{item.label}</span>
                                 </button>
                             ))}
@@ -136,7 +146,7 @@ const Layout = ({ children }) => {
                                 onClick={() => signOut({ callbackUrl: '/login' })}
                                 className="flex w-full items-center gap-4 px-4 py-4 rounded-xl hover:bg-destructive/10 text-destructive font-semibold transition-all"
                             >
-                                <span className="material-symbols-outlined notranslate" translate="no">logout</span>
+                                <LogOut className="size-6" />
                                 <span>Sair da conta</span>
                             </button>
                         </div>
@@ -163,7 +173,7 @@ const Layout = ({ children }) => {
 
                     <div className="hidden lg:flex flex-1 max-w-md mx-4">
                         <div className="relative w-full group">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors notranslate" translate="no">search</span>
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                             <input
                                 type="text"
                                 placeholder="Pesquisar projetos, clientes, faturas..."
@@ -176,7 +186,7 @@ const Layout = ({ children }) => {
                         <div className="flex gap-2">
                             <NotificationBell />
                             <button className="flex items-center justify-center rounded-full size-10 hover:bg-secondary text-foreground transition-colors">
-                                <span className="material-symbols-outlined notranslate" translate="no">settings</span>
+                                <Settings className="size-5" />
                             </button>
                         </div>
                         <div className="h-8 w-px bg-border mx-2"></div>

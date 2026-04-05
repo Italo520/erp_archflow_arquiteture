@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import NotificationService from '@/services/notification.service';
 import { useSession } from 'next-auth/react';
+import { Bell, BellOff, Info, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
 const NotificationBell = () => {
     const { data: session } = useSession();
@@ -50,6 +51,15 @@ const NotificationBell = () => {
         }
     };
 
+    const getIcon = (type) => {
+        switch (type) {
+            case 'success': return <CheckCircle2 className="size-4" />;
+            case 'warning': return <AlertTriangle className="size-4" />;
+            case 'error': return <XCircle className="size-4" />;
+            default: return <Info className="size-4" />;
+        }
+    };
+
     return (
         <div className="relative">
             {/* Bell Button */}
@@ -58,7 +68,7 @@ const NotificationBell = () => {
                 className="flex items-center justify-center rounded-full size-10 hover:bg-surface-dark text-white transition-colors relative"
                 title="Notificações"
             >
-                <span className="material-symbols-outlined notranslate" translate="no">notifications</span>
+                <Bell className="size-5" />
 
                 {/* Unread Count Badge */}
                 {unreadCount > 0 && (
@@ -105,9 +115,7 @@ const NotificationBell = () => {
                         <div className="overflow-y-auto flex-1 bg-white dark:bg-neutral-800">
                             {notifications.length === 0 ? (
                                 <div className="p-8 text-center text-text-secondary dark:text-gray-400">
-                                    <span className="material-symbols-outlined text-4xl mb-2 block opacity-50 notranslate" translate="no">
-                                        notifications_off
-                                    </span>
+                                    <BellOff className="size-10 mb-2 mx-auto opacity-50" />
                                     <p className="text-sm">Nenhuma notificação</p>
                                 </div>
                             ) : (
@@ -125,9 +133,7 @@ const NotificationBell = () => {
                                                         notification.type === 'error' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' :
                                                             'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
                                                     }`}>
-                                                    <span className="material-symbols-outlined text-sm notranslate" translate="no">
-                                                        {notification.icon || 'info'}
-                                                    </span>
+                                                    {getIcon(notification.type)}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className={`text-sm font-medium mb-1 ${!notification.read ? 'text-gray-900 dark:text-gray-100' : 'text-gray-600 dark:text-gray-400'}`}>

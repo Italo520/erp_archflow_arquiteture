@@ -19,6 +19,7 @@ async function getUser(email: string) {
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+    secret: process.env.AUTH_SECRET,
     ...authConfig,
     adapter: PrismaAdapter(prisma) as any,
     providers: [

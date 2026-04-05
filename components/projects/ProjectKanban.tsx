@@ -8,11 +8,23 @@ import {
     useDroppable,
     DragStartEvent,
     DragEndEvent,
-    PointerSensor,
+    MouseSensor,
+    TouchSensor,
     useSensor,
     useSensors,
     closestCorners,
+    pointerWithin,
+    KeyboardSensor,
 } from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+import { createPortal } from 'react-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import Link from 'next/link';
@@ -77,7 +89,20 @@ export default function ProjectKanban({
     }, [initialColumns]);
 
     const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+        useSensor(MouseSensor, {
+            activationConstraint: {
+                distance: 10,
+            },
+        }),
+        useSensor(TouchSensor, {
+            activationConstraint: {
+                delay: 200,
+                tolerance: 5,
+            },
+        }),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
     );
 
     // Group projects by status
@@ -175,7 +200,7 @@ export default function ProjectKanban({
     return (
         <DndContext 
             sensors={sensors} 
-            collisionDetection={closestCorners}
+            collisionDetection={pointerWithin}
             onDragStart={handleDragStart} 
             onDragEnd={handleDragEnd}
         >
@@ -221,17 +246,20 @@ export default function ProjectKanban({
                 </div>
             </div>
             
-            <DragOverlay>
-                {activeId ? (
-                    <div className="opacity-80 rotate-3 scale-105 transition-transform">
-                        <ProjectCard 
-                            project={projects.find(p => p.id === activeId)!} 
-                            isOverlay
-                            onDelete={() => {}}
-                        />
-                    </div>
-                ) : null}
-            </DragOverlay>
+            {typeof window !== 'undefined' && createPortal(
+                <DragOverlay>
+                    {activeId ? (
+                        <div className="opacity-80 rotate-3 scale-105 transition-transform pointer-events-none">
+                            <ProjectCard 
+                                project={projects.find(p => p.id === activeId)!} 
+                                isOverlay
+                                onDelete={() => {}}
+                            />
+                        </div>
+                    ) : null}
+                </DragOverlay>,
+                document.body
+            )}
         </DndContext>
     );
 }
@@ -311,55 +339,64 @@ function KanbanColumn({ id, title: initialTitle, projects, color, onDelete }: {
                 {projects.length === 0 && !isOver && (
                     <div className="border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg p-8 flex flex-col items-center justify-center text-center opacity-40">
                         <LayoutDashboard className="h-8 w-8 mb-2" />
-                        <span className="text-xs font-medium">Nenhum projeto</span>
+                        <span className="text-xs font-medium font-body">Nenhum projeto</span>
                     </div>
                 )}
-                {projects.map((project) => (
-                    <DraggableProjectCard key={project.id} project={project} />
-                ))}
+                <SortableContext items={projects.map(p => p.id)} strategy={verticalListSortingStrategy}>
+                    {projects.map((project) => (
+                        <DraggableProjectCard key={project.id} project={project} />
+                    ))}
+                </SortableContext>
             </div>
         </div>
     );
 }
 
 function DraggableProjectCard({ project }: { project: KanbanProject }) {
-    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({
         id: project.id,
+        data: {
+            type: 'Project',
+            project,
+        }
     });
-
-    const style = transform ? {
-        transform: `translate3d(${transform.x}px, ${transform.y}px, 0)`,
+    
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
         zIndex: isDragging ? 50 : undefined,
-    } : undefined;
+    };
 
     if (isDragging) {
         return (
             <div 
                 ref={setNodeRef} 
                 style={style} 
-                className="opacity-20 border-2 border-primary rounded-xl h-32 bg-primary/5" 
+                className="opacity-30 border-2 border-dashed border-primary rounded-xl h-[130px] bg-primary/5 transition-all duration-300" 
             />
         );
     }
 
     return (
-        <div ref={setNodeRef} style={style}>
-            <ProjectCard 
-                project={project} 
-                dragHandleProps={{...listeners, ...attributes}} 
-            />
+        <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+            <ProjectCard project={project} />
         </div>
     );
 }
 
 function ProjectCard({ 
     project, 
-    dragHandleProps, 
     isOverlay = false,
     onDelete 
 }: { 
     project: KanbanProject, 
-    dragHandleProps?: any,
     isOverlay?: boolean,
     onDelete?: () => void
 }) {
@@ -380,18 +417,13 @@ function ProjectCard({
     };
 
     return (
-        <Card className={`group relative bg-white dark:bg-surface-dark border shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden ${isOverlay ? 'shadow-xl rotate-1' : ''}`}>
-            {/* Header / Drag Handle */}
-            <div 
-                className="absolute left-0 top-0 bottom-0 w-3 bg-slate-200 dark:bg-slate-800 group-hover:bg-primary/20 transition-all cursor-grab active:cursor-grabbing flex items-center justify-center"
-                {...dragHandleProps}
-            >
-                <GripVertical className="h-3 w-3 text-slate-400 group-hover:text-primary transition-colors" />
-            </div>
+        <Card className={`group relative bg-white dark:bg-[#1a1a1a] border-[#e5e7eb] dark:border-[#2a2a2a] shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 cursor-grab active:cursor-grabbing overflow-hidden ${isOverlay ? 'shadow-2xl ring-2 ring-primary scale-[1.02] rotate-1 z-50' : ''}`}>
+            {/* Glossy Overlay (Pro Max) */}
+            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
             
-            <CardHeader className="p-4 pl-7 pb-2 space-y-2">
+            <CardHeader className="p-4 pb-2 space-y-2 relative z-10">
                 <div className="flex justify-between items-start">
-                    <CardTitle className="text-sm font-bold text-slate-800 dark:text-slate-100 leading-tight group-hover:text-primary transition-colors pr-6">
+                    <CardTitle className="text-[14px] font-display font-bold text-[#0F172A] dark:text-slate-100 leading-tight group-hover:text-primary transition-colors pr-6">
                         {project.name}
                     </CardTitle>
                     <DropdownMenu>
@@ -414,21 +446,21 @@ function ProjectCard({
                     </DropdownMenu>
                 </div>
                 {project.client && (
-                    <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-300" />
+                    <div className="flex items-center gap-1.5 text-[11px] font-body text-slate-500 dark:text-slate-400 font-medium">
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
                         {project.client.name}
                     </div>
                 )}
             </CardHeader>
             
-            <CardContent className="p-4 pt-0">
-                <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+            <CardContent className="p-4 pt-0 relative z-10">
+                <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-800/50">
                     {project.owner && (
                         <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-full bg-gradient-to-br from-primary to-indigo-600 text-[10px] flex items-center justify-center font-black text-white shadow-sm" title={`Dono: ${project.owner.fullName}`}>
+                            <div className="h-7 w-7 rounded-lg bg-primary/20 text-[#0F172A] dark:text-white text-[10px] flex items-center justify-center font-bold shadow-sm" title={`Dono: ${project.owner.fullName}`}>
                                 {project.owner.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
                             </div>
-                            <span className="text-[10px] font-semibold text-slate-400 capitalize truncate max-w-[80px]">
+                            <span className="text-[10px] font-body font-semibold text-slate-400 capitalize truncate max-w-[80px]">
                                 {project.owner.fullName.split(' ')[0]}
                             </span>
                         </div>

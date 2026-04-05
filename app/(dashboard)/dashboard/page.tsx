@@ -3,7 +3,8 @@ import { getCurrentUser } from "@/app/actions/auth";
 import { KPICard } from "@/components/dashboard/KPICard";
 import { DeadlineAlerts } from "@/components/dashboard/DeadlineAlerts";
 import { TodayActivities } from "@/components/dashboard/TodayActivities";
-import { DashboardCharts } from "@/components/dashboard/DashboardCharts";
+import { DashboardChartsWrapper as DashboardCharts } from "@/components/dashboard/DashboardChartsWrapper";
+
 import { Briefcase, CheckCircle, DollarSign, Users } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";

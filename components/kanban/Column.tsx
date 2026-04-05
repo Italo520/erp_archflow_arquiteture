@@ -7,12 +7,15 @@ import { CSS } from '@dnd-kit/utilities';
 import { TaskCard } from './TaskCard';
 import { createTask } from '@/actions/task';
 import { updateStage } from '@/actions/stage';
-// Assuming you have a toast compatible with your setup, if not, native alert or console for now, 
-// but typically shadcn or sonner is used. I'll stick to console/alert if uncertain, 
-// but looking at package.json I don't see sonner/toast. 
-// I'll check user context if there's a toast hook available.
-// Found no explicit toast in package dependencies list shown (only raw radix primitives).
-// I will just use standard logic for now.
+import { 
+    Plus, 
+    X, 
+    MoreVertical, 
+    Edit2, 
+    Trash2, 
+    Loader2 
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export function KanbanColumn({ stage, tasks, projectId, onTaskClick }) {
     const [isAdding, setIsAdding] = useState(false);
@@ -126,7 +129,7 @@ export function KanbanColumn({ stage, tasks, projectId, onTaskClick }) {
                             />
                             {isPending && (
                                 <div className="absolute right-1 top-1/2 -translate-y-1/2">
-                                    <span className="material-symbols-outlined text-[12px] animate-spin text-primary">progress_activity</span>
+                                    <Loader2 className="h-3 w-3 animate-spin text-primary" />
                                 </div>
                             )}
                         </div>
@@ -190,9 +193,9 @@ export function KanbanColumn({ stage, tasks, projectId, onTaskClick }) {
                         <div className="flex items-center justify-end gap-2 mt-2">
                             <button
                                 onClick={() => setIsAdding(false)}
-                                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-slate-600"
+                                className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded text-slate-400 hover:text-slate-600 transition-colors"
                             >
-                                <span className="material-symbols-outlined text-[18px]">close</span>
+                                <X className="h-4 w-4" />
                             </button>
                             <button
                                 onClick={handleCreateTask}
@@ -206,10 +209,10 @@ export function KanbanColumn({ stage, tasks, projectId, onTaskClick }) {
                 ) : (
                     <button
                         onClick={() => setIsAdding(true)}
-                        className="w-full flex items-center gap-2 p-2 hover:bg-slate-100 dark:hover:bg-slate-700/50 rounded-lg text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 transition-colors group"
+                        className="w-full flex items-center gap-2 p-2.5 hover:bg-white/40 dark:hover:bg-white/5 rounded-xl text-slate-500 hover:text-primary dark:text-slate-400 dark:hover:text-primary transition-all duration-300 group border border-transparent hover:border-primary/20 hover:shadow-sm"
                     >
-                        <span className="material-symbols-outlined text-[20px] group-hover:scale-110 transition-transform">add</span>
-                        <span className="text-sm font-medium">Adicionar Tarefa</span>
+                        <Plus className="h-4 w-4 group-hover:scale-125 transition-transform" />
+                        <span className="text-sm font-display font-bold">Adicionar Tarefa</span>
                     </button>
                 )}
             </div>
