@@ -13,6 +13,7 @@ describe("Project Management Integration Tests", () => {
 
     it("should create a new project", async () => {
         const projectData = {
+            ownerId: "a8d6707e-8405-422b-b5bb-99b6dec005c1",
             name: "Integração Teste",
             status: "PLANNING",
         };
