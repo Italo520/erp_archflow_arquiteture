@@ -5,21 +5,29 @@ import ProjectsView from '@/components/projects/ProjectsView';
 import { useRouter } from 'next/navigation';
 
 // Mock child components to isolate View logic
-const MockProjectFilters = () => <div data-testid="project-filters">Filters</div>;
-MockProjectFilters.displayName = 'MockProjectFilters';
-jest.mock('@/components/projects/ProjectFilters', () => MockProjectFilters);
+jest.mock('@/components/projects/ProjectFilters', () => {
+        const MockProjectFilters = () => <div data-testid="project-filters">Filters</div>;
+        MockProjectFilters.displayName = 'MockProjectFilters';
+        return MockProjectFilters;
+    });
 
-const MockProjectsTable = () => <div data-testid="projects-table">Table</div>;
-MockProjectsTable.displayName = 'MockProjectsTable';
-jest.mock('@/components/projects/ProjectsTable', () => MockProjectsTable);
+jest.mock('@/components/projects/ProjectsTable', () => {
+        const MockProjectsTable = () => <div data-testid="projects-table">Table</div>;
+        MockProjectsTable.displayName = 'MockProjectsTable';
+        return MockProjectsTable;
+    });
 
-const MockProjectKanban = () => <div data-testid="project-kanban">Kanban</div>;
-MockProjectKanban.displayName = 'MockProjectKanban';
-jest.mock('@/components/projects/ProjectKanban', () => MockProjectKanban);
+jest.mock('@/components/projects/ProjectKanban', () => {
+        const MockProjectKanban = () => <div data-testid="project-kanban">Kanban</div>;
+        MockProjectKanban.displayName = 'MockProjectKanban';
+        return MockProjectKanban;
+    });
 
-const MockExportButton = () => <button>Export</button>;
-MockExportButton.displayName = 'MockExportButton';
-jest.mock('@/components/projects/ExportButton', () => MockExportButton);
+jest.mock('@/components/projects/ExportButton', () => {
+        const MockExportButton = () => <button>Export</button>;
+        MockExportButton.displayName = 'MockExportButton';
+        return MockExportButton;
+    });
 jest.mock('next/navigation', () => ({
     useRouter: jest.fn(),
     useSearchParams: jest.fn(() => ({ get: jest.fn() })),

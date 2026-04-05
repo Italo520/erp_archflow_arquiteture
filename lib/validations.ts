@@ -1,5 +1,6 @@
 import { z } from "zod";
 import {
+    Priority,
     ClientLegalType,
     ClientCategory,
     ClientStatus,
@@ -15,6 +16,8 @@ import {
 } from "@prisma/client";
 
 // --- Enums as Zod Enums ---
+export const PriorityEnum = z.nativeEnum(Priority);
+
 export const ClientLegalTypeEnum = z.nativeEnum(ClientLegalType);
 export const ClientCategoryEnum = z.nativeEnum(ClientCategory);
 export const ClientStatusEnum = z.nativeEnum(ClientStatus);
@@ -54,8 +57,12 @@ export const clientSchema = z.object({
     geoLocation: z.any().optional().nullable(),
     category: ClientCategoryEnum.optional().nullable(),
     status: ClientStatusEnum.default(ClientStatus.PROSPECT),
+    rating: z.number().min(0).max(5).optional().nullable(),
+    totalSpent: z.number().nonnegative().optional().nullable(),
+    avatar: z.string().url("Invalid Image URL").optional().nullable().or(z.literal("")),
     notes: z.string().optional().nullable(),
     contactPreference: ContactPreferenceEnum.optional().nullable(),
+    userId: z.string().uuid().optional().nullable(),
     tags: z.array(z.string()).optional(),
     metadata: z.any().optional().nullable(),
 });
@@ -161,7 +168,9 @@ export const projectPhaseSchema = z.object({
 
 export const projectSchema = z.object({
     name: z.string().min(2, "Project name is required"),
+    clientName: z.string().optional().nullable(),
     status: z.string().default("PLANNING"),
+    imageUrl: z.string().url("Invalid Image URL").optional().nullable().or(z.literal("")),
     clientId: z.string().uuid().optional().nullable(),
     projectType: z.string().optional().nullable(),
     address: z.string().optional().nullable(),
@@ -171,6 +180,9 @@ export const projectSchema = z.object({
     actualEndDate: z.coerce.date().optional().nullable(),
     totalArea: z.number().nonnegative().optional().nullable(),
     plannedCost: z.number().optional().nullable(), // Decimal handled as number in Zod input
+    actualCost: z.number().optional().nullable(), // Decimal handled as number in Zod input
+    attachedDocuments: z.any().optional().nullable(),
+    ownerId: z.string().uuid(),
     // Spread architectural fields
     ...projectArchitectureSchema.shape,
     phases: z.array(projectPhaseSchema).optional(),
@@ -179,4 +191,41 @@ export const projectSchema = z.object({
 export const updateProjectSchema = projectSchema.partial().extend({
     id: z.string().uuid(),
     phases: z.array(projectPhaseSchema).optional(),
+});
+
+// --- User Schemas ---
+export const userSchema = z.object({
+    fullName: z.string().min(2, "Full name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    passwordHash: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export const updateUserSchema = userSchema.partial().extend({
+    id: z.string().uuid(),
+});
+
+// --- Task Schemas ---
+export const taskSchema = z.object({
+    title: z.string().min(1, "Title is required"),
+    description: z.string().optional().nullable(),
+    priority: PriorityEnum.optional().nullable(),
+    dueDate: z.coerce.date().optional().nullable(),
+
+    tags: z.array(z.string()).optional(),
+    attachments: z.any().optional().nullable(),
+    comments: z.any().optional().nullable(),
+    checklist: z.any().optional().nullable(),
+    historico: z.any().optional().nullable(),
+
+    projectId: z.string().uuid(),
+    stageId: z.string().uuid(),
+    assigneeId: z.string().uuid().optional().nullable(),
+
+    position: z.number().int().default(0),
+    metadata: z.any().optional().nullable(),
+    approvalStatus: z.string().default("PENDING").optional().nullable(),
+});
+
+export const updateTaskSchema = taskSchema.partial().extend({
+    id: z.string().uuid(),
 });

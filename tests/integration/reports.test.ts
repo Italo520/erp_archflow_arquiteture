@@ -121,8 +121,8 @@ describe('PDF Generation', () => {
 
 describe('Excel Generation', () => {
     describe('generateReportExcel', () => {
-        it('generates a valid Excel blob', () => {
-            const result = generateReportExcel({
+        it('generates a valid Excel blob', async () => {
+            const result = await generateReportExcel({
                 filename: 'test-report.xlsx',
                 sheets: [
                     {
@@ -141,8 +141,8 @@ describe('Excel Generation', () => {
             expect(result.size).toBeGreaterThan(0);
         });
 
-        it('creates multiple sheets correctly', () => {
-            const result = generateReportExcel({
+        it('creates multiple sheets correctly', async () => {
+            const result = await generateReportExcel({
                 filename: 'multi-sheet.xlsx',
                 sheets: [
                     {
@@ -162,8 +162,8 @@ describe('Excel Generation', () => {
             expect(result.size).toBeGreaterThan(0);
         });
 
-        it('handles special characters in sheet names', () => {
-            const result = generateReportExcel({
+        it('handles special characters in sheet names', async () => {
+            const result = await generateReportExcel({
                 filename: 'special-chars.xlsx',
                 sheets: [
                     {
@@ -177,9 +177,9 @@ describe('Excel Generation', () => {
             expect(result).toBeInstanceOf(Blob);
         });
 
-        it('truncates long sheet names to 31 characters', () => {
+        it('truncates long sheet names to 31 characters', async () => {
             const longName = 'This is a very long sheet name that exceeds the limit';
-            const result = generateReportExcel({
+            const result = await generateReportExcel({
                 filename: 'long-name.xlsx',
                 sheets: [
                     {
@@ -196,8 +196,8 @@ describe('Excel Generation', () => {
     });
 
     describe('generateBusinessReportExcel', () => {
-        it('generates business report with Summary and Detail sheets', () => {
-            const result = generateBusinessReportExcel({
+        it('generates business report with Summary and Detail sheets', async () => {
+            const result = await generateBusinessReportExcel({
                 totalRevenue: 50000,
                 profitMargin: 25,
                 newClients: 5,
@@ -214,8 +214,8 @@ describe('Excel Generation', () => {
     });
 
     describe('generateProductivityReportExcel', () => {
-        it('generates productivity report with ranking data', () => {
-            const result = generateProductivityReportExcel({
+        it('generates productivity report with ranking data', async () => {
+            const result = await generateProductivityReportExcel({
                 totalHours: 320,
                 billableHours: 240,
                 nonBillableHours: 80,

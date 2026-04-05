@@ -31,3 +31,7 @@ export function hasProjectAccess(userRole: Role, requiredRole: Role): boolean {
     if (userRole === Role.VIEWER) return requiredRole === Role.VIEWER;
     return false;
 }
+
+export function hasGlobalPermission(userRole: Role, allowedRoles: Role[]): boolean {
+    return allowedRoles.includes(userRole);
+}

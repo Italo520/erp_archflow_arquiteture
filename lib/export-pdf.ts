@@ -37,11 +37,20 @@ export async function generateReportPDF(
     const margin = 20;
     let yPosition = margin;
 
-    // Colors based on report type
+    // Use branding colors
+    // Primary: #CDD5C6 -> rgb(205, 213, 198)
+    // Foreground: #152026 -> rgb(21, 32, 38)
+    // Secondary: #B7BCBF -> rgb(183, 188, 191)
+
+    // We use a slightly varied palette depending on the report type but all grounded in the core brand
+    const brandPrimary: [number, number, number] = [205, 213, 198];
+    const brandSecondary: [number, number, number] = [183, 188, 191];
+    const brandForeground: [number, number, number] = [21, 32, 38];
+
     const colors = {
-        business: { primary: [41, 98, 255] as [number, number, number], secondary: [100, 100, 100] as [number, number, number] },
-        productivity: { primary: [34, 197, 94] as [number, number, number], secondary: [100, 100, 100] as [number, number, number] },
-        financial: { primary: [245, 158, 11] as [number, number, number], secondary: [100, 100, 100] as [number, number, number] },
+        business: { primary: brandPrimary, secondary: brandSecondary },
+        productivity: { primary: [180, 195, 170] as [number, number, number], secondary: brandSecondary }, // Slightly darker variant
+        financial: { primary: [190, 205, 180] as [number, number, number], secondary: brandSecondary }, // Another variant
     };
     const theme = colors[type];
 
@@ -49,9 +58,9 @@ export async function generateReportPDF(
     doc.setFillColor(...theme.primary);
     doc.rect(0, 0, pageWidth, 40, 'F');
 
-    // Logo placeholder (would be actual logo in production)
+    // Logo placeholder
     doc.setFontSize(24);
-    doc.setTextColor(255, 255, 255);
+    doc.setTextColor(...brandForeground);
     doc.setFont('helvetica', 'bold');
     doc.text('ArchFlow', margin, 18);
 
@@ -62,7 +71,7 @@ export async function generateReportPDF(
 
     // Report metadata
     doc.setFontSize(9);
-    doc.setTextColor(200, 200, 200);
+    doc.setTextColor(100, 100, 100);
     doc.text(`Período: ${data.period}`, pageWidth - margin, 18, { align: 'right' });
     doc.text(
         `Gerado em: ${format(data.generatedAt, "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}`,
@@ -75,7 +84,7 @@ export async function generateReportPDF(
 
     // Summary Section
     if (data.summary && data.summary.length > 0) {
-        doc.setTextColor(0, 0, 0);
+        doc.setTextColor(...brandForeground);
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
         doc.text('Resumo Executivo', margin, yPosition);
@@ -98,7 +107,7 @@ export async function generateReportPDF(
 
             // Value
             doc.setFontSize(14);
-            doc.setTextColor(0, 0, 0);
+            doc.setTextColor(...brandForeground);
             doc.setFont('helvetica', 'bold');
             doc.text(String(item.value), xPos + 5, yPosition + 20);
         });
@@ -115,7 +124,7 @@ export async function generateReportPDF(
                 yPosition = margin;
             }
 
-            doc.setTextColor(0, 0, 0);
+            doc.setTextColor(...brandForeground);
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
             doc.text(table.title, margin, yPosition);
@@ -132,7 +141,7 @@ export async function generateReportPDF(
                 },
                 headStyles: {
                     fillColor: theme.primary,
-                    textColor: [255, 255, 255],
+                    textColor: brandForeground, // dark text on pastel background
                     fontStyle: 'bold',
                 },
                 alternateRowStyles: {

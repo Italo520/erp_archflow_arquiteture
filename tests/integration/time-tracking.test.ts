@@ -17,6 +17,7 @@ describe("Time Tracking Integration Tests", () => {
     beforeAll(async () => {
         // Create a project for testing
         const project = await createProject({
+            ownerId: "a8d6707e-8405-422b-b5bb-99b6dec005c1",
             name: "Time Tracking Test Project",
             status: "PLANNING",
             visibility: "PRIVATE",

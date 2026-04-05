@@ -30,6 +30,7 @@ describe("Project Architecture Actions", () => {
     describe("createProject (Architectural Fields)", () => {
         it("should create a project with architectural details", async () => {
             const projectData = {
+                ownerId: "a8d6707e-8405-422b-b5bb-99b6dec005c1",
                 name: "Modern Villa",
                 architecturalStyle: "MODERNISTA" as const,
                 constructionType: "CONCRETO_ARMADO" as const,
