@@ -3,12 +3,13 @@
 import React from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { ModeToggle } from './ModeToggle';
-import authService from '@/services/authService';
+import { signOut, useSession } from 'next-auth/react';
 import NotificationBell from '@/components/NotificationBell';
 
 const Layout = ({ children }) => {
     const router = useRouter();
     const pathname = usePathname();
+    const { data: session } = useSession();
     const currentPath = pathname;
 
     const menuItems = [
@@ -61,8 +62,7 @@ const Layout = ({ children }) => {
                         </div>
                         <button
                             onClick={() => {
-                                authService.logout();
-                                router.push('/login');
+                                signOut({ callbackUrl: '/login' });
                             }}
                             className="flex w-full items-center gap-3 px-3 py-3 rounded-xl hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive group"
                         >
@@ -103,13 +103,13 @@ const Layout = ({ children }) => {
                             </button>
                         </div>
                         <div className="h-8 w-px bg-border mx-2"></div>
-                        <div className="flex items-center gap-3 cursor-pointer">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-foreground text-sm font-bold">Ana Arquiteta</p>
-                                <p className="text-muted-foreground text-xs">Admin</p>
-                            </div>
-                            <div
-                                className="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-border"
+                    <div className="flex items-center gap-3 cursor-pointer">
+                        <div className="text-right hidden sm:block">
+                            <p className="text-foreground text-sm font-bold">{session?.user?.name || 'Usuário'}</p>
+                            <p className="text-muted-foreground text-xs">{session?.user?.email || 'Admin'}</p>
+                        </div>
+                        <div
+                            className="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-border"
                                 style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDcQ26BLXXZiGcztd8nNmej4VGpUM-rSNITPSDiOkQjoR2N6qlWWAoY31IBhOAcdvMuh8O7xDChNxdLLiGWlZitRYOJIwJj_cOyx1XPjKDAsKIb-rVn4LdoEQ2iITFVdy7yI6lRuJHup8-0rjh7rmyr6YEmD_b3o3p3EJ8EbKKj8DIiSpMvTZMUgwJe6fYnUg2NzlTI_rWZiDzcc7hyJSkXNa5GRMqRl6kbY6OQ1IRGQc0uK7bCZ1MDASrziIJ9RS7gwW3tqNAIalo")' }}
                             ></div>
                         </div>

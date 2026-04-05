@@ -1,0 +1,213 @@
+{
+  "project_id": "erp_archflow",
+  "version": "1.0",
+  "orchestration_strategy": "parallel_execution_limit_15",
+  "tasks": [
+    {
+      "id_tarefa": "auth_01_rbac_middleware",
+      "descricao_detalhada": "Implementar middleware de RBAC. Modificar `auth.ts` e `lib/permissions.ts` para injetar o `role` do usuário na sessão. Criar um wrapper utilitário em `lib/utils.js` (ou novo arquivo) para checar permissões dentro das Server Actions antes de executar mutações no banco.",
+      "dependencias": [],
+      "arquivos_alvo": [
+        "auth.ts",
+        "lib/permissions.ts",
+        "lib/utils.js"
+      ],
+      "status": "completed",
+      "assignee_session": null,
+      "tentativas": 0
+    },
+    {
+      "id_tarefa": "schema_01_zod_validation",
+      "descricao_detalhada": "Criar esquemas de validação Zod rigorosos no arquivo `lib/validations.ts` para as entidades base: User, Client, Project e Task. Estes esquemas devem espelhar o schema.prisma e ser usados tanto no Frontend (React Hook Form) quanto no Backend (Server Actions).",
+      "dependencias": [],
+      "arquivos_alvo": [
+        "lib/validations.ts"
+      ],
+      "status": "completed",
+      "assignee_session": null,
+      "tentativas": 0
+    },
+    {
+      "id_tarefa": "api_01_client_actions",
+      "descricao_detalhada": "Completar o CRUD de Clientes no arquivo `app/actions/client.ts`. Implementar validação Zod (criada em schema_01_zod_validation), tratamento de erros (try/catch), validação RBAC e `revalidatePath('/clients')`. Métodos: createClient, updateClient, deleteClient, getClients.",
+      "dependencias": [
+        "schema_01_zod_validation",
+        "auth_01_rbac_middleware"
+      ],
+      "arquivos_alvo": [
+        "app/actions/client.ts"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "ui_01_client_integration",
+      "descricao_detalhada": "Acoplar o Frontend de Clientes com o Backend. No arquivo `components/clients/ClientForm.tsx`, usar React Hook Form com Zod resolver. Chamar as server actions criadas em `app/actions/client.ts`. Implementar estados de loading e toast notifications (usando Sonner).",
+      "dependencias": [
+        "api_01_client_actions"
+      ],
+      "arquivos_alvo": [
+        "components/clients/ClientForm.tsx",
+        "app/(dashboard)/clients/new/page.tsx",
+        "app/(dashboard)/clients/[id]/edit/page.tsx"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "api_02_project_actions",
+      "descricao_detalhada": "Finalizar CRUD de Projetos em `app/actions/project.ts`. Implementar validação Zod, criação de projeto com fases padrão aninhadas (nested writes do Prisma), tratamento de erros, validação de permissão e `revalidatePath('/projects')`.",
+      "dependencias": [
+        "schema_01_zod_validation",
+        "auth_01_rbac_middleware"
+      ],
+      "arquivos_alvo": [
+        "app/actions/project.ts"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "ui_02_project_integration",
+      "descricao_detalhada": "Conectar `components/projects/ProjectForm.tsx` com as Server Actions de projeto. Gerenciar estado de formulário multi-etapas (se houver), submissão com loading states e redirecionamento via `useRouter` pós-criação para a página de detalhes do projeto.",
+      "dependencias": [
+        "api_02_project_actions"
+      ],
+      "arquivos_alvo": [
+        "components/projects/ProjectForm.tsx",
+        "app/(dashboard)/projects/new/page.tsx"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "api_03_task_kanban_actions",
+      "descricao_detalhada": "Implementar lógicas complexas de Task/Kanban em `app/actions/task.ts` ou `actions/task.ts`. Especificamente: `moveTask(taskId, newStatus, newOrder)` garantindo a atualização otimista ou reordenação no Prisma usando transações (`prisma.$transaction`) para evitar conflitos de ordem.",
+      "dependencias": [
+        "schema_01_zod_validation"
+      ],
+      "arquivos_alvo": [
+        "app/actions/task.ts",
+        "actions/task.ts"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "ui_03_kanban_integration",
+      "descricao_detalhada": "Tornar o Kanban interativo. Atualizar `components/kanban/KanbanBoard.tsx` para usar drag-and-drop (dnd-kit ou react-beautiful-dnd, verificar o package.json). Ao soltar um card, chamar a Server Action `moveTask` otimisticamente (usando `useOptimistic` do React 18+).",
+      "dependencias": [
+        "api_03_task_kanban_actions"
+      ],
+      "arquivos_alvo": [
+        "components/kanban/KanbanBoard.tsx",
+        "components/kanban/Column.tsx",
+        "components/kanban/TaskCard.tsx"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "api_04_time_tracking",
+      "descricao_detalhada": "Implementar backend para apontamento de horas. Em `app/actions/timeLog.ts`, criar métodos `startTimeLog`, `stopTimeLog`, `addManualTimeLog`. Garantir validação para que um usuário não tenha dois timers ativos simultaneamente.",
+      "dependencias": [
+        "auth_01_rbac_middleware"
+      ],
+      "arquivos_alvo": [
+        "app/actions/timeLog.ts"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "ui_04_timer_integration",
+      "descricao_detalhada": "Integrar o componente `components/activities/Timer.tsx` e `ManualTimeLogForm.tsx`. Sincronizar o estado do timer do frontend com o banco de dados (revelar o timer ativo atual na carga inicial da página). Gerenciar persistência local (localStorage fallback) caso a aba seja fechada.",
+      "dependencias": [
+        "api_04_time_tracking"
+      ],
+      "arquivos_alvo": [
+        "components/activities/Timer.tsx",
+        "components/activities/ManualTimeLogForm.tsx",
+        "app/(dashboard)/time-tracking/page.tsx"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "infra_01_storage_service",
+      "descricao_detalhada": "Implementar lógica de upload de arquivos reais. O projeto menciona AWS S3/Supabase. Modificar/Criar uma API Route `/api/upload` (ou Server Action segura com presigned URLs) em Next.js para lidar com uploads de multipart/form-data. Retornar a URL pública.",
+      "dependencias": [],
+      "arquivos_alvo": [
+        "lib/supabase.ts",
+        "app/api/upload/route.ts"
+      ],
+      "status": "completed",
+      "assignee_session": null,
+      "tentativas": 0
+    },
+    {
+      "id_tarefa": "ui_05_document_upload",
+      "descricao_detalhada": "Integrar `components/shared/ImageUpload.tsx` e `components/projects/ProjectDocumentsTab.tsx` com o serviço de upload (`infra_01_storage_service`). Adicionar barra de progresso de upload e tratar visualização do documento (PDF preview, imagem) na tabela de documentos.",
+      "dependencias": [
+        "infra_01_storage_service"
+      ],
+      "arquivos_alvo": [
+        "components/shared/ImageUpload.tsx",
+        "components/projects/ProjectDocumentsTab.tsx"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "api_05_export_services",
+      "descricao_detalhada": "Popular os arquivos `lib/export-excel.ts` e `lib/export-pdf.ts` with lógicas reais usando bibliotecas como `exceljs` e `jspdf` (ou `@react-pdf/renderer`). Criar métodos que recebam dados estruturados e retornem Buffer/Blob.",
+      "dependencias": [],
+      "arquivos_alvo": [
+        "lib/export-excel.ts",
+        "lib/export-pdf.ts"
+      ],
+      "status": "completed",
+      "assignee_session": null,
+      "tentativas": 0
+    },
+    {
+      "id_tarefa": "ui_06_reports_export",
+      "descricao_detalhada": "Conectar os botões em `components/shared/ExportButtons.tsx` e nas páginas de relatório (`components/reports/BusinessReport.tsx`) com os serviços de exportação. Fazer o download do arquivo no navegador quando o usuário clicar.",
+      "dependencias": [
+        "api_05_export_services"
+      ],
+      "arquivos_alvo": [
+        "components/shared/ExportButtons.tsx",
+        "components/reports/BusinessReport.tsx"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    },
+    {
+      "id_tarefa": "infra_02_websocket_realtime",
+      "descricao_detalhada": "Setup de infraestrutura de WebSocket. Implementar o `hooks/useWebSocket.js` para escutar eventos (ex: usando Pusher ou Socket.io compatível). Acoplar ao `NotificationBell.jsx` para atualizar o contador em tempo real quando o banco registrar nova notificação.",
+      "dependencias": [],
+      "arquivos_alvo": [
+        "hooks/useWebSocket.js",
+        "components/layout/NotificationBell.jsx"
+      ],
+      "status": "completed",
+      "assignee_session": null,
+      "tentativas": 0
+    },
+    {
+      "id_tarefa": "qa_01_e2e_tests",
+      "descricao_detalhada": "Escrever os testes end-to-end restantes no diretório `tests/e2e/`. Focar no `activity-flow.spec.ts` (testar iniciar/parar timer) e `dashboard-flow.spec.ts` (testar navegação e permissões).",
+      "dependencias": [
+        "ui_04_timer_integration",
+        "auth_01_rbac_middleware"
+      ],
+      "arquivos_alvo": [
+        "tests/e2e/activity-flow.spec.ts",
+        "tests/e2e/dashboard-flow.spec.ts"
+      ],
+      "status": "completed",
+      "assignee_session": null
+    }
+  ]
+}
