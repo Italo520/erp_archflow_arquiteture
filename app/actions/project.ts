@@ -22,10 +22,16 @@ export async function createProject(data: z.infer<typeof projectSchema>) {
     }
 
     try {
+        console.log("SERVER ACTION: fetching first kanban column...");
+        const firstColumn = await (prisma as any).projectKanbanColumn.findFirst({
+            orderBy: { order: 'asc' }
+        });
+
         console.log("SERVER ACTION: creating project in DB...");
         const project = await (prisma as any).project.create({
             data: {
                 ...result.data,
+                status: result.data.status || firstColumn?.id || 'PLANNING',
                 ownerId: session.user.id,
                 phases: result.data.phases as any, // Cast JSON
             },

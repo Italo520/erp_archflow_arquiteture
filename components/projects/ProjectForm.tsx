@@ -72,7 +72,11 @@ export function ProjectForm({ initialData, isEditing = false }: ProjectFormProps
             }
 
             if (result.success) {
-                router.push(`/projects/${result.data?.id || initialData?.id}`);
+                if (isEditing) {
+                    router.push(`/projects/${result.data?.id || initialData?.id}`);
+                } else {
+                    router.push('/dashboard/projects?view=kanban');
+                }
                 router.refresh();
             } else {
                 setError(typeof result.error === 'string' ? result.error : "Erro de validação");

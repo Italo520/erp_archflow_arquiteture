@@ -570,3 +570,14 @@ model PasswordResetToken {
   @@unique([email, token])
   @@map("password_reset_tokens")
 }
+
+model ProjectKanbanColumn {
+  id        String   @id @default(uuid())
+  title     String
+  color     String?  // hex or tailwind class
+  order     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("project_kanban_columns")
+}

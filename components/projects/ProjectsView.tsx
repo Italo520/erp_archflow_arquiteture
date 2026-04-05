@@ -11,9 +11,10 @@ import { LayoutGrid, List } from 'lucide-react';
 
 interface ProjectsViewProps {
     projects: any[];
+    columns: any[];
 }
 
-export default function ProjectsView({ projects }: ProjectsViewProps) {
+export default function ProjectsView({ projects, columns }: ProjectsViewProps) {
     const [viewMode, setViewMode] = useState<'list' | 'kanban'>(() => {
         if (typeof window !== 'undefined') {
             const savedMode = localStorage.getItem('projectsViewMode');
@@ -85,7 +86,7 @@ export default function ProjectsView({ projects }: ProjectsViewProps) {
             {viewMode === 'list' ? (
                 <ProjectsTable projects={projects} />
             ) : (
-                <ProjectKanban projects={projects} />
+                <ProjectKanban projects={projects} columns={columns} />
             )}
         </div>
     );
