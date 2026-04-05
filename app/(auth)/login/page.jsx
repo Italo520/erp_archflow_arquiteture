@@ -18,22 +18,33 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setError('');
+        
+        // Basic Client-side validation
+        if (!email.includes('@')) {
+            setError('Por favor, insira um e-mail válido.');
+            return;
+        }
+        if (password.length < 6) {
+            setError('A senha deve ter pelo menos 6 caracteres.');
+            return;
+        }
+
         setLoading(true);
 
         try {
             const res = await signIn('credentials', {
-                email,
+                email: email.toLowerCase().trim(),
                 password,
                 redirect: false,
             });
 
             if (res?.error) {
-                setError('Falha no login. Verifique suas credenciais.');
+                setError('Credenciais inválidas. Verifique seu e-mail e senha.');
             } else {
                 router.push('/dashboard');
             }
         } catch (err) {
-            setError('Um erro inesperado ocorreu.');
+            setError('Ocorreu um erro ao tentar entrar. Tente novamente.');
             console.error(err);
         } finally {
             setLoading(false);

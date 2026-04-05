@@ -34,26 +34,56 @@ const Register = () => {
 
     const handleNext = (e) => {
         e.preventDefault();
+        setError('');
+
+        if (fullName.length < 2) {
+            setError('Seu nome completo deve ter pelo menos 2 caracteres.');
+            return;
+        }
+        if (!email.includes('@')) {
+            setError('Por favor, insira um e-mail válido.');
+            return;
+        }
+        if (password.length < 6) {
+            setError('A senha deve ter pelo menos 6 caracteres.');
+            return;
+        }
+
         setStep(2);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         setError('');
+        
+        if (companyName.length < 2) {
+            setError('O nome do escritório deve ter pelo menos 2 caracteres.');
+            return;
+        }
+
+        setLoading(true);
 
         try {
-            await signUp({ 
-                name: fullName, 
-                email, 
+            const res = await signUp({ 
+                name: fullName.trim(), 
+                email: email.toLowerCase().trim(), 
                 password, 
-                companyName, 
-                address 
+                companyName: companyName.trim(), 
+                address: address.trim() 
             });
-            router.push('/login?registered=true');
+
+            if (res?.error) {
+                if (typeof res.error === 'string') {
+                    setError(res.error === 'User already exists' ? 'Este e-mail já está cadastrado.' : res.error);
+                } else {
+                    setError('Dados inválidos. Verifique os campos preenchidos.');
+                }
+            } else {
+                router.push('/login?registered=true');
+            }
         } catch (err) {
             console.error(err);
-            setError(err instanceof Error ? err.message : 'Falha ao registrar conta. Tente novamente.');
+            setError('Ocorreu um erro ao realizar o cadastro. Tente novamente.');
         } finally {
             setLoading(false);
         }
