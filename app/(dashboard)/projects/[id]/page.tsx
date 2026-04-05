@@ -41,7 +41,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
             </header>
 
             <Tabs defaultValue="activities" className="flex-1 flex flex-col">
-                <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 mb-6">
+                <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0 mb-6 overflow-x-auto overflow-y-hidden scrollbar-none flex whitespace-nowrap">
                     <TabsTrigger value="overview" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
                         Visão Geral
                     </TabsTrigger>

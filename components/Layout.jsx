@@ -5,11 +5,13 @@ import { useRouter, usePathname } from 'next/navigation';
 import { ModeToggle } from './ModeToggle';
 import { signOut, useSession } from 'next-auth/react';
 import NotificationBell from '@/components/NotificationBell';
+import { Menu, X, Architecture } from 'lucide-react';
 
 const Layout = ({ children }) => {
     const router = useRouter();
     const pathname = usePathname();
     const { data: session } = useSession();
+    const [isMenuOpen, setIsMenuOpen] = React.useState(false);
     const currentPath = pathname;
 
     const menuItems = [
@@ -21,18 +23,25 @@ const Layout = ({ children }) => {
         { path: '/settings', label: 'Configurações', icon: 'settings' },
     ];
 
+    const getPageTitle = (path) => {
+        const item = menuItems.find(i => i.path === path);
+        if (item) return item.label;
+        if (path.includes('/projects/')) return 'Detalhes do Projeto';
+        return 'ArchFlow';
+    };
+
     return (
-        <div className="flex h-screen w-full bg-background text-foreground">
-            {/* Sidebar */}
-            <aside className="hidden lg:flex w-72 flex-col border-r border-border bg-card flex-shrink-0">
+        <div className="flex h-screen w-full bg-background text-foreground overflow-hidden">
+            {/* Sidebar Desktop */}
+            <aside className="hidden lg:flex w-72 flex-col border-r border-border bg-card min-w-0 shrink-0 z-40 relative">
                 <div className="flex h-full flex-col p-4">
                     <div className="flex gap-3 items-center px-2 py-4 mb-6">
                         <div className="bg-center bg-no-repeat bg-cover rounded-full size-10 bg-primary flex items-center justify-center text-primary-foreground">
-                            <span className="material-symbols-outlined text-2xl">architecture</span>
+                            <span className="material-symbols-outlined text-2xl notranslate" translate="no">architecture</span>
                         </div>
                         <div className="flex flex-col">
-                            <h1 className="text-foreground text-lg font-bold leading-normal">ArchManager</h1>
-                            <p className="text-muted-foreground text-xs font-normal">ERP Arquitetura</p>
+                            <h1 className="text-foreground text-lg font-bold leading-normal font-display tracking-tight truncate notranslate" translate="no">ArchManager</h1>
+                            <p className="text-muted-foreground text-[10px] uppercase tracking-[0.15em] font-medium opacity-80 truncate">ERP Arquitetura</p>
                         </div>
                     </div>
 
@@ -73,20 +82,88 @@ const Layout = ({ children }) => {
                 </div>
             </aside>
 
+            {/* Mobile Sidebar (Drawer) */}
+            <div className={`lg:hidden fixed inset-0 z-[60] transform transition-all duration-300 ${isMenuOpen ? 'visible opacity-100' : 'invisible opacity-0'}`}>
+                {/* Backdrop */}
+                <div
+                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                    onClick={() => setIsMenuOpen(false)}
+                />
+                
+                {/* Sidebar Drawer */}
+                <aside className={`absolute left-0 top-0 h-full w-4/5 max-w-sm bg-card border-r border-border transition-transform duration-300 ${isMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                    <div className="flex h-full flex-col p-6">
+                        <div className="flex justify-between items-center mb-10">
+                            <div className="flex gap-3 items-center">
+                                <div className="bg-primary rounded-xl size-10 flex items-center justify-center text-primary-foreground">
+                                    <span className="material-symbols-outlined notranslate" translate="no">architecture</span>
+                                </div>
+                                <h2 className="text-xl font-bold font-display tracking-tight text-foreground notranslate" translate="no">ArchFlow</h2>
+                            </div>
+                            <button
+                                onClick={() => setIsMenuOpen(false)}
+                                className="p-2 rounded-lg hover:bg-secondary transition-colors"
+                            >
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+
+                        <nav className="flex flex-col gap-3 flex-1 overflow-y-auto">
+                            {menuItems.map((item) => (
+                                <button
+                                    key={item.path}
+                                    onClick={() => {
+                                        router.push(item.path);
+                                        setIsMenuOpen(false);
+                                    }}
+                                    className={`flex items-center gap-4 px-4 py-4 rounded-xl transition-all ${currentPath === item.path
+                                        ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20 scale-[1.02]'
+                                        : 'hover:bg-secondary text-muted-foreground hover:text-foreground'
+                                        }`}
+                                >
+                                    <span className="material-symbols-outlined notranslate" translate="no">{item.icon}</span>
+                                    <span className="font-medium text-sm truncate">{item.label}</span>
+                                </button>
+                            ))}
+                        </nav>
+
+                        <div className="pt-6 border-t border-border mt-auto flex flex-col gap-4">
+                            <div className="flex items-center justify-between p-2 rounded-xl bg-secondary/50">
+                                <span className="text-sm font-medium px-2">Aparência</span>
+                                <ModeToggle />
+                            </div>
+                            <button
+                                onClick={() => signOut({ callbackUrl: '/login' })}
+                                className="flex w-full items-center gap-4 px-4 py-4 rounded-xl hover:bg-destructive/10 text-destructive font-semibold transition-all"
+                            >
+                                <span className="material-symbols-outlined notranslate" translate="no">logout</span>
+                                <span>Sair da conta</span>
+                            </button>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+
             {/* Main Content */}
-            <main className="flex flex-1 flex-col h-full overflow-hidden relative">
+            <main className="flex flex-1 flex-col h-full relative min-w-0">
                 {/* Mobile Header / Top Bar */}
-                <header className="flex items-center justify-between border-b border-border px-6 py-4 bg-background z-20 shrink-0">
-                    <div className="flex items-center gap-4 text-foreground lg:hidden">
-                        <button className="text-foreground p-1">
-                            <span className="material-symbols-outlined">menu</span>
+                <header className="flex items-center justify-between border-b border-border px-4 md:px-6 py-4 bg-background z-20 shrink-0 sticky top-0">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => setIsMenuOpen(true)}
+                            className="lg:hidden p-2 -ml-2 flex items-center justify-center rounded-lg hover:bg-secondary transition-colors"
+                            aria-label="Abrir Menu"
+                        >
+                            <Menu className="h-6 w-6 text-foreground" />
                         </button>
-                        <h2 className="text-lg font-bold">ArchManager</h2>
+                        <h1 className="text-lg md:text-xl font-bold tracking-tight text-foreground truncate max-w-[150px] sm:max-w-none font-display">
+                            {getPageTitle(pathname)}
+                        </h1>
                     </div>
 
                     <div className="hidden lg:flex flex-1 max-w-md mx-4">
                         <div className="relative w-full group">
-                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">search</span>
+                            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors notranslate" translate="no">search</span>
                             <input
                                 type="text"
                                 placeholder="Pesquisar projetos, clientes, faturas..."
@@ -99,7 +176,7 @@ const Layout = ({ children }) => {
                         <div className="flex gap-2">
                             <NotificationBell />
                             <button className="flex items-center justify-center rounded-full size-10 hover:bg-secondary text-foreground transition-colors">
-                                <span className="material-symbols-outlined">settings</span>
+                                <span className="material-symbols-outlined notranslate" translate="no">settings</span>
                             </button>
                         </div>
                         <div className="h-8 w-px bg-border mx-2"></div>
@@ -116,9 +193,11 @@ const Layout = ({ children }) => {
                     </div>
                 </header>
 
-                {/* Scrollable Area */}
-                <div className="flex-1 overflow-y-auto overflow-x-hidden bg-background">
-                    {children}
+                {/* Page Content */}
+                <div className="flex-1 overflow-y-auto overflow-x-auto bg-background">
+                    <div className="mx-auto w-full max-w-7xl px-4 md:px-8 py-6">
+                        {children}
+                    </div>
                 </div>
             </main>
         </div>

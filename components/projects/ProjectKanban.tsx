@@ -179,7 +179,7 @@ export default function ProjectKanban({
             onDragStart={handleDragStart} 
             onDragEnd={handleDragEnd}
         >
-            <div className="flex h-[calc(100vh-250px)] gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
+            <div className="flex h-[calc(100dvh-180px)] min-h-[400px] md:h-[calc(100vh-250px)] gap-4 md:gap-6 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-800">
                 {columns.map((col) => (
                     <KanbanColumn
                         key={col.id}

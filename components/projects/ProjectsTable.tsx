@@ -126,7 +126,7 @@ export default function ProjectsTable({ projects }: { projects: Project[] }) {
     }
 
     return (
-        <div className="rounded-md border bg-white shadow-sm overflow-hidden">
+        <div className="rounded-md border bg-white shadow-sm overflow-x-auto">
             <Table>
                 <TableHeader className="bg-muted/40">
                     <TableRow>

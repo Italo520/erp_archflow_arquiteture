@@ -41,7 +41,7 @@ const Login = () => {
     };
 
     return (
-        <div className="font-display bg-background-light dark:bg-background-dark min-h-screen flex w-full text-foreground overflow-hidden">
+        <div className="font-display bg-background-light dark:bg-background-dark min-h-screen flex w-full text-foreground overflow-y-auto">
             <div className="flex w-full min-h-screen">
                 {/* Left Side: Architectural Imagery */}
                 <div className="hidden lg:flex lg:w-1/2 relative bg-surface-dark items-center justify-center overflow-hidden">

@@ -42,7 +42,7 @@ export default function ProjectsView({ projects, columns }: ProjectsViewProps) {
     }));
 
     return (
-        <div className="p-6 lg:p-10 max-w-[1400px] mx-auto min-h-screen">
+        <div className="p-4 md:p-6 lg:p-10 max-w-[1400px] mx-auto min-h-screen">
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
                 <div className="flex flex-col gap-2">
                     <h1 className="text-slate-900 dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Projetos</h1>

@@ -58,7 +58,7 @@ const NotificationBell = () => {
                 className="flex items-center justify-center rounded-full size-10 hover:bg-surface-dark text-white transition-colors relative"
                 title="Notificações"
             >
-                <span className="material-symbols-outlined">notifications</span>
+                <span className="material-symbols-outlined notranslate" translate="no">notifications</span>
 
                 {/* Unread Count Badge */}
                 {unreadCount > 0 && (
@@ -85,7 +85,7 @@ const NotificationBell = () => {
                     />
 
                     {/* Notification Panel */}
-                    <div className="absolute right-0 top-12 z-50 w-80 bg-surface-dark border border-border-dark rounded-xl shadow-xl max-h-96 overflow-hidden flex flex-col">
+                    <div className="absolute right-0 top-12 z-50 w-[calc(100vw-2rem)] sm:w-80 bg-surface-dark border border-border-dark rounded-xl shadow-xl max-h-[80vh] overflow-hidden flex flex-col">
                         {/* Header */}
                         <div className="flex items-center justify-between p-4 border-b border-border-dark">
                             <h3 className="text-white font-bold text-sm">
@@ -105,7 +105,7 @@ const NotificationBell = () => {
                         <div className="overflow-y-auto flex-1 bg-white dark:bg-neutral-800">
                             {notifications.length === 0 ? (
                                 <div className="p-8 text-center text-text-secondary dark:text-gray-400">
-                                    <span className="material-symbols-outlined text-4xl mb-2 block opacity-50">
+                                    <span className="material-symbols-outlined text-4xl mb-2 block opacity-50 notranslate" translate="no">
                                         notifications_off
                                     </span>
                                     <p className="text-sm">Nenhuma notificação</p>
@@ -125,7 +125,7 @@ const NotificationBell = () => {
                                                         notification.type === 'error' ? 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400' :
                                                             'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400'
                                                     }`}>
-                                                    <span className="material-symbols-outlined text-sm">
+                                                    <span className="material-symbols-outlined text-sm notranslate" translate="no">
                                                         {notification.icon || 'info'}
                                                     </span>
                                                 </div>

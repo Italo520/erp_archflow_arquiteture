@@ -38,7 +38,7 @@ export function DeadlineAlerts({ projects }: DeadlineAlertsProps) {
             <CardHeader>
                 <CardTitle>Prazos Próximos</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 overflow-y-auto max-h-[300px]">
                 {projects.length === 0 ? (
                     <p className="text-sm text-muted-foreground">Nenhum prazo próximo nos próximos dias.</p>
                 ) : (

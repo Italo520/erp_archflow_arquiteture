@@ -23,21 +23,21 @@ export default async function DashboardPage() {
     }).format(metrics.kpi.monthlyRevenue);
 
     return (
-        <div className="flex-1 space-y-4 p-8 pt-6">
-            <div className="flex items-center justify-between space-y-2">
+        <div className="flex-1 space-y-4 p-4 md:p-8 pt-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+                    <h2 className="text-2xl md:text-3xl font-bold tracking-tight font-display text-foreground">Dashboard</h2>
                     {/* Saudação personalizada could be "Olá, {user?.name}" if name available */}
                     <div className="flex items-center gap-2 text-muted-foreground">
-                        <p>Bem-vindo de volta!</p>
+                        <p className="text-sm md:text-base">Bem-vindo de volta!</p>
                         <span>•</span>
-                        <p className="capitalize">{formattedDate}</p>
+                        <p className="capitalize text-sm md:text-base">{formattedDate}</p>
                     </div>
                 </div>
             </div>
 
             {/* KPI Section */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 <KPICard
                     title="Total de Clientes"
                     value={metrics.kpi.totalClients}
@@ -67,10 +67,10 @@ export default async function DashboardPage() {
             </div>
 
             {/* Main Content Grid */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-7">
 
                 {/* Charts Section - Takes 4 cols on large screens (approx 60%) */}
-                <div className="col-span-4">
+                <div className="col-span-1 lg:col-span-4 min-w-0">
                     <DashboardCharts
                         productivityData={metrics.charts.productivity}
                         projectDistribution={metrics.charts.projectDistribution}
@@ -78,11 +78,11 @@ export default async function DashboardPage() {
                 </div>
 
                 {/* Side Panel - Takes 3 cols on large screens (approx 40%) */}
-                <div className="col-span-3 space-y-4">
-                    <div className="h-[300px]">
+                <div className="col-span-1 lg:col-span-3 min-w-0 space-y-4">
+                    <div className="min-h-[300px] h-fit">
                         <DeadlineAlerts projects={metrics.lists.urgentProjects} />
                     </div>
-                    <div className="h-[400px]">
+                    <div className="min-h-[400px] h-fit">
                         <TodayActivities activities={metrics.lists.todaysAgenda} />
                     </div>
                 </div>
