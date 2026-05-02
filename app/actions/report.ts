@@ -169,9 +169,10 @@ export async function getTopProjects(): Promise<ActionResponse> {
             select: { id: true, name: true }
         });
 
-        // Merge
+        // Merge - Optimized with Map for O(1) lookup
+        const projectMap = new Map(projects.map(p => [p.id, p]));
         const result = topProjects.map(t => {
-            const proj = projects.find(p => p.id === t.projectId);
+            const proj = t.projectId ? projectMap.get(t.projectId) : undefined;
             return {
                 name: proj?.name || "Unknown",
                 hours: t._sum.duration || 0
@@ -212,8 +213,9 @@ export async function getTimeBreakdownByClient(): Promise<ActionResponse> {
             select: { id: true, name: true }
         });
 
+        const clientMap = new Map(clients.map(c => [c.id, c]));
         const result = grouped.map(g => {
-            const client = clients.find(c => c.id === g.clientId);
+            const client = g.clientId ? clientMap.get(g.clientId) : undefined;
             return {
                 name: client?.name || (g.clientId ? "Unknown Client" : "Internal / No Client"),
                 hours: g._sum.duration || 0
@@ -253,8 +255,9 @@ export async function getFullProjectBreakdown(): Promise<ActionResponse> {
             select: { id: true, name: true }
         });
 
+        const projectMap = new Map(projects.map(p => [p.id, p]));
         const result = grouped.map(t => {
-            const proj = projects.find(p => p.id === t.projectId);
+            const proj = t.projectId ? projectMap.get(t.projectId) : undefined;
             return {
                 name: proj?.name || "Unknown",
                 hours: t._sum.duration || 0
