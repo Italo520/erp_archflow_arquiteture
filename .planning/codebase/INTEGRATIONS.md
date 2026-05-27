@@ -1,122 +1,122 @@
-# External Integrations
+# Integrações Externas
 
-> Last mapped: 2026-05-27
+> Último mapeamento: 2026-05-27
 
-## Database: PostgreSQL (via Supabase)
+## Banco de Dados: PostgreSQL (via Supabase)
 
-- **Provider:** Supabase (hosted PostgreSQL)
-- **Connection:** `DATABASE_URL` (pooled), `DIRECT_URL` (direct for migrations)
-- **ORM:** Prisma v7 with `@prisma/adapter-pg` driver adapter
-- **Client setup:** `lib/prisma.ts` — singleton pattern with `pg.Pool`
-- **Schema:** `prisma/schema.prisma` (587 lines, 17 models, 15+ enums)
-- **Migrations:** `prisma/migrations/` directory
-- **Seed:** `prisma/seed.ts` (runs via `ts-node`)
+- **Provedor:** Supabase (PostgreSQL hospedado)
+- **Conexão:** `DATABASE_URL` (com pool), `DIRECT_URL` (direta para migrações)
+- **ORM:** Prisma v7 com adaptador de driver `@prisma/adapter-pg`
+- **Configuração do cliente:** `lib/prisma.ts` — padrão singleton com `pg.Pool`
+- **Schema:** `prisma/schema.prisma` (587 linhas, 17 modelos, 15+ enums)
+- **Migrações:** Diretório `prisma/migrations/`
+- **Seed:** `prisma/seed.ts` (executado via `ts-node`)
 
-### Models Overview
+### Visão Geral dos Modelos
 
-| Model | Purpose | Key Relations |
+| Modelo | Propósito | Relações Principais |
 |---|---|---|
-| `User` | System users (OWNER/EDITOR/VIEWER) | Projects, Tasks, AuditLogs, Notifications |
-| `Client` | Architecture clients (PF/PJ) | Projects, Activities, TimeLogs |
-| `Project` | Architectural projects | Stages, Tasks, Members, Budget, Estimate |
-| `Stage` | Kanban columns per project | Tasks |
-| `Task` | Work items within stages | Activities, Deliverables, TimeLogs |
-| `Activity` | Calendar events (meetings, calls, visits) | Client, Project, Task |
-| `Deliverable` | Project deliverables (renders, drawings) | Task, Project |
-| `TimeLog` | Time tracking entries | User, Project, Task, Client |
-| `Estimate` | Project cost estimates | Project (1:1) |
-| `Budget` | Project budgets | Project (1:1) |
-| `ProjectMember` | User-Project membership | User, Project |
-| `Notification` | In-app notifications | User |
-| `AuditLog` | Change audit trail | User, Project |
-| `PasswordResetToken` | Password reset flow | — |
-| `ProjectKanbanColumn` | Custom kanban columns | — |
+| `User` | Usuários do sistema (OWNER/EDITOR/VIEWER) | Projetos, Tarefas, AuditLogs, Notificações |
+| `Client` | Clientes de arquitetura (PF/PJ) | Projetos, Atividades, TimeLogs |
+| `Project` | Projetos arquitetônicos | Etapas, Tarefas, Membros, Orçamento, Estimativa |
+| `Stage` | Colunas Kanban por projeto | Tarefas |
+| `Task` | Itens de trabalho dentro das etapas | Atividades, Entregáveis, TimeLogs |
+| `Activity` | Eventos de calendário (reuniões, ligações, visitas) | Cliente, Projeto, Tarefa |
+| `Deliverable` | Entregáveis do projeto (renders, desenhos) | Tarefa, Projeto |
+| `TimeLog` | Registros de tempo | Usuário, Projeto, Tarefa, Cliente |
+| `Estimate` | Estimativas de custo do projeto | Projeto (1:1) |
+| `Budget` | Orçamentos do projeto | Projeto (1:1) |
+| `ProjectMember` | Membros do projeto (Usuário-Projeto) | Usuário, Projeto |
+| `Notification` | Notificações in-app | Usuário |
+| `AuditLog` | Trilha de auditoria de alterações | Usuário, Projeto |
+| `PasswordResetToken` | Fluxo de reset de senha | — |
+| `ProjectKanbanColumn` | Colunas Kanban customizadas | — |
 
-## Storage: Supabase Storage
+## Armazenamento: Supabase Storage
 
-- **Client:** `lib/supabase.ts` — `createClient(url, anonKey)`
-- **Usage:** Project image uploads in `actions/project.ts`
+- **Cliente:** `lib/supabase.ts` — `createClient(url, anonKey)`
+- **Uso:** Upload de imagens de projetos em `actions/project.ts`
 - **Bucket:** `projects`
-- **Flow:** Upload file → get public URL → store in DB `imageUrl` field
-- **Auth:** Supabase Anon Key (public uploads)
-- **Env vars:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- **Fluxo:** Upload do arquivo → obter URL pública → armazenar no campo `imageUrl` do BD
+- **Autenticação:** Supabase Anon Key (uploads públicos)
+- **Variáveis de ambiente:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 
-## Authentication: NextAuth.js v5
+## Autenticação: NextAuth.js v5
 
-- **Config:** `auth.ts` + `auth.config.ts`
-- **Provider:** Credentials only (email + password)
-- **Session:** JWT-based
-- **Password hashing:** bcryptjs
-- **Validation:** Zod schema on login input
-- **Middleware:** `proxy.ts` (route-level auth check)
-- **Protected routes:** `/dashboard/*`, `/projects/*`
-- **Env var:** `AUTH_SECRET`
+- **Configuração:** `auth.ts` + `auth.config.ts`
+- **Provedor:** Apenas Credentials (email + senha)
+- **Sessão:** Baseada em JWT
+- **Hash de senha:** bcryptjs
+- **Validação:** Schema Zod no input de login
+- **Middleware:** `proxy.ts` (proteção de rota)
+- **Rotas protegidas:** `/dashboard/*`, `/projects/*`
+- **Variável de ambiente:** `AUTH_SECRET`
 
-## Real-Time: Pusher
+## Tempo Real: Pusher
 
-- **Client:** `hooks/useWebSocket.js` — Pusher.js singleton
-- **Server:** `pusher` package available (not yet wired in server actions)
-- **Channel pattern:** `notifications-{userId}` (public channels, private planned)
-- **Events:** `new-notification`
-- **State:** Client-side only (notifications not persisted to DB via WebSocket)
-- **Env vars:** `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER`
+- **Cliente:** `hooks/useWebSocket.js` — Singleton Pusher.js
+- **Servidor:** Pacote `pusher` disponível (ainda não integrado nas Server Actions)
+- **Padrão de canal:** `notifications-{userId}` (canais públicos, privados planejados)
+- **Eventos:** `new-notification`
+- **Estado:** Apenas no cliente (notificações não persistidas no BD via WebSocket)
+- **Variáveis de ambiente:** `NEXT_PUBLIC_PUSHER_KEY`, `NEXT_PUBLIC_PUSHER_CLUSTER`
 
-## HTTP Client (Legacy)
+## Cliente HTTP (Legado)
 
-- **Client:** `services/api.js` — Axios instance
-- **Base URL:** `NEXT_PUBLIC_API_URL` (default: `http://localhost:8080`)
-- **Auth:** Bearer token from cookies (legacy pattern)
-- **Usage:** Legacy service files in `services/` directory
-- **Status:** Being replaced by Server Actions
+- **Cliente:** `services/api.js` — Instância Axios
+- **URL Base:** `NEXT_PUBLIC_API_URL` (padrão: `http://localhost:8080`)
+- **Autenticação:** Token Bearer via cookies (padrão legado)
+- **Uso:** Arquivos de serviço legados no diretório `services/`
+- **Status:** Sendo substituído por Server Actions
 
-### Legacy Service Files
+### Arquivos de Serviço Legados
 
-| File | Purpose |
+| Arquivo | Propósito |
 |---|---|
-| `services/api.js` | Axios HTTP client base |
-| `services/auth.service.js` | Legacy auth API calls |
-| `services/authService.js` | Duplicate auth service |
-| `services/project.service.js` | Project CRUD via REST |
-| `services/task.service.js` | Task CRUD via REST |
-| `services/comment.service.js` | Comments via REST |
-| `services/notification.service.js` | Notifications via REST |
+| `services/api.js` | Cliente HTTP base com Axios |
+| `services/auth.service.js` | Chamadas de API de autenticação legadas |
+| `services/authService.js` | Serviço de autenticação duplicado |
+| `services/project.service.js` | CRUD de projetos via REST |
+| `services/task.service.js` | CRUD de tarefas via REST |
+| `services/comment.service.js` | Comentários via REST |
+| `services/notification.service.js` | Notificações via REST |
 
-## Export Services
+## Serviços de Exportação
 
-### PDF Export (`lib/export-pdf.ts`)
-- Uses **jspdf** + **jspdf-autotable**
-- Generates PDF reports for projects, tasks, time tracking
+### Exportação PDF (`lib/export-pdf.ts`)
+- Usa **jspdf** + **jspdf-autotable**
+- Gera relatórios PDF para projetos, tarefas, rastreamento de tempo
 
-### Excel Export (`lib/export-excel.ts`)
-- Uses **exceljs**
-- Generates Excel spreadsheets for data export
+### Exportação Excel (`lib/export-excel.ts`)
+- Usa **exceljs**
+- Gera planilhas Excel para exportação de dados
 
-## Rich Text Editor
+## Editor de Texto Rico
 
-- **Library:** TipTap (via `@tiptap/react`, `@tiptap/starter-kit`)
-- **Extensions:** Image, Mention
-- **Usage:** `components/comments/CommentEditor.jsx`
+- **Biblioteca:** TipTap (via `@tiptap/react`, `@tiptap/starter-kit`)
+- **Extensões:** Image, Mention
+- **Uso:** `components/comments/CommentEditor.jsx`
 
 ## Drag & Drop
 
-- **Library:** @dnd-kit (core + sortable + utilities)
-- **Usage:** Kanban board (`components/kanban/KanbanBoard.tsx`)
-- **Pattern:** Sortable columns with draggable task cards
+- **Biblioteca:** @dnd-kit (core + sortable + utilities)
+- **Uso:** Quadro Kanban (`components/kanban/KanbanBoard.tsx`)
+- **Padrão:** Colunas ordenáveis com cards de tarefa arrastáveis
 
-## Charts & Data Visualization
+## Gráficos e Visualização de Dados
 
-- **Library:** Recharts v3
-- **Usage:** Dashboard charts (`components/dashboard/`)
-- **Charts:** Revenue, Productivity, Project Status, Time by Project
+- **Biblioteca:** Recharts v3
+- **Uso:** Gráficos do dashboard (`components/dashboard/`)
+- **Gráficos:** Receita, Produtividade, Status de Projetos, Tempo por Projeto
 
-## Notifications API
+## API de Notificações
 
-- **Route:** `app/api/v1/notifications/route.ts`
-- **Protocol:** REST (GET notifications for user)
-- **Client component:** `components/NotificationBell.jsx`
-- **Real-time:** Pusher WebSocket for push notifications
+- **Rota:** `app/api/v1/notifications/route.ts`
+- **Protocolo:** REST (GET notificações do usuário)
+- **Componente cliente:** `components/NotificationBell.jsx`
+- **Tempo real:** WebSocket Pusher para notificações push
 
-## External CDN
+## CDN Externo
 
-- **Google Fonts:** Material Symbols Outlined (via CDN link in `app/layout.js`)
-- **Fonts:** Inter, Outfit (via `next/font/google`)
+- **Google Fonts:** Material Symbols Outlined (via link CDN em `app/layout.js`)
+- **Fontes:** Inter, Outfit (via `next/font/google`)

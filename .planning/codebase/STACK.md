@@ -1,164 +1,164 @@
-# Technology Stack
+# Stack Tecnológica
 
-> Last mapped: 2026-05-27
+> Último mapeamento: 2026-05-27
 
-## Languages & Runtime
+## Linguagens e Runtime
 
-| Technology | Version | Purpose |
+| Tecnologia | Versão | Propósito |
 |---|---|---|
-| **TypeScript** | ^5.9.3 | Primary language (actions, lib, components, config) |
-| **JavaScript (JSX)** | ES2017 target | Legacy components, services, hooks |
+| **TypeScript** | ^5.9.3 | Linguagem principal (actions, lib, componentes, configs) |
+| **JavaScript (JSX)** | Target ES2017 | Componentes legados, serviços, hooks |
 | **Node.js** | 20+ (.nvmrc) | Runtime |
-| **SQL** | PostgreSQL | Database |
+| **SQL** | PostgreSQL | Banco de dados |
 
-- TypeScript strict mode is **disabled** (`"strict": false` in `tsconfig.json`)
-- Module resolution: `bundler` (Next.js standard)
-- Path alias: `@/*` → `./*` (e.g., `@/lib/prisma`)
+- Modo strict do TypeScript está **desabilitado** (`"strict": false` em `tsconfig.json`)
+- Resolução de módulos: `bundler` (padrão do Next.js)
+- Alias de caminho: `@/*` → `./*` (ex: `@/lib/prisma`)
 
-## Core Framework
+## Framework Principal
 
-| Package | Version | Role |
+| Pacote | Versão | Papel |
 |---|---|---|
-| **Next.js** | 16.1.1 | Full-stack framework (App Router, Server Actions, RSC) |
-| **React** | 19.2.3 | UI library |
-| **React DOM** | 19.2.3 | DOM renderer |
+| **Next.js** | 16.1.1 | Framework full-stack (App Router, Server Actions, RSC) |
+| **React** | 19.2.3 | Biblioteca de UI |
+| **React DOM** | 19.2.3 | Renderizador DOM |
 
-### Next.js Configuration (`next.config.mjs`)
-- **PWA enabled** via `@ducanh2912/next-pwa` (disabled in dev)
-- Build: webpack mode (`--webpack` flag)
-- Allowed dev origins: `localhost:3000`, `192.168.0.37:3000`
-- App Router (no Pages Router)
+### Configuração do Next.js (`next.config.mjs`)
+- **PWA habilitado** via `@ducanh2912/next-pwa` (desabilitado em dev)
+- Build: modo webpack (flag `--webpack`)
+- Origens permitidas em dev: `localhost:3000`, `192.168.0.37:3000`
+- App Router (sem Pages Router)
 
-## Database & ORM
+## Banco de Dados e ORM
 
-| Package | Version | Role |
+| Pacote | Versão | Papel |
 |---|---|---|
 | **Prisma Client** | ^7.2.0 | ORM / Query builder |
-| **Prisma (CLI)** | ^7.6.0 | Schema management, migrations |
-| **@prisma/adapter-pg** | ^7.2.0 | PostgreSQL adapter (driver-based) |
-| **pg** | ^8.17.1 | PostgreSQL connection pooling |
+| **Prisma (CLI)** | ^7.6.0 | Gerenciamento de schema e migrações |
+| **@prisma/adapter-pg** | ^7.2.0 | Adaptador PostgreSQL (baseado em driver) |
+| **pg** | ^8.17.1 | Pool de conexões PostgreSQL |
 
-### Database Setup (`lib/prisma.ts`)
-- Uses **driver-based** Prisma with `PrismaPg` adapter over raw `pg.Pool`
-- Connection string from `DATABASE_URL` env var
-- Dev singleton pattern via `globalForPrisma`
+### Configuração do Banco (`lib/prisma.ts`)
+- Usa Prisma **baseado em driver** com adaptador `PrismaPg` sobre `pg.Pool`
+- String de conexão via variável de ambiente `DATABASE_URL`
+- Padrão singleton em dev via `globalForPrisma`
 - Logging: `query`, `error`, `warn`
-- PostgreSQL hosted on **Supabase** (see `prisma.config.ts` — uses `DIRECT_URL` for migrations)
-- Postinstall hook runs `prisma generate`
+- PostgreSQL hospedado no **Supabase** (veja `prisma.config.ts` — usa `DIRECT_URL` para migrações)
+- Hook postinstall executa `prisma generate`
 
-## Authentication
+## Autenticação
 
-| Package | Version | Role |
+| Pacote | Versão | Papel |
 |---|---|---|
-| **next-auth** | ^5.0.0-beta.30 | Auth framework (NextAuth v5 beta) |
-| **bcryptjs** | ^3.0.3 | Password hashing |
+| **next-auth** | ^5.0.0-beta.30 | Framework de autenticação (NextAuth v5 beta) |
+| **bcryptjs** | ^3.0.3 | Hash de senhas |
 
-### Auth Setup (`auth.ts`, `auth.config.ts`)
-- **Credentials provider** only (email + password)
-- JWT session strategy
-- Zod validation on login input
-- Password comparison via bcrypt
-- Custom callbacks: `jwt` (adds `id`, `role`), `session` (exposes `id`, `role`)
-- Route protection: `/dashboard/*` and `/projects/*` require auth
-- Middleware proxy in `proxy.ts` for route-level protection
-- Custom type augmentation: `types/next-auth.d.ts`
+### Configuração de Auth (`auth.ts`, `auth.config.ts`)
+- Apenas provedor **Credentials** (email + senha)
+- Estratégia de sessão JWT
+- Validação de input via Zod no login
+- Comparação de senha via bcrypt
+- Callbacks customizados: `jwt` (adiciona `id`, `role`), `session` (expõe `id`, `role`)
+- Proteção de rotas: `/dashboard/*` e `/projects/*` exigem autenticação
+- Middleware proxy em `proxy.ts` para proteção em nível de rota
+- Extensão de tipos: `types/next-auth.d.ts`
 
-## UI & Styling
+## UI e Estilização
 
-| Package | Version | Role |
+| Pacote | Versão | Papel |
 |---|---|---|
-| **Tailwind CSS** | ^4.0.0 | Utility-first CSS framework |
-| **@tailwindcss/postcss** | ^4.0.0 | PostCSS integration |
-| **tailwindcss-animate** | ^1.0.7 | Animation utilities |
-| **tailwind-merge** | ^3.4.0 | Class merging |
-| **class-variance-authority** | ^0.7.1 | Variant-based component styling |
-| **clsx** | ^2.1.1 | Conditional class names |
-| **next-themes** | ^0.4.6 | Dark/Light mode toggle |
+| **Tailwind CSS** | ^4.0.0 | Framework CSS utilitário |
+| **@tailwindcss/postcss** | ^4.0.0 | Integração com PostCSS |
+| **tailwindcss-animate** | ^1.0.7 | Utilitários de animação |
+| **tailwind-merge** | ^3.4.0 | Merge de classes |
+| **class-variance-authority** | ^0.7.1 | Estilização baseada em variantes |
+| **clsx** | ^2.1.1 | Nomes de classes condicionais |
+| **next-themes** | ^0.4.6 | Alternância modo escuro/claro |
 
 ### Design System
-- **Component Library:** Shadcn/UI pattern (25 UI components in `components/ui/`)
-- **Primitives:** Radix UI (Dialog, Select, Dropdown, Tabs, Tooltip, Checkbox, etc.)
-- **Icons:** Lucide React + Google Material Symbols (via CDN)
-- **Fonts:** Inter (body), Outfit (display) via `next/font/google`; config also references Spline Sans, Manrope, Noto Sans
-- **Color Palette:** HSL-based CSS variables, light/dark themes in `globals.css`
-  - Light: Pastel beige (#FBF2ED), greenish primary (#CDD5C6)
-  - Dark: Deep black (#0D0D0D), deep blue (#152026), slate (#253840)
-- **Custom colors:** Status (todo/progress/done), surface variants
+- **Biblioteca de componentes:** Padrão Shadcn/UI (25 componentes em `components/ui/`)
+- **Primitivas:** Radix UI (Dialog, Select, Dropdown, Tabs, Tooltip, Checkbox, etc.)
+- **Ícones:** Lucide React + Google Material Symbols (via CDN)
+- **Fontes:** Inter (corpo), Outfit (display) via `next/font/google`; config também referencia Spline Sans, Manrope, Noto Sans
+- **Paleta de cores:** Variáveis CSS baseadas em HSL, temas claro/escuro em `globals.css`
+  - Claro: Bege pastel (#FBF2ED), verde pastel primário (#CDD5C6)
+  - Escuro: Preto profundo (#0D0D0D), azul profundo (#152026), ardósia (#253840)
+- **Cores customizadas:** Status (a fazer/em progresso/concluído), variantes de superfície
 
-## Key Dependencies
+## Dependências Principais
 
-| Package | Version | Purpose |
+| Pacote | Versão | Propósito |
 |---|---|---|
-| **@dnd-kit/core + sortable** | ^6.3.1 / ^10.0.0 | Drag and drop (Kanban board) |
-| **@tiptap/react + starter-kit** | ^3.14.0 | Rich text editor (comments, descriptions) |
-| **react-hook-form** | ^7.71.1 | Form management |
-| **@hookform/resolvers** | ^5.2.2 | Zod resolver for RHF |
-| **zod** | ^4.3.5 | Schema validation |
-| **recharts** | ^3.6.0 | Charts and data visualization |
-| **@tanstack/react-table** | ^8.21.3 | Data tables |
-| **date-fns** | ^4.1.0 | Date manipulation |
-| **sonner** | ^2.0.7 | Toast notifications |
-| **cmdk** | ^1.1.1 | Command palette |
-| **axios** | ^1.13.2 | HTTP client (legacy service layer) |
-| **js-cookie** | ^3.0.5 | Cookie management (legacy) |
-| **jspdf + jspdf-autotable** | ^4.0.0 / ^5.0.7 | PDF export |
-| **exceljs** | ^4.4.0 | Excel export |
-| **pusher / pusher-js** | ^5.3.3 / ^8.5.0 | Real-time notifications |
-| **@supabase/supabase-js** | ^2.90.1 | Supabase client (storage uploads) |
-| **react-day-picker** | ^9.13.0 | Date picker |
-| **use-debounce** | ^10.1.0 | Input debouncing |
+| **@dnd-kit/core + sortable** | ^6.3.1 / ^10.0.0 | Drag and drop (quadro Kanban) |
+| **@tiptap/react + starter-kit** | ^3.14.0 | Editor de texto rico (comentários, descrições) |
+| **react-hook-form** | ^7.71.1 | Gerenciamento de formulários |
+| **@hookform/resolvers** | ^5.2.2 | Resolver Zod para RHF |
+| **zod** | ^4.3.5 | Validação de schemas |
+| **recharts** | ^3.6.0 | Gráficos e visualização de dados |
+| **@tanstack/react-table** | ^8.21.3 | Tabelas de dados |
+| **date-fns** | ^4.1.0 | Manipulação de datas |
+| **sonner** | ^2.0.7 | Notificações toast |
+| **cmdk** | ^1.1.1 | Paleta de comandos |
+| **axios** | ^1.13.2 | Cliente HTTP (camada de serviço legada) |
+| **js-cookie** | ^3.0.5 | Gerenciamento de cookies (legado) |
+| **jspdf + jspdf-autotable** | ^4.0.0 / ^5.0.7 | Exportação para PDF |
+| **exceljs** | ^4.4.0 | Exportação para Excel |
+| **pusher / pusher-js** | ^5.3.3 / ^8.5.0 | Notificações em tempo real |
+| **@supabase/supabase-js** | ^2.90.1 | Cliente Supabase (uploads de armazenamento) |
+| **react-day-picker** | ^9.13.0 | Seletor de datas |
+| **use-debounce** | ^10.1.0 | Debounce de input |
 | **tippy.js** | ^6.3.7 | Tooltips |
 
-## Dev Dependencies
+## Dependências de Desenvolvimento
 
-| Package | Version | Purpose |
+| Pacote | Versão | Propósito |
 |---|---|---|
-| **Jest** | ^30.2.0 | Unit test runner |
-| **@testing-library/react** | ^16.3.2 | React component testing |
-| **@testing-library/user-event** | ^14.6.1 | User interaction simulation |
-| **@testing-library/jest-dom** | ^6.9.1 | DOM matchers |
-| **ts-jest** | ^29.4.6 | TypeScript support for Jest |
-| **jest-mock-extended** | ^4.0.0 | Extended mocking |
-| **Playwright** | ^1.58.0 | E2E testing |
+| **Jest** | ^30.2.0 | Executor de testes unitários |
+| **@testing-library/react** | ^16.3.2 | Testes de componentes React |
+| **@testing-library/user-event** | ^14.6.1 | Simulação de interação do usuário |
+| **@testing-library/jest-dom** | ^6.9.1 | Matchers para DOM |
+| **ts-jest** | ^29.4.6 | Suporte TypeScript para Jest |
+| **jest-mock-extended** | ^4.0.0 | Mocking estendido |
+| **Playwright** | ^1.58.0 | Testes E2E |
 | **ESLint** | ^9 | Linting |
-| **eslint-config-next** | 16.1.1 | Next.js lint rules |
-| **PostCSS** | ^8.5.6 | CSS processing |
-| **autoprefixer** | ^10.4.23 | Vendor prefixes |
-| **ts-node** | ^10.9.2 | TypeScript execution (seeds) |
-| **dotenv** | ^17.4.0 | Environment variables |
+| **eslint-config-next** | 16.1.1 | Regras de lint do Next.js |
+| **PostCSS** | ^8.5.6 | Processamento CSS |
+| **autoprefixer** | ^10.4.23 | Prefixos de vendor |
+| **ts-node** | ^10.9.2 | Execução TypeScript (seeds) |
+| **dotenv** | ^17.4.0 | Variáveis de ambiente |
 
-## Configuration Files
+## Arquivos de Configuração
 
-| File | Purpose |
+| Arquivo | Propósito |
 |---|---|
-| `tsconfig.json` | TypeScript compiler config |
-| `next.config.mjs` | Next.js + PWA config |
-| `tailwind.config.mjs` | Tailwind CSS v4 theme config |
-| `postcss.config.mjs` | PostCSS plugins |
-| `eslint.config.mjs` | ESLint flat config |
-| `jest.config.js` | Jest test runner config |
-| `playwright.config.ts` | Playwright E2E config |
-| `prisma.config.ts` | Prisma CLI config (migration datasource) |
-| `components.json` | Shadcn/UI component config |
-| `.nvmrc` | Node version pinning |
-| `.gitignore` | Git ignore rules |
+| `tsconfig.json` | Configuração do compilador TypeScript |
+| `next.config.mjs` | Configuração Next.js + PWA |
+| `tailwind.config.mjs` | Configuração de tema do Tailwind CSS v4 |
+| `postcss.config.mjs` | Plugins PostCSS |
+| `eslint.config.mjs` | Configuração flat do ESLint |
+| `jest.config.js` | Configuração do executor de testes Jest |
+| `playwright.config.ts` | Configuração E2E do Playwright |
+| `prisma.config.ts` | Configuração CLI do Prisma (datasource de migração) |
+| `components.json` | Configuração do Shadcn/UI |
+| `.nvmrc` | Fixação de versão do Node |
+| `.gitignore` | Regras de ignorar do Git |
 
-## Environment Variables (Expected)
+## Variáveis de Ambiente (Esperadas)
 
-| Variable | Usage |
+| Variável | Uso |
 |---|---|
-| `DATABASE_URL` | Prisma connection (pooled) |
-| `DIRECT_URL` | Prisma migrations (direct, Supabase) |
-| `AUTH_SECRET` | NextAuth JWT signing |
-| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anonymous key |
-| `NEXT_PUBLIC_PUSHER_KEY` | Pusher app key |
-| `NEXT_PUBLIC_PUSHER_CLUSTER` | Pusher cluster region |
-| `NEXT_PUBLIC_API_URL` | Legacy API base URL (default: localhost:8080) |
+| `DATABASE_URL` | Conexão Prisma (com pool) |
+| `DIRECT_URL` | Migrações Prisma (direta, Supabase) |
+| `AUTH_SECRET` | Assinatura JWT do NextAuth |
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Chave anônima do Supabase |
+| `NEXT_PUBLIC_PUSHER_KEY` | Chave do app Pusher |
+| `NEXT_PUBLIC_PUSHER_CLUSTER` | Região do cluster Pusher |
+| `NEXT_PUBLIC_API_URL` | URL base da API legada (padrão: localhost:8080) |
 
-## NPM Scripts
+## Scripts NPM
 
-| Script | Command |
+| Script | Comando |
 |---|---|
 | `dev` | `next dev --webpack` |
 | `build` | `next build --webpack` |

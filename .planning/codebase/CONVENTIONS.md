@@ -1,88 +1,88 @@
-# Code Conventions
+# Convenções de Código
 
-> Last mapped: 2026-05-27
+> Último mapeamento: 2026-05-27
 
-## Language & Style
+## Linguagem e Estilo
 
 ### TypeScript
-- **Strict mode:** Disabled (`"strict": false` in `tsconfig.json`)
+- **Modo strict:** Desabilitado (`"strict": false` em `tsconfig.json`)
 - **Target:** ES2017
-- **Module:** ESNext with bundler resolution
-- **Path aliases:** `@/*` → `./*`
-- **Type assertions:** Used freely (e.g., `as any` for Prisma Json fields)
+- **Module:** ESNext com resolução bundler
+- **Aliases de caminho:** `@/*` → `./*`
+- **Asserções de tipo:** Usadas livremente (ex: `as any` para campos Json do Prisma)
 
-### Mixed JS/TS Codebase
-The codebase uses both JavaScript and TypeScript:
-- **TypeScript:** Server actions, lib utilities, newer components
-- **JavaScript:** Page files, layout files, some hooks
-- No enforcement to convert legacy JS files
+### Codebase Misto JS/TS
+O codebase usa tanto JavaScript quanto TypeScript:
+- **TypeScript:** Server actions, utilitários da lib, componentes mais recentes
+- **JavaScript:** Arquivos de página, arquivos de layout, alguns hooks
+- Sem obrigatoriedade de converter arquivos JS legados
 
-## Component Patterns
+## Padrões de Componentes
 
-### Client Components
+### Componentes Cliente
 ```tsx
 'use client';
 
 import React from 'react';
 // imports...
 
-const ComponentName = ({ prop1, prop2 }) => {
-    const [state, setState] = React.useState(initialValue);
-    // logic...
+const NomeDoComponente = ({ prop1, prop2 }) => {
+    const [estado, setEstado] = React.useState(valorInicial);
+    // lógica...
     return (<div>...</div>);
 };
 
-export default ComponentName;
+export default NomeDoComponente;
 ```
 
-- `'use client'` directive for interactive components
-- Arrow function components
-- `default export` pattern (most components)
-- Props destructured in parameters (no interface in many cases)
+- Diretiva `'use client'` para componentes interativos
+- Componentes com arrow function
+- Padrão `default export` (maioria dos componentes)
+- Props desestruturadas nos parâmetros (sem interface em muitos casos)
 
-### Server Components (Pages)
+### Server Components (Páginas)
 ```jsx
-import { serverAction } from '@/actions/entity';
+import { serverAction } from '@/actions/entidade';
 
-export default async function PageName() {
-    const data = await serverAction();
-    return <ClientComponent data={data} />;
+export default async function NomeDaPagina() {
+    const dados = await serverAction();
+    return <ComponenteCliente data={dados} />;
 }
 ```
 
-- Async function components
-- Direct server action calls for data fetching
-- Pass data to client components as props
+- Componentes com função async
+- Chamadas diretas a server actions para busca de dados
+- Dados passados para componentes cliente como props
 
-### Shadcn/UI Components (`components/ui/`)
+### Componentes Shadcn/UI (`components/ui/`)
 ```tsx
 import * as React from "react"
 import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
-const variants = cva("base-classes", {
+const variantes = cva("classes-base", {
     variants: { ... },
     defaultVariants: { ... },
 });
 
-const Component = React.forwardRef<HTMLElement, Props>(
+const Componente = React.forwardRef<HTMLElement, Props>(
     ({ className, variant, ...props }, ref) => (
-        <element ref={ref} className={cn(variants({ variant }), className)} {...props} />
+        <elemento ref={ref} className={cn(variantes({ variant }), className)} {...props} />
     )
 );
-Component.displayName = "Component";
+Componente.displayName = "Componente";
 
-export { Component };
+export { Componente };
 ```
 
-- `React.forwardRef` pattern
-- `cva` for variant styling
-- `cn()` utility for class merging (`clsx` + `tailwind-merge`)
-- Named exports
+- Padrão `React.forwardRef`
+- `cva` para estilização com variantes
+- Utilitário `cn()` para merge de classes (`clsx` + `tailwind-merge`)
+- Exports nomeados
 
-## Server Action Patterns
+## Padrões de Server Action
 
-### Standard Action Pattern
+### Padrão de Action Padrão
 ```typescript
 'use server'
 
@@ -91,171 +91,171 @@ import { auth } from "@/auth"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 
-const EntitySchema = z.object({ ... });
+const SchemaEntidade = z.object({ ... });
 
-export async function createEntity(data: z.input<typeof EntitySchema>) {
+export async function criarEntidade(dados: z.input<typeof SchemaEntidade>) {
     const session = await auth();
     if (!session || !session.user || !session.user.id) {
         throw new Error("Não autorizado");
     }
 
-    const validated = EntitySchema.safeParse(data);
-    if (!validated.success) throw new Error("Dados inválidos");
+    const validado = SchemaEntidade.safeParse(dados);
+    if (!validado.success) throw new Error("Dados inválidos");
 
-    const entity = await prisma.entity.create({
-        data: { ...validated.data, ownerId: session.user.id }
+    const entidade = await prisma.entidade.create({
+        data: { ...validado.data, ownerId: session.user.id }
     });
 
-    revalidatePath('/path');
-    return { success: true, entity };
+    revalidatePath('/caminho');
+    return { success: true, entidade };
 }
 ```
 
-### Key Patterns:
-1. **Auth check first** — `auth()` called at start of every action
-2. **Zod validation** — `safeParse` with throw on failure
-3. **Prisma query** — Direct ORM call
-4. **Cache invalidation** — `revalidatePath()` after mutations
-5. **Return shape** — `{ success: true, ...data }` or throw Error
+### Padrões Principais:
+1. **Verificação de auth primeiro** — `auth()` chamado no início de toda action
+2. **Validação Zod** — `safeParse` com throw em caso de falha
+3. **Query Prisma** — Chamada direta ao ORM
+4. **Invalidação de cache** — `revalidatePath()` após mutações
+5. **Formato de retorno** — `{ success: true, ...dados }` ou throw Error
 
-### Error Handling
-- **Server Actions:** `throw new Error("message")` — no try/catch in most actions
-- **Some actions** use try/catch and return `{ success: false, error: "message" }`
-- **Client side:** Not consistently wrapped in try/catch
-- **No centralized error boundary** beyond Next.js defaults
+### Tratamento de Erros
+- **Server Actions:** `throw new Error("mensagem")` — sem try/catch na maioria das actions
+- **Algumas actions** usam try/catch e retornam `{ success: false, error: "mensagem" }`
+- **Lado do cliente:** Sem try/catch sistemático ao redor de chamadas de Server Action
+- **Sem error boundary:** Sem React Error Boundary customizado além dos padrões do Next.js
 
-## Validation Patterns
+## Padrões de Validação
 
-### Zod Schema Convention (`lib/validations.ts`)
+### Convenção de Schema Zod (`lib/validations.ts`)
 ```typescript
-// Create schema
-export const entitySchema = z.object({
-    name: z.string().min(2, "Message"),
-    optionalField: z.string().optional().nullable(),
-    enumField: z.nativeEnum(PrismaEnum).optional().nullable(),
-    dateField: z.coerce.date().optional().nullable(),
-    numericField: z.number().nonnegative().optional().nullable(),
+// Schema de criação
+export const schemaEntidade = z.object({
+    nome: z.string().min(2, "Mensagem"),
+    campoOpcional: z.string().optional().nullable(),
+    campoEnum: z.nativeEnum(EnumPrisma).optional().nullable(),
+    campoData: z.coerce.date().optional().nullable(),
+    campoNumerico: z.number().nonnegative().optional().nullable(),
 });
 
-// Update schema (partial + required id)
-export const updateEntitySchema = entitySchema.partial().extend({
+// Schema de atualização (parcial + id obrigatório)
+export const schemaAtualizacaoEntidade = schemaEntidade.partial().extend({
     id: z.string().uuid(),
 });
 ```
 
-### Prisma Enum Mapping
-- All Prisma enums mapped to Zod via `z.nativeEnum(EnumName)`
-- Exported as constants (e.g., `PriorityEnum`, `ClientStatusEnum`)
+### Mapeamento de Enums Prisma
+- Todos os enums do Prisma mapeados para Zod via `z.nativeEnum(NomeEnum)`
+- Exportados como constantes (ex: `PriorityEnum`, `ClientStatusEnum`)
 
-## Naming Conventions
+## Convenções de Nomenclatura
 
-### Variables & Functions
-- **camelCase** for variables and functions
-- **PascalCase** for React components and TypeScript types
-- **UPPER_CASE** not used (even for constants)
+### Variáveis e Funções
+- **camelCase** para variáveis e funções
+- **PascalCase** para componentes React e tipos TypeScript
+- **UPPER_CASE** não utilizado (mesmo para constantes)
 
-### Prisma Schema
-- **Models:** PascalCase (e.g., `ProjectMember`, `TimeLog`)
-- **Fields:** camelCase (e.g., `createdAt`, `assigneeId`)
-- **Database mapping:** `@@map("snake_case")` for table names, `@map("snake_case")` for columns
-- **Enums:** PascalCase names, UPPER_CASE values (e.g., `Priority.HIGH`)
+### Schema Prisma
+- **Modelos:** PascalCase (ex: `ProjectMember`, `TimeLog`)
+- **Campos:** camelCase (ex: `createdAt`, `assigneeId`)
+- **Mapeamento de banco:** `@@map("snake_case")` para nomes de tabelas, `@map("snake_case")` para colunas
+- **Enums:** Nomes em PascalCase, valores em UPPER_CASE (ex: `Priority.HIGH`)
 
-### Files
-- **Components:** PascalCase (e.g., `ProjectCard.tsx`)
-- **Actions/Lib:** camelCase (e.g., `project.ts`, `validations.ts`)
-- **CSS:** kebab-case (e.g., `globals.css`)
+### Arquivos
+- **Componentes:** PascalCase (ex: `ProjectCard.tsx`)
+- **Actions/Lib:** camelCase (ex: `project.ts`, `validations.ts`)
+- **CSS:** kebab-case (ex: `globals.css`)
 
-## Styling Conventions
+## Convenções de Estilização
 
 ### Tailwind CSS v4
-- CSS variable-based theming in `globals.css`
-- HSL color values: `hsl(var(--primary))`
-- `@theme` directive for custom design tokens
-- `@layer base` for global styles
-- `@utility container` for custom utilities
+- Temas baseados em variáveis CSS em `globals.css`
+- Valores de cor HSL: `hsl(var(--primary))`
+- Diretiva `@theme` para tokens de design customizados
+- `@layer base` para estilos globais
+- `@utility container` para utilitários customizados
 
-### Class Organization
+### Organização de Classes
 ```tsx
 className="flex items-center gap-3 px-3 py-3 rounded-xl transition-colors"
 ```
-- Layout → Spacing → Visual → Interactive
+- Layout → Espaçamento → Visual → Interativo
 
-### Theme Support
-- Dark/light mode via `next-themes` + CSS class strategy
-- All colors defined as CSS custom properties
-- Components use semantic color names (`bg-background`, `text-foreground`, `bg-card`)
+### Suporte a Temas
+- Modo escuro/claro via `next-themes` + estratégia de classe CSS
+- Todas as cores definidas como propriedades CSS customizadas
+- Componentes usam nomes de cores semânticas (`bg-background`, `text-foreground`, `bg-card`)
 
-## Data Handling
+## Manipulação de Dados
 
-### JSONB Fields (Prisma)
-- Typed as `Json?` in Prisma schema
-- Cast to `as any` when writing
-- Cast to typed interfaces when reading (e.g., `as unknown as HistoryItem[]`)
-- Used for: `attachments`, `comments`, `checklist`, `historico`, `phases`, `budgetBreakdown`
+### Campos JSONB (Prisma)
+- Tipados como `Json?` no schema Prisma
+- Convertidos com `as any` ao escrever
+- Convertidos para interfaces tipadas ao ler (ex: `as unknown as HistoryItem[]`)
+- Usados para: `attachments`, `comments`, `checklist`, `historico`, `phases`, `budgetBreakdown`
 
-### Dates
-- Stored as `DateTime` in Prisma
-- Received as strings from forms, converted with `new Date()`
-- Displayed with `date-fns` utilities
-- `z.coerce.date()` for Zod validation
+### Datas
+- Armazenadas como `DateTime` no Prisma
+- Recebidas como strings de formulários, convertidas com `new Date()`
+- Exibidas com utilitários `date-fns`
+- `z.coerce.date()` para validação Zod
 
 ### IDs
-- All entities use UUID v4 (`@id @default(uuid())`)
-- Referenced as `z.string().uuid()` in Zod schemas
+- Todas as entidades usam UUID v4 (`@id @default(uuid())`)
+- Referenciados como `z.string().uuid()` nos schemas Zod
 
-## Import Conventions
+## Convenções de Import
 ```typescript
-// 1. Framework imports
+// 1. Imports do framework
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 
-// 2. Library imports
+// 2. Imports de bibliotecas
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { Priority } from "@prisma/client"
 
-// 3. Component imports
+// 3. Imports de componentes
 import { Button } from "@/components/ui/button"
 
-// 4. Local imports
+// 4. Imports locais
 import { cn } from "@/lib/utils"
 ```
 
-- Path alias `@/` used consistently
-- No barrel exports (direct file imports)
-- Prisma client enums imported from `@prisma/client`
+- Alias `@/` usado consistentemente
+- Sem barrel exports (imports diretos de arquivo)
+- Enums do Prisma importados de `@prisma/client`
 
-## Form Handling
+## Manipulação de Formulários
 
-### React Hook Form + Zod Pattern
+### Padrão React Hook Form + Zod
 ```tsx
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { entitySchema } from "@/lib/validations";
+import { schemaEntidade } from "@/lib/validations";
 
 const form = useForm({
-    resolver: zodResolver(entitySchema),
+    resolver: zodResolver(schemaEntidade),
     defaultValues: { ... },
 });
 ```
 
-### Legacy FormData Pattern (some actions)
+### Padrão Legado com FormData (algumas actions)
 ```typescript
-export async function createEntity(formData: FormData) {
-    const rawData = {
-        name: formData.get('name'),
+export async function criarEntidade(formData: FormData) {
+    const dadosBrutos = {
+        nome: formData.get('nome'),
         // ...
     };
-    const validated = Schema.safeParse(rawData);
+    const validado = Schema.safeParse(dadosBrutos);
     // ...
 }
 ```
 
-## Localization
+## Localização
 
-- **Language:** Portuguese (Brazil) for all user-facing strings
-- Validation messages in Portuguese: `"Nome deve ter pelo menos 3 caracteres"`
-- UI labels in Portuguese: `"Projetos"`, `"Clientes"`, `"Configurações"`
-- HTML lang attribute: `"pt-BR"`
-- No i18n library (strings hardcoded in components)
-- Some Zod validation messages in English (inconsistency in `lib/validations.ts`)
+- **Idioma:** Português do Brasil para todas as strings voltadas ao usuário
+- Mensagens de validação em português: `"Nome deve ter pelo menos 3 caracteres"`
+- Labels da UI em português: `"Projetos"`, `"Clientes"`, `"Configurações"`
+- Atributo HTML lang: `"pt-BR"`
+- Sem biblioteca de i18n (strings hardcoded nos componentes)
+- Algumas mensagens de validação Zod em inglês (inconsistência em `lib/validations.ts`)

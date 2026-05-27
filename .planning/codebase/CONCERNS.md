@@ -1,126 +1,126 @@
-# Concerns & Technical Debt
+# Preocupações e Dívida Técnica
 
-> Last mapped: 2026-05-27
+> Último mapeamento: 2026-05-27
 
-## 🔴 High Priority
+## 🔴 Alta Prioridade
 
-### 1. Legacy Service Layer Coexisting with Server Actions
-- **Location:** `services/*.js` (7 files)
-- **Issue:** Legacy Axios-based REST services (`services/api.js`, `services/auth.service.js`, etc.) coexist with newer Server Actions (`actions/*.ts`, `app/actions/*.ts`). This creates confusion about which pattern to use.
-- **Legacy base URL:** Points to `localhost:8080` (old Java backend)
-- **Duplicate auth services:** Both `services/auth.service.js` and `services/authService.js` exist
-- **Risk:** Developers may accidentally use the legacy REST pattern instead of Server Actions
-- **Recommendation:** Audit usage of `services/` files, remove unused ones, migrate remaining callers to Server Actions
+### 1. Camada de Serviço Legada Coexistindo com Server Actions
+- **Localização:** `services/*.js` (7 arquivos)
+- **Problema:** Serviços REST legados baseados em Axios (`services/api.js`, `services/auth.service.js`, etc.) coexistem com as Server Actions mais recentes (`actions/*.ts`, `app/actions/*.ts`). Isso gera confusão sobre qual padrão usar.
+- **URL base legada:** Aponta para `localhost:8080` (antigo backend Java)
+- **Serviços de auth duplicados:** Existem tanto `services/auth.service.js` quanto `services/authService.js`
+- **Risco:** Desenvolvedores podem acidentalmente usar o padrão REST legado ao invés das Server Actions
+- **Recomendação:** Auditar uso dos arquivos `services/`, remover os não utilizados, migrar chamadores restantes para Server Actions
 
-### 2. Duplicate Server Action Locations
-- **Locations:** `actions/*.ts` (root level) and `app/actions/*.ts`
-- **Issue:** Server Actions split across two directories with overlapping entities (both have `auth.ts`, `project.ts`)
-- **Root `actions/`:** 4 files (auth, project, task, stage) — older, simpler
-- **App `app/actions/`:** 10 files — newer, more comprehensive
-- **Risk:** Conflicting logic, unclear which actions pages should import
-- **Recommendation:** Consolidate all actions into `app/actions/` and remove root `actions/`
+### 2. Localizações Duplicadas de Server Actions
+- **Localizações:** `actions/*.ts` (nível raiz) e `app/actions/*.ts`
+- **Problema:** Server Actions divididas em dois diretórios com entidades sobrepostas (ambos têm `auth.ts`, `project.ts`)
+- **Raiz `actions/`:** 4 arquivos (auth, project, task, stage) — mais antigos, mais simples
+- **App `app/actions/`:** 10 arquivos — mais recentes, mais abrangentes
+- **Risco:** Lógica conflitante, incerto qual actions as páginas devem importar
+- **Recomendação:** Consolidar todas as actions em `app/actions/` e remover a pasta raiz `actions/`
 
-### 3. TypeScript Strict Mode Disabled
-- **File:** `tsconfig.json` — `"strict": false`
-- **Impact:** No null checks, no strict function types, no strict property initialization
-- **Risk:** Runtime errors from null/undefined access, type safety gaps
-- **Evidence:** Heavy use of `as any` casts for Prisma Json fields
-- **Recommendation:** Enable incrementally: start with `strictNullChecks`
+### 3. Modo Strict do TypeScript Desabilitado
+- **Arquivo:** `tsconfig.json` — `"strict": false`
+- **Impacto:** Sem checagem de null, sem tipos de função strict, sem inicialização de propriedades strict
+- **Risco:** Erros em runtime por acesso a null/undefined, lacunas na segurança de tipos
+- **Evidência:** Uso pesado de casts `as any` para campos Json do Prisma
+- **Recomendação:** Habilitar incrementalmente: começar com `strictNullChecks`
 
-### 4. Inconsistent Error Handling
-- **Pattern 1:** `throw new Error("message")` — most actions
-- **Pattern 2:** `return { success: false, error }` — some lib functions
-- **Client side:** No systematic try/catch around Server Action calls
-- **No error boundary:** No custom React Error Boundary beyond Next.js defaults
-- **Risk:** Unhandled rejections, poor user error feedback
-- **Recommendation:** Standardize on Result type pattern, add error boundaries
+### 4. Tratamento de Erros Inconsistente
+- **Padrão 1:** `throw new Error("mensagem")` — maioria das actions
+- **Padrão 2:** `return { success: false, error }` — algumas funções da lib
+- **Lado do cliente:** Sem try/catch sistemático ao redor de chamadas de Server Action
+- **Sem error boundary:** Sem React Error Boundary customizado além dos padrões do Next.js
+- **Risco:** Rejeições não tratadas, feedback pobre de erros para o usuário
+- **Recomendação:** Padronizar com padrão de tipo Result, adicionar error boundaries
 
-## 🟡 Medium Priority
+## 🟡 Média Prioridade
 
-### 5. Permission System Not Integrated
-- **File:** `lib/permissions.ts`
-- **Issue:** Well-defined permission functions (`canCreateProject`, `canDeleteProject`, etc.) but they're **not called** in most Server Actions. Actions only check `session.user.id` exists.
-- **Risk:** Any authenticated user can perform any operation regardless of role
-- **Recommendation:** Integrate permission checks into all Server Actions
+### 5. Sistema de Permissões Não Integrado
+- **Arquivo:** `lib/permissions.ts`
+- **Problema:** Funções de permissão bem definidas (`canCreateProject`, `canDeleteProject`, etc.) mas **não são chamadas** na maioria das Server Actions. As actions apenas verificam se `session.user.id` existe.
+- **Risco:** Qualquer usuário autenticado pode realizar qualquer operação independente do papel
+- **Recomendação:** Integrar verificações de permissão em todas as Server Actions
 
-### 6. Pusher/WebSocket Implementation Incomplete
-- **File:** `hooks/useWebSocket.js`
-- **Issues:**
-  - Uses **public channels** instead of authenticated private channels (security risk)
-  - `channelName` variable defined but unused (line 33 uses different name)
-  - Server-side Pusher SDK available (`pusher` package) but not integrated into Server Actions
-  - Notifications from WebSocket not persisted to database
-  - `markAsRead` only updates client state, not DB
-- **Risk:** Notifications can be intercepted; data loss on page refresh
-- **Recommendation:** Implement server-side push in actions, use private channels with auth
+### 6. Implementação Pusher/WebSocket Incompleta
+- **Arquivo:** `hooks/useWebSocket.js`
+- **Problemas:**
+  - Usa **canais públicos** ao invés de canais privados autenticados (risco de segurança)
+  - Variável `channelName` definida mas não usada (linha 33 usa nome diferente)
+  - SDK Pusher do servidor disponível (pacote `pusher`) mas não integrado nas Server Actions
+  - Notificações do WebSocket não persistidas no banco de dados
+  - `markAsRead` atualiza apenas estado do cliente, não o BD
+- **Risco:** Notificações podem ser interceptadas; perda de dados ao recarregar página
+- **Recomendação:** Implementar push server-side nas actions, usar canais privados com autenticação
 
-### 7. JSONB Fields Loosely Typed
-- **Models:** `Task.attachments`, `Task.comments`, `Task.checklist`, `Task.historico`, `Project.phases`, `Budget.budgetBreakdown`
-- **Issue:** Stored as `Json?` in Prisma, cast with `as any` or `as unknown as TypedInterface[]`
-- **Risk:** Data corruption, runtime type errors, difficult to query
-- **Recommendation:** Consider normalizing critical JSON fields into proper relations, or add runtime validation on read
+### 7. Campos JSONB com Tipagem Frouxa
+- **Modelos:** `Task.attachments`, `Task.comments`, `Task.checklist`, `Task.historico`, `Project.phases`, `Budget.budgetBreakdown`
+- **Problema:** Armazenados como `Json?` no Prisma, convertidos com `as any` ou `as unknown as InterfaceTipada[]`
+- **Risco:** Corrupção de dados, erros de tipo em runtime, difícil de consultar
+- **Recomendação:** Considerar normalizar campos JSON críticos em relações próprias, ou adicionar validação em runtime na leitura
 
-### 8. Mixed JavaScript and TypeScript
-- **Pattern:** Newer features in TS, older features in JS
-- **JS files:** Page files (`page.jsx`), `Layout.jsx`, `Providers.jsx`, `NotificationBell.jsx`, hooks, services
-- **TS files:** Actions, lib, newer components, Kanban
-- **Risk:** Inconsistent type safety, harder to maintain
-- **Recommendation:** Gradually convert `.jsx` → `.tsx`, `.js` → `.ts`
+### 8. JavaScript e TypeScript Misturados
+- **Padrão:** Features mais recentes em TS, mais antigas em JS
+- **Arquivos JS:** Arquivos de página (`page.jsx`), `Layout.jsx`, `Providers.jsx`, `NotificationBell.jsx`, hooks, services
+- **Arquivos TS:** Actions, lib, componentes mais recentes, Kanban
+- **Risco:** Segurança de tipos inconsistente, mais difícil de manter
+- **Recomendação:** Converter gradualmente `.jsx` → `.tsx`, `.js` → `.ts`
 
-### 9. Hardcoded Strings (No i18n)
-- **Issue:** All UI strings in Portuguese (Brazil) hardcoded in components
-- **Mixed languages:** Some Zod validation messages in English (`lib/validations.ts`), UI in Portuguese
-- **Risk:** Cannot support additional languages without rewriting components
-- **Recommendation:** Extract strings to translation files, standardize language for validation messages
+### 9. Strings Hardcoded (Sem i18n)
+- **Problema:** Todas as strings de UI em português do Brasil hardcoded nos componentes
+- **Idiomas mistos:** Algumas mensagens de validação Zod em inglês (`lib/validations.ts`), UI em português
+- **Risco:** Impossível suportar idiomas adicionais sem reescrever componentes
+- **Recomendação:** Extrair strings para arquivos de tradução, padronizar idioma para mensagens de validação
 
-### 10. Large Component Files
-- **`components/Layout.jsx`** — 218 lines (sidebar + header + mobile drawer)
-- **`components/projects/ProjectKanban.tsx`** — 19,570 bytes
-- **`components/projects/ProjectForm.tsx`** — 15,381 bytes
-- **`components/projects/ProjectsTable.tsx`** — 15,200 bytes
-- **`components/activities/ActivityForm.tsx`** — 15,902 bytes
-- **Risk:** Hard to maintain, test, and review
-- **Recommendation:** Extract sub-components, especially from `ProjectForm` and `ProjectKanban`
+### 10. Arquivos de Componentes Grandes
+- **`components/Layout.jsx`** — 218 linhas (sidebar + header + drawer mobile)
+- **`components/projects/ProjectKanban.tsx`** — 19.570 bytes
+- **`components/projects/ProjectForm.tsx`** — 15.381 bytes
+- **`components/projects/ProjectsTable.tsx`** — 15.200 bytes
+- **`components/activities/ActivityForm.tsx`** — 15.902 bytes
+- **Risco:** Difícil de manter, testar e revisar
+- **Recomendação:** Extrair sub-componentes, especialmente de `ProjectForm` e `ProjectKanban`
 
-## 🟢 Low Priority
+## 🟢 Baixa Prioridade
 
-### 11. Temporary/Debug Files in Root
-- **Files:** `test_action.ts`, `tmp_check_db.ts`, `tmp_perf_test.ts`, `dev.log`, `dev_server.log`, `dag_tasks.json`
-- **Risk:** Clutter, confusion, potential data leaks
-- **Recommendation:** Add to `.gitignore` or delete
+### 11. Arquivos Temporários/Debug na Raiz
+- **Arquivos:** `test_action.ts`, `tmp_check_db.ts`, `tmp_perf_test.ts`, `dev.log`, `dev_server.log`, `dag_tasks.json`
+- **Risco:** Poluição, confusão, potencial vazamento de dados
+- **Recomendação:** Adicionar ao `.gitignore` ou deletar
 
-### 12. Hardcoded Avatar URL
-- **File:** `components/Layout.jsx` (line 200)
-- **Issue:** Default user avatar is a hardcoded Google CDN URL
-- **Risk:** External dependency, may break
-- **Recommendation:** Use a local fallback or initials-based avatar
+### 12. URL de Avatar Hardcoded
+- **Arquivo:** `components/Layout.jsx` (linha 200)
+- **Problema:** Avatar padrão do usuário é uma URL hardcoded do CDN do Google
+- **Risco:** Dependência externa, pode quebrar
+- **Recomendação:** Usar fallback local ou avatar baseado em iniciais
 
-### 13. Console Logging in Production Code
-- **Files:** `actions/project.ts`, `auth.ts`, `lib/db.ts`
-- **Issue:** `console.log` and `console.error` calls throughout server-side code
-- **Risk:** Information leakage in production logs
-- **Recommendation:** Use structured logging library or remove before production
+### 13. Console Logging em Código de Produção
+- **Arquivos:** `actions/project.ts`, `auth.ts`, `lib/db.ts`
+- **Problema:** Chamadas `console.log` e `console.error` em todo o código server-side
+- **Risco:** Vazamento de informações nos logs de produção
+- **Recomendação:** Usar biblioteca de logging estruturado ou remover antes de produção
 
 ### 14. NextAuth v5 Beta
-- **Version:** `^5.0.0-beta.30`
-- **Issue:** Using beta version of NextAuth v5 — API may change before stable release
-- **Risk:** Breaking changes on update
-- **Recommendation:** Track NextAuth v5 stable release, pin beta version carefully
+- **Versão:** `^5.0.0-beta.30`
+- **Problema:** Usando versão beta do NextAuth v5 — API pode mudar antes do release estável
+- **Risco:** Breaking changes ao atualizar
+- **Recomendação:** Acompanhar release estável do NextAuth v5, fixar versão beta com cuidado
 
-### 15. No CI/CD Configuration
-- **Observation:** `.github/` directory exists but no CI workflow observed
-- **Issue:** No automated testing, linting, or deployment pipeline
-- **Risk:** Regressions, untested deployments
-- **Recommendation:** Add GitHub Actions workflow for lint, test, build, deploy
+### 15. Sem Configuração de CI/CD
+- **Observação:** Diretório `.github/` existe mas nenhum workflow de CI observado
+- **Problema:** Sem testes automatizados, linting ou pipeline de deploy
+- **Risco:** Regressões, deploys sem teste
+- **Recomendação:** Adicionar workflow GitHub Actions para lint, test, build, deploy
 
-## 📊 Debt Summary
+## 📊 Resumo da Dívida
 
-| Severity | Count | Key Areas |
+| Severidade | Quantidade | Áreas Principais |
 |---|---|---|
-| 🔴 High | 4 | Legacy services, duplicate actions, strict mode, error handling |
-| 🟡 Medium | 6 | Permissions, WebSocket, JSONB types, JS/TS mix, i18n, large files |
-| 🟢 Low | 5 | Temp files, hardcoded avatar, console.log, NextAuth beta, CI/CD |
+| 🔴 Alta | 4 | Serviços legados, actions duplicadas, modo strict, tratamento de erros |
+| 🟡 Média | 6 | Permissões, WebSocket, tipos JSONB, JS/TS misto, i18n, arquivos grandes |
+| 🟢 Baixa | 5 | Arquivos temporários, avatar hardcoded, console.log, NextAuth beta, CI/CD |
 | **Total** | **15** | |
 
-## No TODO/FIXME/HACK Markers Found
-A grep for `TODO`, `FIXME`, `HACK`, `XXX`, and `REFACTOR` across all `.ts`, `.tsx`, `.js`, `.jsx` files returned **zero results**. Technical debt is implicit rather than marked.
+## Nenhum Marcador TODO/FIXME/HACK Encontrado
+Uma busca por `TODO`, `FIXME`, `HACK`, `XXX` e `REFACTOR` em todos os arquivos `.ts`, `.tsx`, `.js`, `.jsx` retornou **zero resultados**. A dívida técnica é implícita, não marcada no código.

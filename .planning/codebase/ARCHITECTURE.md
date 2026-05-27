@@ -1,40 +1,40 @@
-# Architecture
+# Arquitetura
 
-> Last mapped: 2026-05-27
+> Último mapeamento: 2026-05-27
 
-## Architectural Pattern
+## Padrão Arquitetural
 
-**Full-Stack Monolith** — Next.js 16 App Router with Server Actions, replacing a legacy Java Spring Boot + React frontend architecture.
+**Monolito Full-Stack** — Next.js 16 App Router com Server Actions, substituindo a arquitetura legada de Java Spring Boot + Frontend React.
 
-### Key Design Decisions
-1. **Server Actions over REST API** — Most CRUD operations use `'use server'` actions directly, eliminating the REST API layer
-2. **App Router** — All routing uses the Next.js App Router with route groups `(auth)` and `(dashboard)`
-3. **Prisma as single data layer** — All database access goes through Prisma Client
-4. **JWT Sessions** — NextAuth v5 with JWT strategy (no database sessions)
-5. **Client-side state** — No global state manager (React Context via Providers, local useState)
+### Decisões Técnicas Principais
+1. **Server Actions ao invés de API REST** — A maioria das operações CRUD usa actions `'use server'` diretamente, eliminando a camada de API REST
+2. **App Router** — Toda a navegação usa o App Router do Next.js com grupos de rotas `(auth)` e `(dashboard)`
+3. **Prisma como camada única de dados** — Todo acesso ao banco de dados passa pelo Prisma Client
+4. **Sessões JWT** — NextAuth v5 com estratégia JWT (sem sessões no banco de dados)
+5. **Estado no cliente** — Sem gerenciador de estado global (React Context via Providers, useState local)
 
-## Layer Architecture
+## Arquitetura em Camadas
 
 ```
 ┌─────────────────────────────────────────────────┐
-│                    Browser                       │
+│                    Navegador                     │
 ├─────────────────────────────────────────────────┤
-│           React Components (Client)              │
+│           Componentes React (Cliente)            │
 │   components/{feature}/*.tsx                     │
 │   hooks/useWebSocket.js                          │
 ├─────────────────────────────────────────────────┤
-│           Next.js Pages (Server + Client)        │
-│   app/(dashboard)/{route}/page.jsx               │
-│   app/(auth)/{route}/page.jsx                    │
+│           Páginas Next.js (Servidor + Cliente)   │
+│   app/(dashboard)/{rota}/page.jsx                │
+│   app/(auth)/{rota}/page.jsx                     │
 ├─────────────────────────────────────────────────┤
 │           Server Actions                         │
-│   actions/{entity}.ts                            │
-│   app/actions/{entity}.ts                        │
+│   actions/{entidade}.ts                          │
+│   app/actions/{entidade}.ts                      │
 ├─────────────────────────────────────────────────┤
-│           API Route Handlers (minimal)           │
+│           Route Handlers da API (mínimo)         │
 │   app/api/v1/notifications/route.ts              │
 ├─────────────────────────────────────────────────┤
-│           Library / Utils                        │
+│           Biblioteca / Utilitários               │
 │   lib/prisma.ts, lib/validations.ts              │
 │   lib/permissions.ts, lib/db.ts                  │
 ├─────────────────────────────────────────────────┤
@@ -43,106 +43,106 @@
 └─────────────────────────────────────────────────┘
 ```
 
-## Data Flow
+## Fluxo de Dados
 
-### Typical Server Action Flow (Primary Pattern)
+### Fluxo Típico de Server Action (Padrão Principal)
 ```
-User Action → Client Component → Server Action (actions/*.ts)
-  → Zod Validation → auth() session check → Prisma query
-  → revalidatePath() → Return result
-```
-
-### Typical Page Load Flow
-```
-URL → Next.js Route → Server Component (page.jsx)
-  → Server Action (data fetch) → Prisma query
-  → Render RSC → Stream to client
+Ação do Usuário → Componente Cliente → Server Action (actions/*.ts)
+  → Validação Zod → Verificação de sessão auth() → Query Prisma
+  → revalidatePath() → Retorno do resultado
 ```
 
-### Real-Time Flow (Notifications)
+### Fluxo Típico de Carregamento de Página
 ```
-Server Event → Pusher Server SDK → Pusher Channel
-  → Client (useWebSocket hook) → State update → UI
-```
-
-### Legacy REST Flow (Being Deprecated)
-```
-Client Component → services/*.js → Axios → External API (:8080)
-  → Response → State update → UI
+URL → Rota Next.js → Server Component (page.jsx)
+  → Server Action (busca de dados) → Query Prisma
+  → Renderiza RSC → Stream para o cliente
 ```
 
-## Key Abstractions
+### Fluxo de Tempo Real (Notificações)
+```
+Evento do Servidor → Pusher Server SDK → Canal Pusher
+  → Cliente (hook useWebSocket) → Atualização de estado → UI
+```
 
-### Authentication (`auth.ts`, `auth.config.ts`)
-- Centralized auth config with NextAuth v5
-- `auth()` called in every Server Action for session validation
-- Callbacks chain: `authorize` → `jwt` → `session`
-- Route middleware in `proxy.ts`
+### Fluxo REST Legado (Sendo Descontinuado)
+```
+Componente Cliente → services/*.js → Axios → API Externa (:8080)
+  → Resposta → Atualização de estado → UI
+```
+
+## Abstrações Principais
+
+### Autenticação (`auth.ts`, `auth.config.ts`)
+- Configuração centralizada de auth com NextAuth v5
+- `auth()` chamado em toda Server Action para validação de sessão
+- Cadeia de callbacks: `authorize` → `jwt` → `session`
+- Middleware de rota em `proxy.ts`
 
 ### Server Actions (`actions/*.ts`)
-Primary server-side logic layer. Each action:
-1. Calls `auth()` to verify session
-2. Validates input with Zod schemas
-3. Executes Prisma queries
-4. Calls `revalidatePath()` for cache invalidation
-5. Returns `{ success: boolean, ... }`
+Camada principal de lógica server-side. Cada action:
+1. Chama `auth()` para verificar sessão
+2. Valida input com schemas Zod
+3. Executa queries Prisma
+4. Chama `revalidatePath()` para invalidação de cache
+5. Retorna `{ success: boolean, ... }`
 
-**Action files:**
+**Arquivos de actions:**
 
-| File | Entities | Operations |
+| Arquivo | Entidades | Operações |
 |---|---|---|
-| `actions/auth.ts` | User | Register |
-| `actions/project.ts` | Project, Stage | Create, Read, Delete |
-| `actions/task.ts` | Task | Create, Update, Delete, Reorder |
-| `actions/stage.ts` | Stage | Update order |
+| `actions/auth.ts` | Usuário | Registro |
+| `actions/project.ts` | Projeto, Etapa | Criar, Ler, Deletar |
+| `actions/task.ts` | Tarefa | Criar, Atualizar, Deletar, Reordenar |
+| `actions/stage.ts` | Etapa | Atualizar ordem |
 
-### App-Level Actions (`app/actions/*.ts`)
-More granular server actions scoped to dashboard features:
+### Actions do App (`app/actions/*.ts`)
+Server Actions mais granulares com escopo de funcionalidades do dashboard:
 
-| File | Purpose |
+| Arquivo | Propósito |
 |---|---|
-| `app/actions/auth.ts` | Auth-related actions |
-| `app/actions/project.ts` | Extended project operations |
-| `app/actions/dashboard.ts` | Dashboard data aggregation (KPIs, charts) |
-| `app/actions/client.ts` | Client CRUD |
-| `app/actions/activity.ts` | Activity management |
-| `app/actions/kanban.ts` | Kanban board operations |
-| `app/actions/deliverable.ts` | Deliverable management |
-| `app/actions/timeLog.ts` | Time tracking operations |
-| `app/actions/report.ts` | Report generation |
-| `app/actions/reports.ts` | Report data queries |
+| `app/actions/auth.ts` | Actions relacionadas a autenticação |
+| `app/actions/project.ts` | Operações estendidas de projeto |
+| `app/actions/dashboard.ts` | Agregação de dados do dashboard (KPIs, gráficos) |
+| `app/actions/client.ts` | CRUD de clientes |
+| `app/actions/activity.ts` | Gerenciamento de atividades |
+| `app/actions/kanban.ts` | Operações do quadro Kanban |
+| `app/actions/deliverable.ts` | Gerenciamento de entregáveis |
+| `app/actions/timeLog.ts` | Operações de rastreamento de tempo |
+| `app/actions/report.ts` | Geração de relatórios |
+| `app/actions/reports.ts` | Consultas de dados de relatórios |
 
-### Validation Layer (`lib/validations.ts`)
-- Centralized Zod schemas for all entities
-- Uses `z.nativeEnum()` to mirror Prisma enums
+### Camada de Validação (`lib/validations.ts`)
+- Schemas Zod centralizados para todas as entidades
+- Usa `z.nativeEnum()` para espelhar enums do Prisma
 - Schemas: `clientSchema`, `activitySchema`, `timeLogSchema`, `deliverableSchema`, `projectSchema`, `taskSchema`, `userSchema`
-- Each has a corresponding `update*Schema` with `.partial()` + required `id`
+- Cada um tem um `update*Schema` correspondente com `.partial()` + `id` obrigatório
 
-### Permissions (`lib/permissions.ts`)
-- Role-based permission checks (OWNER, EDITOR, VIEWER)
-- Functions: `canCreateProject`, `canDeleteProject`, `canManageTeam`, `canEditTask`, `canDeleteTask`, `canCreateClient`
-- `hasProjectAccess(userRole, requiredRole)` — hierarchical role check
-- **Not yet integrated** into most Server Actions (auth check is session-based only)
+### Permissões (`lib/permissions.ts`)
+- Verificações de permissão baseadas em papel (OWNER, EDITOR, VIEWER)
+- Funções: `canCreateProject`, `canDeleteProject`, `canManageTeam`, `canEditTask`, `canDeleteTask`, `canCreateClient`
+- `hasProjectAccess(userRole, requiredRole)` — verificação hierárquica de papel
+- **Ainda não integrado** na maioria das Server Actions (verificação de auth é apenas baseada em sessão)
 
-### Database Utilities (`lib/db.ts`)
-- `getActivityMetricsByUser()` — Aggregates activity data by type
-- `getProductivityTrends()` — Time log trends grouped by date
+### Utilitários de Banco de Dados (`lib/db.ts`)
+- `getActivityMetricsByUser()` — Agrega dados de atividade por tipo
+- `getProductivityTrends()` — Tendências de time log agrupadas por data
 
-## Entry Points
+## Pontos de Entrada
 
-| Entry Point | File | Purpose |
+| Ponto de Entrada | Arquivo | Propósito |
 |---|---|---|
-| Root Layout | `app/layout.js` | HTML shell, fonts, Providers |
-| Root Page | `app/page.jsx` | Landing/redirect |
-| Dashboard Layout | `app/(dashboard)/layout.jsx` | Dashboard shell with sidebar |
-| Auth Layout | `app/(auth)/layout.jsx` | Auth pages layout |
-| API Auth | `app/api/auth/[...nextauth]/route.ts` (implied) | NextAuth route handler |
-| Notification API | `app/api/v1/notifications/route.ts` | Notification REST endpoint |
-| Middleware | `proxy.ts` | Route-level auth middleware |
+| Layout Raiz | `app/layout.js` | Shell HTML, fontes, Providers |
+| Página Raiz | `app/page.jsx` | Landing/redirecionamento |
+| Layout Dashboard | `app/(dashboard)/layout.jsx` | Shell do dashboard com sidebar |
+| Layout Auth | `app/(auth)/layout.jsx` | Layout de páginas de autenticação |
+| API Auth | `app/api/auth/[...nextauth]/route.ts` (implícito) | Route handler do NextAuth |
+| API Notificações | `app/api/v1/notifications/route.ts` | Endpoint REST de notificações |
+| Middleware | `proxy.ts` | Middleware de autenticação em nível de rota |
 
-## Component Architecture
+## Arquitetura de Componentes
 
-### Provider Hierarchy
+### Hierarquia de Providers
 ```
 RootLayout
   └── Providers (components/Providers.jsx)
@@ -152,19 +152,19 @@ RootLayout
                       └── Toaster (sonner)
 ```
 
-### Component Organization Pattern
+### Padrão de Organização de Componentes
 ```
 components/
-  ├── Layout.jsx          — Main dashboard shell (sidebar + header)
-  ├── Providers.jsx        — Context providers wrapper
-  ├── ui/                  — Shadcn/UI primitives (25 components)
-  ├── shared/              — Cross-feature components (ExportButtons, ImageUpload)
-  ├── dashboard/           — Dashboard-specific components (14 files)
-  ├── projects/            — Project management (20 files)
-  ├── clients/             — Client management (8 files)
-  ├── activities/          — Activity & time tracking (11 files)
-  ├── kanban/              — Kanban board (4 files)
-  ├── tasks/               — Task details (1 file)
-  ├── comments/            — Rich text comments (2 files)
-  └── reports/             — Business & productivity reports (2 files)
+  ├── Layout.jsx          — Shell principal do dashboard (sidebar + header)
+  ├── Providers.jsx        — Wrapper de providers de contexto
+  ├── ui/                  — Primitivas Shadcn/UI (25 componentes)
+  ├── shared/              — Componentes compartilhados entre features (ExportButtons, ImageUpload)
+  ├── dashboard/           — Componentes específicos do dashboard (14 arquivos)
+  ├── projects/            — Gerenciamento de projetos (20 arquivos)
+  ├── clients/             — Gerenciamento de clientes (8 arquivos)
+  ├── activities/          — Atividades e rastreamento de tempo (11 arquivos)
+  ├── kanban/              — Quadro Kanban (4 arquivos)
+  ├── tasks/               — Detalhes de tarefas (1 arquivo)
+  ├── comments/            — Comentários com texto rico (2 arquivos)
+  └── reports/             — Relatórios de negócios e produtividade (2 arquivos)
 ```
