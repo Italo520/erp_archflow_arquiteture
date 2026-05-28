@@ -63,6 +63,6 @@ describe('ProjectDocumentsTab', () => {
         const addButton = screen.getByText('Novo Documento');
         fireEvent.click(addButton);
 
-        expect(screen.getByPlaceholderText(/ex: Alvará de Construção/i)).toBeInTheDocument();
+        expect(screen.getByPlaceholderText(/ex: Contrato Arquitetônico Villa/i)).toBeInTheDocument();
     });
 });

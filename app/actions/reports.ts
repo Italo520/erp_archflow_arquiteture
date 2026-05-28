@@ -4,8 +4,9 @@ import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from './auth';
 import { generateBusinessReportPDF, generateProductivityReportPDF } from '@/lib/export-pdf';
 import { generateBusinessReportExcel, generateProductivityReportExcel } from '@/lib/export-excel';
-import { startOfMonth, endOfMonth, subMonths, format, startOfWeek, endOfWeek, startOfQuarter, endOfQuarter } from 'date-fns';
+import { startOfMonth, endOfMonth, subMonths, format, startOfWeek, endOfWeek, startOfQuarter, endOfQuarter, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { auth } from '@/auth';
 
 export type ReportType = 'business' | 'productivity' | 'financial';
 export type ExportFormat = 'pdf' | 'excel';
@@ -272,5 +273,225 @@ export async function getReportPreview(
     } catch (error) {
         console.error('Error fetching report preview:', error);
         return { success: false, error: 'Erro ao carregar preview' };
+    }
+}
+
+// --- CONSOLIDATED USER ANALYTICS ACTIONS (FORMERLY IN report.ts) ---
+
+export async function getTimeLogMetrics() {
+    const session = await auth();
+    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+
+    const startDate = startOfMonth(new Date());
+    const endDate = endOfMonth(new Date());
+
+    try {
+        const aggregation = await prisma.timeLog.aggregate({
+            _sum: { duration: true },
+            where: {
+                userId: session.user.id,
+                date: { gte: startDate, lte: endDate }
+            }
+        });
+
+        const billableAggregation = await prisma.timeLog.aggregate({
+            _sum: { duration: true },
+            where: {
+                userId: session.user.id,
+                date: { gte: startDate, lte: endDate },
+                billable: true
+            }
+        });
+
+        const hourlyRate = 100;
+
+        return {
+            ok: true,
+            success: true,
+            data: {
+                totalHours: aggregation._sum.duration || 0,
+                billableHours: billableAggregation._sum.duration || 0,
+                estimatedValue: (billableAggregation._sum.duration || 0) * hourlyRate
+            }
+        };
+    } catch (error) {
+        console.error("Failed to get metrics:", error);
+        return { ok: false, success: false, error: "Failed to fetch metrics" };
+    }
+}
+
+export async function getTimeDistributionByCategory() {
+    const session = await auth();
+    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+
+    const startDate = startOfMonth(new Date());
+    const endDate = endOfMonth(new Date());
+
+    try {
+        const distribution = await prisma.timeLog.groupBy({
+            by: ["category"],
+            where: {
+                userId: session.user.id,
+                date: { gte: startDate, lte: endDate }
+            },
+            _sum: { duration: true }
+        });
+
+        const formatted = distribution.map(d => ({
+            name: d.category,
+            value: d._sum.duration || 0
+        }));
+
+        return { ok: true, success: true, data: formatted };
+    } catch (error) {
+        console.error("Failed to get distribution:", error);
+        return { ok: false, success: false, error: "Failed to fetch distribution" };
+    }
+}
+
+export async function getDailyProductivity(days: number = 7) {
+    const session = await auth();
+    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+
+    const startDate = subDays(new Date(), days);
+
+    try {
+        const trends = await prisma.timeLog.groupBy({
+            by: ["date"],
+            where: {
+                userId: session.user.id,
+                date: { gte: startDate }
+            },
+            _sum: { duration: true },
+            orderBy: { date: "asc" }
+        });
+
+        const formatted = trends.map(t => ({
+            date: format(new Date(t.date), "MM/dd"),
+            hours: t._sum.duration || 0
+        }));
+
+        return { ok: true, success: true, data: formatted };
+    } catch (error) {
+        console.error("Failed to get trends:", error);
+        return { ok: false, success: false, error: "Failed to fetch trends" };
+    }
+}
+
+export async function getTopProjects() {
+    const session = await auth();
+    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+
+    const startDate = startOfMonth(new Date());
+
+    try {
+        const topProjects = await prisma.timeLog.groupBy({
+            by: ["projectId"],
+            where: {
+                userId: session.user.id,
+                date: { gte: startDate }
+            },
+            _sum: { duration: true },
+            orderBy: { _sum: { duration: "desc" } },
+            take: 5
+        });
+
+        const projectIds = topProjects.map(t => t.projectId);
+        const projects = await prisma.project.findMany({
+            where: { id: { in: projectIds } },
+            select: { id: true, name: true }
+        });
+
+        const projectMap = new Map(projects.map(p => [p.id, p]));
+        const result = topProjects.map(t => {
+            const proj = t.projectId ? projectMap.get(t.projectId) : undefined;
+            return {
+                name: proj?.name || "Unknown",
+                hours: t._sum.duration || 0
+            };
+        });
+
+        return { ok: true, success: true, data: result };
+    } catch (error) {
+        console.error("Failed to get top projects:", error);
+        return { ok: false, success: false, error: "Failed to fetch top projects" };
+    }
+}
+
+export async function getTimeBreakdownByClient() {
+    const session = await auth();
+    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+
+    const startDate = startOfMonth(new Date());
+
+    try {
+        const grouped = await prisma.timeLog.groupBy({
+            by: ["clientId"],
+            where: {
+                userId: session.user.id,
+                date: { gte: startDate }
+            },
+            _sum: { duration: true },
+            orderBy: { _sum: { duration: "desc" } }
+        });
+
+        const clientIds = grouped.map(g => g.clientId).filter(id => id !== null) as string[];
+        const clients = await prisma.client.findMany({
+            where: { id: { in: clientIds } },
+            select: { id: true, name: true }
+        });
+
+        const clientMap = new Map(clients.map(c => [c.id, c]));
+        const result = grouped.map(g => {
+            const client = g.clientId ? clientMap.get(g.clientId) : undefined;
+            return {
+                name: client?.name || (g.clientId ? "Unknown Client" : "Internal / No Client"),
+                hours: g._sum.duration || 0
+            };
+        });
+
+        return { ok: true, success: true, data: result };
+    } catch (error) {
+        console.error("Failed to get client breakdown:", error);
+        return { ok: false, success: false, error: "Failed to fetch client breakdown" };
+    }
+}
+
+export async function getFullProjectBreakdown() {
+    const session = await auth();
+    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+
+    const startDate = startOfMonth(new Date());
+
+    try {
+        const grouped = await prisma.timeLog.groupBy({
+            by: ["projectId"],
+            where: {
+                userId: session.user.id,
+                date: { gte: startDate }
+            },
+            _sum: { duration: true },
+            orderBy: { _sum: { duration: "desc" } }
+        });
+
+        const projectIds = grouped.map(t => t.projectId);
+        const projects = await prisma.project.findMany({
+            where: { id: { in: projectIds } },
+            select: { id: true, name: true }
+        });
+
+        const projectMap = new Map(projects.map(p => [p.id, p]));
+        const result = grouped.map(t => {
+            const proj = t.projectId ? projectMap.get(t.projectId) : undefined;
+            return {
+                name: proj?.name || "Unknown",
+                hours: t._sum.duration || 0
+            };
+        });
+
+        return { ok: true, success: true, data: result };
+    } catch (error) {
+        console.error("Failed to get project breakdown:", error);
+        return { ok: false, success: false, error: "Failed to fetch project breakdown" };
     }
 }

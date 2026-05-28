@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { Role } from "@prisma/client";
+import { requireAuth, requireProjectAccess } from "@/lib/server-utils";
 
 export interface ActionResponse<T = any> {
   ok: boolean;
@@ -14,16 +16,14 @@ export interface ActionResponse<T = any> {
 }
 
 export async function getKanbanColumns(projectId?: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
-    if (!projectId) {
-        return { ok: true, success: true, data: [] };
-    }
-
     try {
+        if (!projectId) {
+            await requireAuth();
+            return { ok: true, success: true, data: [] };
+        }
+
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
+        
         const model = (prisma as any).projectKanbanColumn || (prisma as any).ProjectKanbanColumn;
         
         let columns = await model.findMany({
@@ -59,34 +59,30 @@ export async function getKanbanColumns(projectId?: string): Promise<ActionRespon
 }
 
 export async function createKanbanColumn(projectIdOrTitle: string, title?: string, color?: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
-    let projectId: string;
-    let columnTitle: string;
-
-    if (title === undefined) {
-        // Chamada antiga com 1 argumento do frontend legil: createKanbanColumn(title)
-        columnTitle = projectIdOrTitle;
-        // Tenta obter o primeiro projeto ativo no banco de dados para associar
-        const firstProj = await (prisma as any).project.findFirst({ where: { deletedAt: null } });
-        if (!firstProj) {
-            return { ok: false, success: false, error: "Nenhum projeto ativo encontrado para associar esta coluna", message: "Nenhum projeto ativo encontrado para associar esta coluna" };
-        }
-        projectId = firstProj.id;
-    } else {
-        // Chamada nova com 2-3 argumentos: createKanbanColumn(projectId, title, color)
-        projectId = projectIdOrTitle;
-        columnTitle = title;
-    }
-
-    if (!projectId || !columnTitle) {
-        return { ok: false, success: false, error: "ID do projeto e título são obrigatórios", message: "ID do projeto e título da coluna são obrigatórios" };
-    }
-
     try {
+        await requireAuth();
+        
+        let projectId: string;
+        let columnTitle: string;
+
+        if (title === undefined) {
+            columnTitle = projectIdOrTitle;
+            const firstProj = await (prisma as any).project.findFirst({ where: { deletedAt: null } });
+            if (!firstProj) {
+                return { ok: false, success: false, error: "Nenhum projeto ativo", message: "Nenhum projeto ativo" };
+            }
+            projectId = firstProj.id;
+        } else {
+            projectId = projectIdOrTitle;
+            columnTitle = title;
+        }
+
+        if (!projectId || !columnTitle) {
+            return { ok: false, success: false, error: "ID e título obrigatórios", message: "ID e título obrigatórios" };
+        }
+
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+        
         const model = (prisma as any).projectKanbanColumn || (prisma as any).ProjectKanbanColumn;
         
         const lastColumn = await model.findFirst({
@@ -116,13 +112,15 @@ export async function createKanbanColumn(projectIdOrTitle: string, title?: strin
 }
 
 export async function updateKanbanColumn(id: string, data: { title?: string, color?: string, order?: number }): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireAuth();
         const model = (prisma as any).projectKanbanColumn || (prisma as any).ProjectKanbanColumn;
+        
+        const existing = await model.findUnique({ where: { id } });
+        if (existing) {
+            await requireProjectAccess(existing.projectId, [Role.OWNER, Role.EDITOR]);
+        }
+        
         const column = await model.update({
             where: { id },
             data
@@ -140,12 +138,8 @@ export async function updateKanbanColumn(id: string, data: { title?: string, col
 }
 
 export async function deleteKanbanColumn(id: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireAuth();
         const model = (prisma as any).projectKanbanColumn || (prisma as any).ProjectKanbanColumn;
         const column = await model.findUnique({ where: { id } });
         if (!column) {
@@ -153,6 +147,8 @@ export async function deleteKanbanColumn(id: string): Promise<ActionResponse> {
         }
 
         const projectId = column.projectId;
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+        
 
         // Move os projetos que estavam com o status apontado para essa coluna para a primeira disponível do projeto
         const firstColumn = await model.findFirst({
@@ -187,12 +183,9 @@ export async function deleteKanbanColumn(id: string): Promise<ActionResponse> {
 }
 
 export async function updateProjectStatus(projectId: string, statusId: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+        
         const projectModel = (prisma as any).project || (prisma as any).Project;
         const project = await projectModel.update({
             where: { id: projectId },

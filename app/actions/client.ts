@@ -3,17 +3,44 @@
 import { prisma } from "@/lib/prisma";
 import { clientSchema, updateClientSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
-import { redirect } from "next/navigation";
 import { z } from "zod";
+import { requireAuth } from "@/lib/server-utils";
+import { canCreateClient } from "@/lib/permissions";
+import { Role } from "@prisma/client";
 
-export async function createClient(data: z.infer<typeof clientSchema>) {
-    const result = clientSchema.safeParse(data);
+// Interface oficial de resposta para Server Actions
+export interface ActionResponse<T = any> {
+  ok: boolean;
+  success?: boolean; // Retrocompatibilidade do frontend
+  message?: string;
+  data?: T;
+  error?: string | any; // Retrocompatibilidade do frontend
+  errors?: Record<string, string[]> | string;
+  metadata?: any; // Para paginações retrocompatíveis
+}
 
-    if (!result.success) {
-        return { error: result.error.flatten().fieldErrors };
-    }
-
+export async function createClient(data: z.infer<typeof clientSchema>): Promise<ActionResponse> {
     try {
+        const session = await requireAuth();
+        const userRole = (session.user.role as Role) || Role.VIEWER;
+        
+        if (!canCreateClient(userRole)) {
+            return { ok: false, success: false, error: "Sem permissão", message: "Você não tem permissão para criar clientes" };
+        }
+
+        const result = clientSchema.safeParse(data);
+
+        if (!result.success) {
+            const errs = result.error.flatten().fieldErrors;
+            return { 
+                ok: false, 
+                success: false, 
+                error: errs, 
+                message: "Erro de validação nos campos", 
+                errors: errs as any 
+            };
+        }
+
         const client = await prisma.client.create({
             data: {
                 ...result.data,
@@ -23,19 +50,45 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
         });
 
         revalidatePath("/dashboard/clients");
-        return { success: true, data: client };
+        return { 
+            ok: true, 
+            success: true, 
+            data: client, 
+            message: "Cliente criado com sucesso" 
+        };
     } catch (error: any) {
         console.error("Failed to create client:", error);
-        return { error: "Failed to create client. " + (error.message || "") };
+        return { 
+            ok: false, 
+            success: false, 
+            error: error.message || "Failed to create client", 
+            message: "Falha ao criar cliente: " + (error.message || "") 
+        };
     }
 }
 
 export async function getClientById(id: string) {
     try {
+        await requireAuth();
         const client = await prisma.client.findUnique({
             where: { id },
             include: {
-                projects: true,
+                projects: {
+                    where: { deletedAt: null },
+                    orderBy: { createdAt: "desc" },
+                },
+                activities: {
+                    orderBy: { startTime: "desc" },
+                    include: {
+                        createdBy: { select: { fullName: true } }
+                    }
+                },
+                timeLogs: {
+                    orderBy: { date: "desc" },
+                    include: {
+                        project: { select: { name: true } },
+                    }
+                },
                 _count: {
                     select: { projects: true, activities: true },
                 },
@@ -48,14 +101,28 @@ export async function getClientById(id: string) {
     }
 }
 
-export async function updateClient(id: string, data: z.infer<typeof updateClientSchema>) {
-    const result = updateClientSchema.safeParse({ ...data, id });
-
-    if (!result.success) {
-        return { error: result.error.flatten().fieldErrors };
-    }
-
+export async function updateClient(id: string, data: z.infer<typeof updateClientSchema>): Promise<ActionResponse> {
     try {
+        const session = await requireAuth();
+        const userRole = (session.user.role as Role) || Role.VIEWER;
+        
+        if (!canCreateClient(userRole)) {
+            return { ok: false, success: false, error: "Sem permissão", message: "Você não tem permissão para editar clientes" };
+        }
+
+        const result = updateClientSchema.safeParse({ ...data, id });
+
+        if (!result.success) {
+            const errs = result.error.flatten().fieldErrors;
+            return { 
+                ok: false, 
+                success: false, 
+                error: errs, 
+                message: "Erro de validação nos campos", 
+                errors: errs as any 
+            };
+        }
+
         const client = await prisma.client.update({
             where: { id },
             data: {
@@ -67,27 +134,54 @@ export async function updateClient(id: string, data: z.infer<typeof updateClient
 
         revalidatePath("/dashboard/clients");
         revalidatePath(`/dashboard/clients/${id}`);
-        return { success: true, data: client };
+        return { 
+            ok: true, 
+            success: true, 
+            data: client, 
+            message: "Cliente atualizado com sucesso" 
+        };
     } catch (error: any) {
         console.error("Failed to update client:", error);
-        return { error: "Failed to update client." };
+        return { 
+            ok: false, 
+            success: false, 
+            error: error.message || "Failed to update client", 
+            message: "Falha ao atualizar cliente: " + (error.message || "") 
+        };
     }
 }
 
-export async function softDeleteClient(id: string) {
+export async function softDeleteClient(id: string): Promise<ActionResponse> {
     try {
-        await prisma.client.update({
+        const session = await requireAuth();
+        const userRole = (session.user.role as Role) || Role.VIEWER;
+        
+        if (!canCreateClient(userRole)) {
+            return { ok: false, success: false, error: "Sem permissão", message: "Você não tem permissão para excluir clientes" };
+        }
+
+        const client = await prisma.client.update({
             where: { id },
             data: {
-                status: "INACTIVE", // Or BLOCKED, depending on logic
+                status: "INACTIVE",
                 deletedAt: new Date(),
             },
         });
         revalidatePath("/dashboard/clients");
-        return { success: true };
-    } catch (error) {
+        return { 
+            ok: true, 
+            success: true, 
+            data: client, 
+            message: "Cliente excluído com sucesso (deleção lógica)" 
+        };
+    } catch (error: any) {
         console.error("Failed to delete client:", error);
-        return { error: "Failed to delete client." };
+        return { 
+            ok: false, 
+            success: false, 
+            error: error.message || "Failed to delete client", 
+            message: "Falha ao excluir cliente: " + (error.message || "") 
+        };
     }
 }
 
@@ -103,8 +197,9 @@ export async function listClients({
     tags?: string[];
     page?: number;
     limit?: number;
-}) {
+}): Promise<ActionResponse> {
     try {
+        await requireAuth();
         const skip = (page - 1) * limit;
 
         const where: any = {
@@ -145,6 +240,8 @@ export async function listClients({
         ]);
 
         return {
+            ok: true,
+            success: true,
             data: clients,
             metadata: {
                 total,
@@ -153,14 +250,20 @@ export async function listClients({
                 hasMore: page < Math.ceil(total / limit),
             },
         };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to list clients:", error);
-        return { error: "Failed to list clients." };
+        return { 
+            ok: false, 
+            success: false, 
+            error: error.message || "Failed to list clients", 
+            message: "Falha ao listar clientes" 
+        };
     }
 }
 
 export async function getClientStats() {
     try {
+        await requireAuth();
         const [total, active, newThisMonth] = await prisma.$transaction([
             prisma.client.count({ where: { deletedAt: null } }),
             prisma.client.count({ where: { deletedAt: null, status: "ACTIVE" } }),

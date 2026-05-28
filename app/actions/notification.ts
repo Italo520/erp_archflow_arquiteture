@@ -1,7 +1,7 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
+import { requireAuth } from "@/lib/server-utils";
 import { revalidatePath } from "next/cache";
 import { triggerNotification } from "@/lib/pusher";
 import { NotificationType, RelatedEntityType } from "@prisma/client";
@@ -10,12 +10,9 @@ import { NotificationType, RelatedEntityType } from "@prisma/client";
  * Recupera todas as notificações do usuário ativo.
  */
 export async function getNotifications() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Não autorizado" };
-  }
-
   try {
+    const session = await requireAuth();
+
     const notifications = await prisma.notification.findMany({
       where: { userId: session.user.id },
       orderBy: { createdAt: "desc" },
@@ -43,12 +40,9 @@ export async function getNotifications() {
  * Marca uma notificação específica como lida no banco de dados.
  */
 export async function markAsRead(notificationId: string) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Não autorizado" };
-  }
-
   try {
+    const session = await requireAuth();
+
     await prisma.notification.update({
       where: {
         id: notificationId,
@@ -72,12 +66,9 @@ export async function markAsRead(notificationId: string) {
  * Deleta todas as notificações do usuário ativo.
  */
 export async function clearNotifications() {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return { error: "Não autorizado" };
-  }
-
   try {
+    const session = await requireAuth();
+
     await prisma.notification.deleteMany({
       where: { userId: session.user.id },
     });
@@ -105,6 +96,43 @@ export async function createNotification(
   }
 ) {
   try {
+    // 1. Validar regra RBAC (SystemNotificationRule)
+    const targetUser = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (targetUser) {
+      const rule = await prisma.systemNotificationRule.findUnique({
+        where: {
+          role_eventType: {
+            role: targetUser.role,
+            eventType: data.type,
+          }
+        }
+      });
+
+      // Se existir uma regra e estiver desabilitada, ignoramos a criação
+      if (rule && !rule.enabled) {
+        return { success: true, message: "Notificação suprimida pela regra de RBAC" };
+      }
+
+      const userPref = await prisma.userNotificationPreference.findUnique({
+        where: {
+          userId_eventType: {
+            userId: userId,
+            eventType: data.type,
+          }
+        }
+      });
+
+      // O usuário individualmente deu opt-out
+      if (userPref && !userPref.enabled) {
+        return { success: true, message: "Notificação suprimida pela preferência do usuário" };
+      }
+    }
+
+    // 2. Criar notificação
     const notification = await prisma.notification.create({
       data: {
         userId,

@@ -4,27 +4,28 @@ import { prisma } from "@/lib/prisma";
 import { activitySchema, updateActivitySchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/auth";
+import { requireAuth } from "@/lib/server-utils";
 import { ActivityStatus } from "@prisma/client";
 
-// Helper for standarized return
-type ActionResponse<T = any> = {
-    success: boolean;
-    data?: T;
-    error?: string;
-};
+// Interface oficial unificada
+export interface ActionResponse<T = any> {
+  ok: boolean;
+  success?: boolean; // Retrocompatibilidade
+  message?: string;
+  data?: T;
+  error?: string | any; // Retrocompatibilidade
+  errors?: Record<string, string[]> | string;
+}
 
 export async function createActivity(data: z.infer<typeof activitySchema>): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     const result = activitySchema.safeParse(data);
-
     if (!result.success) {
-        return { success: false, error: JSON.stringify(result.error.flatten().fieldErrors) };
+        const errs = result.error.flatten().fieldErrors;
+        return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
     }
 
     try {
+        const session = await requireAuth();
         const activity = await prisma.activity.create({
             data: {
                 ...result.data,
@@ -32,17 +33,26 @@ export async function createActivity(data: z.infer<typeof activitySchema>): Prom
             },
         });
 
+        // Reatividade: atualiza o engajamento do cliente
+        if (result.data.clientId) {
+            await prisma.client.update({
+                where: { id: result.data.clientId },
+                data: { lastInteractionAt: new Date() }
+            });
+            revalidatePath(`/dashboard/clients/${result.data.clientId}`);
+        }
+
         revalidatePath("/dashboard/activities");
-        if (data.clientId) revalidatePath(`/dashboard/clients/${data.clientId}`);
-        return { success: true, data: activity };
+        return { ok: true, success: true, data: activity, message: "Atividade criada com sucesso" };
     } catch (error: any) {
         console.error("Failed to create activity:", error);
-        return { success: false, error: "Failed to create activity." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao criar atividade." };
     }
 }
 
 export async function getActivityById(id: string): Promise<ActionResponse> {
     try {
+        await requireAuth();
         const activity = await prisma.activity.findUnique({
             where: { id },
             include: {
@@ -51,82 +61,92 @@ export async function getActivityById(id: string): Promise<ActionResponse> {
                 createdBy: { select: { id: true, fullName: true, email: true } },
             },
         });
-        if (!activity) return { success: false, error: "Activity not found" };
-        return { success: true, data: activity };
-    } catch (error) {
+        if (!activity) return { ok: false, success: false, error: "Activity not found", message: "Atividade não encontrada" };
+        return { ok: true, success: true, data: activity };
+    } catch (error: any) {
         console.error("Failed to get activity:", error);
-        return { success: false, error: "Failed to get activity." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao carregar atividade." };
     }
 }
 
 export async function updateActivity(id: string, data: z.infer<typeof updateActivitySchema>): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     const result = updateActivitySchema.safeParse({ ...data, id });
-
     if (!result.success) {
-        return { success: false, error: JSON.stringify(result.error.flatten().fieldErrors) };
+        const errs = result.error.flatten().fieldErrors;
+        return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
     }
 
     try {
+        await requireAuth();
         const activity = await prisma.activity.update({
             where: { id },
             data: result.data,
         });
 
+        // Reatividade: atualiza o engajamento do cliente
+        if (activity.clientId) {
+            await prisma.client.update({
+                where: { id: activity.clientId },
+                data: { lastInteractionAt: new Date() }
+            });
+            revalidatePath(`/dashboard/clients/${activity.clientId}`);
+        }
+
         revalidatePath("/dashboard/activities");
-        return { success: true, data: activity };
+        return { ok: true, success: true, data: activity, message: "Atividade atualizada com sucesso" };
     } catch (error: any) {
         console.error("Failed to update activity:", error);
-        return { success: false, error: "Failed to update activity." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao atualizar atividade." };
     }
 }
 
 export async function deleteActivity(id: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     try {
-        await prisma.activity.delete({
+        await requireAuth();
+        const activity = await prisma.activity.delete({
             where: { id },
         });
         revalidatePath("/dashboard/activities");
-        return { success: true };
-    } catch (error) {
+        if (activity.clientId) revalidatePath(`/dashboard/clients/${activity.clientId}`);
+        return { ok: true, success: true, message: "Atividade excluída com sucesso" };
+    } catch (error: any) {
         console.error("Failed to delete activity:", error);
-        return { success: false, error: "Failed to delete activity." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao excluir atividade." };
     }
 }
 
 export async function completeActivity(id: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     try {
+        await requireAuth();
         const activity = await prisma.activity.update({
             where: { id },
             data: { status: ActivityStatus.COMPLETED },
         });
+
+        // Reatividade: atualiza o engajamento do cliente
+        if (activity.clientId) {
+            await prisma.client.update({
+                where: { id: activity.clientId },
+                data: { lastInteractionAt: new Date() }
+            });
+            revalidatePath(`/dashboard/clients/${activity.clientId}`);
+        }
+
         revalidatePath("/dashboard/activities");
-        return { success: true, data: activity };
-    } catch (error) {
+        return { ok: true, success: true, data: activity, message: "Atividade concluída com sucesso" };
+    } catch (error: any) {
         console.error("Failed to complete activity:", error);
-        return { success: false, error: "Failed to complete activity." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao marcar atividade como concluída." };
     }
 }
 
 export async function addParticipant(id: string, participantName: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     try {
+        await requireAuth();
         const activity = await prisma.activity.findUnique({ where: { id }, select: { participants: true } });
-        if (!activity) return { success: false, error: "Activity not found" };
+        if (!activity) return { ok: false, success: false, error: "Activity not found", message: "Atividade não encontrada" };
 
         const updatedParticipants = [...(activity.participants || []), participantName];
-
-        // Remove duplicates just in case
         const uniqueParticipants = Array.from(new Set(updatedParticipants));
 
         const updatedActivity = await prisma.activity.update({
@@ -135,20 +155,18 @@ export async function addParticipant(id: string, participantName: string): Promi
         });
 
         revalidatePath("/dashboard/activities");
-        return { success: true, data: updatedActivity };
-    } catch (error) {
+        return { ok: true, success: true, data: updatedActivity, message: "Participante adicionado com sucesso" };
+    } catch (error: any) {
         console.error("Failed to add participant:", error);
-        return { success: false, error: "Failed to add participant." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao adicionar participante." };
     }
 }
 
 export async function removeParticipant(id: string, participantName: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     try {
+        await requireAuth();
         const activity = await prisma.activity.findUnique({ where: { id }, select: { participants: true } });
-        if (!activity) return { success: false, error: "Activity not found" };
+        if (!activity) return { ok: false, success: false, error: "Activity not found", message: "Atividade não encontrada" };
 
         const updatedParticipants = (activity.participants || []).filter(p => p !== participantName);
 
@@ -158,10 +176,10 @@ export async function removeParticipant(id: string, participantName: string): Pr
         });
 
         revalidatePath("/dashboard/activities");
-        return { success: true, data: updatedActivity };
-    } catch (error) {
+        return { ok: true, success: true, data: updatedActivity, message: "Participante removido com sucesso" };
+    } catch (error: any) {
         console.error("Failed to remove participant:", error);
-        return { success: false, error: "Failed to remove participant." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao remover participante." };
     }
 }
 
@@ -171,6 +189,7 @@ export async function listActivities(
     limit: number = 20
 ): Promise<ActionResponse> {
     try {
+        await requireAuth();
         const skip = (page - 1) * limit;
 
         const where: any = {};
@@ -203,14 +222,13 @@ export async function listActivities(
         ]);
 
         return {
+            ok: true,
             success: true,
             data: activities,
-            // metadata: { total, page, totalPages: Math.ceil(total / limit) } - user requested specific standardized return, sticking to data: any. 
-            // I'll attach metadata to data if needed or just return it as data.
-            // The user asked for { success, data, error }. I will wrap the list result in data.
-        };
-    } catch (error) {
+            metadata: { total, page, totalPages: Math.ceil(total / limit) }
+        } as any;
+    } catch (error: any) {
         console.error("Failed to list activities:", error);
-        return { success: false, error: "Failed to list activities." };
+        return { ok: false, success: false, error: error.message, message: "Failed to list activities." };
     }
 }

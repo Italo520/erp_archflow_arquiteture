@@ -161,6 +161,7 @@ model User {
   approvedDeliv   Deliverable[]   @relation("DeliverableApprover")
   timeLogs        TimeLog[]
   clients         Client[]        @relation("ClientOwner")
+  notificationPrefs UserNotificationPreference[]
 
   @@map("users")
 }
@@ -588,4 +589,29 @@ model ProjectKanbanColumn {
 
   @@index([projectId])
   @@map("project_kanban_columns")
+}
+
+model SystemNotificationRule {
+  id        String   @id @default(uuid())
+  role      String   // e.g. OWNER, EDITOR, VIEWER, CLIENT
+  eventType String   @map("event_type")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([role, eventType])
+  @@map("system_notification_rules")
+}
+
+model UserNotificationPreference {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  eventType String   @map("event_type")
+  enabled   Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@unique([userId, eventType])
+  @@map("user_notification_preferences")
 }

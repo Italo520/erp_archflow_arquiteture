@@ -3,10 +3,11 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { projectSchema, updateProjectSchema, projectPhaseSchema } from "@/lib/validations";
 import { Role } from "@prisma/client";
 import { canCreateProject, canDeleteProject } from "@/lib/permissions";
+import { requireAuth, requireProjectAccess } from "@/lib/server-utils";
+import { logAudit } from "@/app/actions/audit";
 
 export interface ActionResponse<T = any> {
   ok: boolean;
@@ -21,23 +22,18 @@ export interface ActionResponse<T = any> {
 // --- CORE CRUD ---
 
 export async function createProject(data: z.infer<typeof projectSchema>): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
-    const userRole = (session.user.role as Role) || Role.VIEWER;
-    if (!canCreateProject(userRole)) {
-        return { ok: false, success: false, error: "Sem permissão", message: "Você não tem permissão para criar projetos" };
-    }
-
-    const result = projectSchema.safeParse(data);
-    if (!result.success) {
-        const errs = result.error.flatten().fieldErrors;
-        return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
-    }
-
     try {
+        const session = await requireAuth();
+        const userRole = (session.user.role as Role) || Role.VIEWER;
+        if (!canCreateProject(userRole)) {
+            return { ok: false, success: false, error: "Sem permissão", message: "Você não tem permissão para criar projetos" };
+        }
+
+        const result = projectSchema.safeParse(data);
+        if (!result.success) {
+            const errs = result.error.flatten().fieldErrors;
+            return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
+        }
         // 1. Cria o projeto inicialmente com status temporário
         const project = await (prisma as any).project.create({
             data: {
@@ -69,6 +65,14 @@ export async function createProject(data: z.infer<typeof projectSchema>): Promis
             data: { status: colPlanning.id }
         });
 
+        await logAudit({
+            action: 'CREATE',
+            entityType: 'Project',
+            entityId: updatedProject.id,
+            projectId: updatedProject.id,
+            changes: { new: updatedProject }
+        });
+
         revalidatePath("/dashboard/projects");
         if (data.clientId) revalidatePath(`/dashboard/clients/${data.clientId}`);
 
@@ -81,6 +85,7 @@ export async function createProject(data: z.infer<typeof projectSchema>): Promis
 
 export async function getProjectById(id: string) {
     try {
+        await requireProjectAccess(id, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
         const project = await (prisma as any).project.findUnique({
             where: { id },
             include: {
@@ -110,29 +115,28 @@ export async function getProjectById(id: string) {
 }
 
 export async function updateProject(id: string, data: z.infer<typeof updateProjectSchema>): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
-    const userRole = (session.user.role as Role) || Role.VIEWER;
-    if (!canCreateProject(userRole)) {
-        return { ok: false, success: false, error: "Sem permissão", message: "Você não tem permissão para editar projetos" };
-    }
-
-    const result = updateProjectSchema.safeParse(data);
-    if (!result.success) {
-        const errs = result.error.flatten().fieldErrors;
-        return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
-    }
-
     try {
+        await requireProjectAccess(id, [Role.OWNER, Role.EDITOR]);
+        
+        const result = updateProjectSchema.safeParse(data);
+        if (!result.success) {
+            const errs = result.error.flatten().fieldErrors;
+            return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
+        }
         const project = await (prisma as any).project.update({
             where: { id },
             data: {
                 ...result.data,
                 phases: result.data.phases ? (result.data.phases as any) : undefined,
             },
+        });
+
+        await logAudit({
+            action: 'UPDATE',
+            entityType: 'Project',
+            entityId: project.id,
+            projectId: project.id,
+            changes: { new: project }
         });
 
         revalidatePath("/dashboard/projects");
@@ -146,22 +150,21 @@ export async function updateProject(id: string, data: z.infer<typeof updateProje
 }
 
 export async function deleteProject(id: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
-    const userRole = (session.user.role as Role) || Role.VIEWER;
-    if (!canDeleteProject(userRole)) {
-        return { ok: false, success: false, error: "Sem permissão", message: "Você não tem permissão para excluir projetos" };
-    }
-
     try {
+        await requireProjectAccess(id, [Role.OWNER]);
         const project = await (prisma as any).project.update({
             where: { id },
             data: { deletedAt: new Date() }
         });
         
+        await logAudit({
+            action: 'DELETE',
+            entityType: 'Project',
+            entityId: id,
+            projectId: id,
+            changes: { old: { deletedAt: null }, new: { deletedAt: new Date() } }
+        });
+
         revalidatePath("/dashboard/projects");
         return { ok: true, success: true, data: project, message: "Projeto excluído com sucesso (deleção lógica)" };
     } catch (error: any) {
@@ -171,12 +174,8 @@ export async function deleteProject(id: string): Promise<ActionResponse> {
 }
 
 export async function listProjects(filters?: { clientId?: string; status?: string }): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireAuth();
         const where: any = { deletedAt: null };
         if (filters?.clientId) where.clientId = filters.clientId;
         if (filters?.status) where.status = filters.status;
@@ -199,12 +198,8 @@ export async function listProjects(filters?: { clientId?: string; status?: strin
 // --- PHASES MANAGEMENT ---
 
 export async function updateProjectPhase(projectId: string, phases: z.infer<typeof projectPhaseSchema>[]): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
         const project = await (prisma as any).project.update({
             where: { id: projectId },
             data: { phases: phases as any }
@@ -218,12 +213,8 @@ export async function updateProjectPhase(projectId: string, phases: z.infer<type
 }
 
 export async function addProjectPhase(projectId: string, phase: any): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
         const project = await (prisma as any).project.findUnique({ where: { id: projectId } });
         if (!project) return { ok: false, success: false, error: "Projeto não encontrado", message: "Projeto não encontrado" };
 
@@ -245,12 +236,8 @@ export async function addProjectPhase(projectId: string, phase: any): Promise<Ac
 }
 
 export async function completeProjectPhase(projectId: string, phaseName: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
         const project = await (prisma as any).project.findUnique({ where: { id: projectId } });
         if (!project) return { ok: false, success: false, error: "Projeto não encontrado", message: "Projeto não encontrado" };
 
@@ -275,12 +262,8 @@ export async function completeProjectPhase(projectId: string, phaseName: string)
 // --- DOCUMENTS ---
 
 export async function uploadProjectDocument(projectId: string, fileUrl: string, name: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
         const project = await (prisma as any).project.findUnique({ where: { id: projectId } });
         if (!project) return { ok: false, success: false, error: "Projeto não encontrado", message: "Projeto não encontrado" };
 
@@ -303,6 +286,7 @@ export async function uploadProjectDocument(projectId: string, fileUrl: string, 
 
 export async function listProjectDocuments(projectId: string): Promise<ActionResponse> {
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
         const project = await (prisma as any).project.findUnique({ where: { id: projectId } });
         return { ok: true, success: true, data: project?.attachedDocuments || [] };
     } catch (error: any) {
@@ -311,12 +295,8 @@ export async function listProjectDocuments(projectId: string): Promise<ActionRes
 }
 
 export async function deleteProjectDocument(projectId: string, docUrl: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
         const project = await (prisma as any).project.findUnique({ where: { id: projectId } });
         if (!project) return { ok: false, success: false, error: "Projeto não encontrado", message: "Projeto não encontrado" };
 
@@ -338,12 +318,8 @@ export async function deleteProjectDocument(projectId: string, docUrl: string): 
 // --- TEAM ---
 
 export async function associateArchitect(projectId: string, userId: string, role: string = "VIEWER"): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER]);
         await (prisma as any).projectMember.create({
             data: {
                 projectId,
@@ -362,12 +338,8 @@ export async function associateArchitect(projectId: string, userId: string, role
 export const associateArchitectToProject = associateArchitect;
 
 export async function removeArchitect(projectId: string, userId: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER]);
         await (prisma as any).projectMember.deleteMany({
             where: {
                 projectId,
@@ -386,12 +358,8 @@ export const removeArchitectFromProject = removeArchitect;
 // --- ANALYTICS & TIMELINE ---
 
 export async function getProjectMetrics(projectId: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
         const [project, timeLogs, budget] = await Promise.all([
             (prisma as any).project.findUnique({ where: { id: projectId } }),
             (prisma as any).timeLog.groupBy({
@@ -424,12 +392,8 @@ export async function getProjectMetrics(projectId: string): Promise<ActionRespon
 }
 
 export async function getProjectTimeline(projectId: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
         const project = await (prisma as any).project.findUnique({
             where: { id: projectId },
             select: { phases: true, startDate: true, estimatedEndDate: true }
@@ -444,12 +408,8 @@ export async function getProjectTimeline(projectId: string): Promise<ActionRespo
 }
 
 export async function getProjectBudgetStatus(projectId: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
         const [project, budget] = await Promise.all([
             (prisma as any).project.findUnique({
                 where: { id: projectId },
@@ -475,22 +435,19 @@ export async function getProjectBudgetStatus(projectId: string): Promise<ActionR
 }
 
 export async function updateProjectProgress(projectId: string, progress: number): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
+    try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+        return { ok: true, success: true, message: "O progresso é calculated automaticamente com base nas etapas." };
+    } catch (error: any) {
+        return { ok: false, success: false, error: error.message, message: error.message };
     }
-    return { ok: true, success: true, message: "O progresso é calculated automaticamente com base nas etapas." };
 }
 
 // --- UTILITIES ---
 
 export async function duplicateProject(projectId: string, newName: string, options?: { keepPhases?: boolean; keepTasks?: boolean }): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", message: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
         const original = await (prisma as any).project.findUnique({
             where: { id: projectId },
             include: {
@@ -611,12 +568,8 @@ export async function duplicateProject(projectId: string, newName: string, optio
 }
 
 export async function bulkUpdateProjects(filters: any, updates: any): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireAuth();
         const where: any = {};
         if (filters.status) where.status = filters.status;
         if (filters.clientId) where.clientId = filters.clientId;
@@ -634,12 +587,8 @@ export async function bulkUpdateProjects(filters: any, updates: any): Promise<Ac
 }
 
 export async function exportProjectData(projectId: string, format: string = "json"): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { ok: false, success: false, error: "Não autorizado", errors: "Unauthorized" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
         const project = await getProjectById(projectId);
         if (!project) return { ok: false, success: false, error: "Não encontrado", message: "Projeto não encontrado" };
 

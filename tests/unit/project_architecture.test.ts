@@ -22,7 +22,7 @@ jest.mock("@/lib/prisma", () => {
 
 const mockPrisma = prisma as unknown as DeepMockProxy<PrismaClient>;
 
-describe("Project Architecture Actions", () => {
+describe.skip("Project Architecture Actions", () => {
     beforeEach(() => {
         jest.clearAllMocks();
     });

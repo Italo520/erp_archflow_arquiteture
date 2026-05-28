@@ -41,13 +41,13 @@ describe('ProjectsView', () => {
     });
 
     it('renders list view by default', () => {
-        render(<ProjectsView projects={projects} />);
+        render(<ProjectsView projects={projects} columns={[]} />);
         expect(screen.getByTestId('projects-table')).toBeInTheDocument();
         expect(screen.queryByTestId('project-kanban')).not.toBeInTheDocument();
     });
 
     it('toggles to kanban view', () => {
-        render(<ProjectsView projects={projects} />);
+        render(<ProjectsView projects={projects} columns={[]} />);
 
         // Find Kanban button specificially by role to avoid text duplication with content
         const kanbanBtn = screen.getByRole('button', { name: /Kanban/i });
@@ -61,7 +61,7 @@ describe('ProjectsView', () => {
         // Mock LocalStorage
         const setItemSpy = jest.spyOn(Storage.prototype, 'setItem');
 
-        render(<ProjectsView projects={projects} />);
+        render(<ProjectsView projects={projects} columns={[]} />);
         const kanbanBtn = screen.getByRole('button', { name: /Kanban/i });
         fireEvent.click(kanbanBtn);
 

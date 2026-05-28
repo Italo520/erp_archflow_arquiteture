@@ -12,7 +12,9 @@ import {
     DeliverableStatus,
     ArchitecturalStyle,
     ConstructionType,
-    ProjectVisibility
+    ProjectVisibility,
+    BudgetStatus,
+    EstimateStatus
 } from "@prisma/client";
 
 // --- Enums as Zod Enums ---
@@ -43,8 +45,72 @@ export const addressSchema = z.object({
     state: z.string().optional().or(z.literal("")),
 });
 
+// --- CPF/CNPJ Helpers ---
+function isValidCPF(cpf: string): boolean {
+    const clean = cpf.replace(/\D/g, "");
+    if (clean.length !== 11) return false;
+    
+    // CPFs conhecidos inválidos
+    if (/^(\d)\1{10}$/.test(clean)) return false;
+    
+    // Validação do primeiro dígito verificador
+    let sum = 0;
+    for (let i = 0; i < 9; i++) {
+        sum += parseInt(clean.charAt(i)) * (10 - i);
+    }
+    let rev = 11 - (sum % 11);
+    if (rev === 10 || rev === 11) rev = 0;
+    if (rev !== parseInt(clean.charAt(9))) return false;
+    
+    // Validação do segundo dígito verificador
+    sum = 0;
+    for (let i = 0; i < 10; i++) {
+        sum += parseInt(clean.charAt(i)) * (11 - i);
+    }
+    rev = 11 - (sum % 11);
+    if (rev === 10 || rev === 11) rev = 0;
+    if (rev !== parseInt(clean.charAt(10))) return false;
+    
+    return true;
+}
+
+function isValidCNPJ(cnpj: string): boolean {
+    const clean = cnpj.replace(/\D/g, "");
+    if (clean.length !== 14) return false;
+    
+    // CNPJs conhecidos inválidos
+    if (/^(\d)\1{13}$/.test(clean)) return false;
+    
+    // Validação do primeiro dígito
+    let size = clean.length - 2;
+    let numbers = clean.substring(0, size);
+    const digits = clean.substring(size);
+    let sum = 0;
+    let pos = size - 7;
+    for (let i = size; i >= 1; i--) {
+        sum += parseInt(numbers.charAt(size - i)) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    let result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+    if (result !== parseInt(digits.charAt(0))) return false;
+    
+    // Validação do segundo dígito
+    size = size + 1;
+    numbers = clean.substring(0, size);
+    sum = 0;
+    pos = size - 7;
+    for (let i = size; i >= 1; i--) {
+        sum += parseInt(numbers.charAt(size - i)) * pos--;
+        if (pos < 2) pos = 9;
+    }
+    result = sum % 11 < 2 ? 0 : 11 - (sum % 11);
+    if (result !== parseInt(digits.charAt(1))) return false;
+    
+    return true;
+}
+
 // --- Client Schemas ---
-export const clientSchema = z.object({
+export const clientBaseSchema = z.object({
     name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
     email: z.string().email("Endereço de email inválido"),
     phone: z.string().optional().nullable(),
@@ -67,7 +133,20 @@ export const clientSchema = z.object({
     metadata: z.any().optional().nullable(),
 });
 
-export const updateClientSchema = clientSchema.partial().extend({
+export const clientSchema = clientBaseSchema.refine((data) => {
+    if (data.legalType === ClientLegalType.PF && data.document) {
+        return isValidCPF(data.document);
+    }
+    if (data.legalType === ClientLegalType.PJ && data.document) {
+        return isValidCNPJ(data.document);
+    }
+    return true;
+}, {
+    message: "Documento (CPF/CNPJ) inválido",
+    path: ["document"],
+});
+
+export const updateClientSchema = clientBaseSchema.partial().extend({
     id: z.string().uuid(),
 });
 
@@ -257,4 +336,27 @@ export const taskSchema = z.object({
 
 export const updateTaskSchema = taskSchema.partial().extend({
     id: z.string().uuid(),
+});
+
+// --- Finance Schemas ---
+export const BudgetStatusEnum = z.nativeEnum(BudgetStatus);
+export const EstimateStatusEnum = z.nativeEnum(EstimateStatus);
+
+export const budgetSchema = z.object({
+    totalBudget: z.number().positive("O orçamento deve ser maior que zero"),
+    spentAmount: z.number().nonnegative().default(0),
+    remainingAmount: z.number().nonnegative().default(0),
+    budgetBreakdown: z.any().optional().nullable(),
+    status: BudgetStatusEnum.default(BudgetStatus.DRAFT),
+    projectId: z.string().uuid(),
+});
+
+export const estimateSchema = z.object({
+    estimatedHours: z.number().positive("As horas estimadas devem ser maiores que zero").optional().nullable(),
+    estimatedCost: z.number().positive("O custo estimado deve ser maior que zero").optional().nullable(),
+    actualHours: z.number().nonnegative().optional().nullable(),
+    actualCost: z.number().nonnegative().optional().nullable(),
+    status: EstimateStatusEnum.default(EstimateStatus.DRAFT),
+    notes: z.string().optional().nullable(),
+    projectId: z.string().uuid(),
 });

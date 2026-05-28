@@ -10,6 +10,7 @@ import ProjectPhasesTab from '@/components/projects/ProjectPhasesTab';
 import ProjectDocumentsTab from '@/components/projects/ProjectDocumentsTab';
 import ProjectFinancialTab from '@/components/projects/ProjectFinancialTab';
 import ProjectTeamTab from '@/components/projects/ProjectTeamTab';
+import ProjectAuditTab from '@/components/projects/ProjectAuditTab';
 import { ProjectOverview } from '@/components/projects/ProjectOverview';
 
 
@@ -60,6 +61,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <TabsTrigger value="team" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
                         Equipe
                     </TabsTrigger>
+                    <TabsTrigger value="audit" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent text-amber-600 dark:text-amber-500">
+                        Auditoria
+                    </TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="overview" className="flex-1">
@@ -84,6 +88,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
                 <TabsContent value="team" className="flex-1">
                     <ProjectTeamTab project={project} />
+                </TabsContent>
+
+                <TabsContent value="audit" className="flex-1">
+                    <ProjectAuditTab project={project} />
                 </TabsContent>
             </Tabs>
         </div>

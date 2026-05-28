@@ -21,6 +21,12 @@ jest.mock("@/lib/prisma", () => {
 
 const mockPrisma = prisma as unknown as DeepMockProxy<PrismaClient>;
 
+jest.mock("@/lib/server-utils", () => ({
+    requireAuth: jest.fn().mockResolvedValue({
+        user: { id: "a8d6707e-8405-422b-b5bb-99b6dec005c1", role: "OWNER" }
+    })
+}));
+
 describe("Client Actions", () => {
     beforeEach(() => {
         jest.clearAllMocks();

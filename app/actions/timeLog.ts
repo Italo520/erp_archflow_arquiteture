@@ -4,16 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { timeLogSchema, updateTimeLogSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/auth";
-import { TimeLogCategory } from "@prisma/client";
+import { requireAuth, requireProjectAccess } from "@/lib/server-utils";
+import { TimeLogCategory, Role } from "@prisma/client";
 
-type ActionResponse<T = any> = {
-    success: boolean;
-    data?: T;
-    error?: string;
-};
+// Interface oficial de resposta para Server Actions
+export interface ActionResponse<T = any> {
+  ok: boolean;
+  success?: boolean; // Retrocompatibilidade
+  message?: string;
+  data?: T;
+  error?: string | any; // Retrocompatibilidade
+  errors?: Record<string, string[]> | string;
+}
 
-// Schema for starting a timer - excludes duration requirement as it starts at 0
+// Schema para iniciar um timer - exclui a obrigatoriedade de duration
 const startTimeLogSchema = z.object({
     projectId: z.string().uuid(),
     taskId: z.string().uuid().optional().nullable(),
@@ -25,16 +29,15 @@ const startTimeLogSchema = z.object({
 });
 
 export async function createTimeLog(data: z.infer<typeof timeLogSchema>): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     const result = timeLogSchema.safeParse(data);
-
     if (!result.success) {
-        return { success: false, error: JSON.stringify(result.error.flatten().fieldErrors) };
+        const errs = result.error.flatten().fieldErrors;
+        return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
     }
 
     try {
+        const session = await requireProjectAccess(data.projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
+
         const timeLog = await prisma.timeLog.create({
             data: {
                 ...result.data,
@@ -43,49 +46,50 @@ export async function createTimeLog(data: z.infer<typeof timeLogSchema>): Promis
         });
 
         revalidatePath("/dashboard/time-tracking");
-        return { success: true, data: timeLog };
+        if (result.data.clientId) revalidatePath(`/dashboard/clients/${result.data.clientId}`);
+        return { ok: true, success: true, data: timeLog, message: "Log de tempo criado com sucesso" };
     } catch (error: any) {
         console.error("Failed to create time log:", error);
-        return { success: false, error: "Failed to create time log." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao criar log de tempo." };
     }
 }
 
 export async function startTimeLog(data: z.infer<typeof startTimeLogSchema>): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     const result = startTimeLogSchema.safeParse(data);
     if (!result.success) {
-        return { success: false, error: JSON.stringify(result.error.flatten().fieldErrors) };
+        const errs = result.error.flatten().fieldErrors;
+        return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
     }
 
     try {
+        const session = await requireProjectAccess(data.projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
+
         const timeLog = await prisma.timeLog.create({
             data: {
                 ...result.data,
                 userId: session.user.id,
                 date: new Date(),
                 startTime: new Date(),
-                duration: 0, // Initial duration is 0
+                duration: 0,
             },
         });
         revalidatePath("/dashboard/time-tracking");
-        return { success: true, data: timeLog };
-    } catch (error) {
+        if (result.data.clientId) revalidatePath(`/dashboard/clients/${result.data.clientId}`);
+        return { ok: true, success: true, data: timeLog, message: "Cronômetro iniciado com sucesso" };
+    } catch (error: any) {
         console.error("Failed to start time log:", error);
-        return { success: false, error: "Failed to start time log." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao iniciar cronômetro." };
     }
 }
 
 export async function stopTimeLog(id: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     try {
         const log = await prisma.timeLog.findUnique({ where: { id } });
-        if (!log) return { success: false, error: "Time log not found" };
-        if (log.endTime) return { success: false, error: "Timer already stopped" };
-        if (!log.startTime) return { success: false, error: "No start time set for this log" };
+        if (!log) return { ok: false, success: false, error: "Time log not found", message: "Log de tempo não encontrado" };
+        
+        await requireProjectAccess(log.projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
+        if (log.endTime) return { ok: false, success: false, error: "Timer already stopped", message: "O cronômetro já está parado" };
+        if (!log.startTime) return { ok: false, success: false, error: "No start time set for this log", message: "Sem horário de início para este log" };
 
         const endTime = new Date();
         const startTime = new Date(log.startTime);
@@ -101,10 +105,11 @@ export async function stopTimeLog(id: string): Promise<ActionResponse> {
         });
 
         revalidatePath("/dashboard/time-tracking");
-        return { success: true, data: updatedLog };
-    } catch (error) {
+        if (updatedLog.clientId) revalidatePath(`/dashboard/clients/${updatedLog.clientId}`);
+        return { ok: true, success: true, data: updatedLog, message: "Cronômetro parado com sucesso" };
+    } catch (error: any) {
         console.error("Failed to stop time log:", error);
-        return { success: false, error: "Failed to stop time log." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao parar cronômetro." };
     }
 }
 
@@ -113,51 +118,59 @@ export async function getTimeLogById(id: string): Promise<ActionResponse> {
         const timeLog = await prisma.timeLog.findUnique({
             where: { id },
         });
-        if (!timeLog) return { success: false, error: "Time log not found" };
-        return { success: true, data: timeLog };
-    } catch (error) {
+        if (!timeLog) return { ok: false, success: false, error: "Time log not found", message: "Log de tempo não encontrado" };
+        
+        await requireProjectAccess(timeLog.projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
+        return { ok: true, success: true, data: timeLog };
+    } catch (error: any) {
         console.error("Failed to get time log:", error);
-        return { success: false, error: "Failed to get time log." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao obter log de tempo." };
     }
 }
 
 export async function updateTimeLog(id: string, data: z.infer<typeof updateTimeLogSchema>): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
-    const result = updateTimeLogSchema.safeParse({ ...data, id });
-
-    if (!result.success) {
-        return { success: false, error: JSON.stringify(result.error.flatten().fieldErrors) };
-    }
-
     try {
+        const existing = await prisma.timeLog.findUnique({ where: { id } });
+        if (!existing) return { ok: false, success: false, error: "Not found", message: "Log não encontrado" };
+        
+        await requireProjectAccess(existing.projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
+
+        const result = updateTimeLogSchema.safeParse({ ...data, id });
+        if (!result.success) {
+            const errs = result.error.flatten().fieldErrors;
+            return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
+        }
+
         const timeLog = await prisma.timeLog.update({
             where: { id },
             data: result.data,
         });
 
         revalidatePath("/dashboard/time-tracking");
-        return { success: true, data: timeLog };
+        if (timeLog.clientId) revalidatePath(`/dashboard/clients/${timeLog.clientId}`);
+        return { ok: true, success: true, data: timeLog, message: "Log de tempo atualizado com sucesso" };
     } catch (error: any) {
         console.error("Failed to update time log:", error);
-        return { success: false, error: "Failed to update time log." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao atualizar log de tempo." };
     }
 }
 
 export async function deleteTimeLog(id: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     try {
-        await prisma.timeLog.delete({
+        const existing = await prisma.timeLog.findUnique({ where: { id } });
+        if (!existing) return { ok: false, success: false, error: "Not found", message: "Log não encontrado" };
+        
+        await requireProjectAccess(existing.projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
+
+        const timeLog = await prisma.timeLog.delete({
             where: { id },
         });
         revalidatePath("/dashboard/time-tracking");
-        return { success: true };
-    } catch (error) {
+        if (timeLog.clientId) revalidatePath(`/dashboard/clients/${timeLog.clientId}`);
+        return { ok: true, success: true, message: "Log de tempo excluído com sucesso" };
+    } catch (error: any) {
         console.error("Failed to delete time log:", error);
-        return { success: false, error: "Failed to delete time log." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao excluir log de tempo." };
     }
 }
 
@@ -166,10 +179,8 @@ export async function listTimeLogs(
     limit: number = 20,
     filters?: { projectId?: string; clientId?: string; startDate?: string; endDate?: string }
 ): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     try {
+        const session = await requireAuth();
         const skip = (page - 1) * limit;
         const where: any = { userId: session.user.id };
 
@@ -197,23 +208,23 @@ export async function listTimeLogs(
         ]);
 
         return {
+            ok: true,
             success: true,
             data: {
                 logs,
                 metadata: { total, page, totalPages: Math.ceil(total / limit) },
             }
         };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to list time logs:", error);
-        return { success: false, error: "Failed to list time logs." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao listar logs de tempo." };
     }
 }
 
 export async function calculateBillableHours(projectId: string): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+
         const aggregation = await prisma.timeLog.aggregate({
             _sum: {
                 duration: true,
@@ -224,18 +235,17 @@ export async function calculateBillableHours(projectId: string): Promise<ActionR
             },
         });
 
-        return { success: true, data: { totalBillableHours: aggregation._sum.duration || 0 } };
-    } catch (error) {
+        return { ok: true, success: true, data: { totalBillableHours: aggregation._sum.duration || 0 } };
+    } catch (error: any) {
         console.error("Failed to calculate billable hours:", error);
-        return { success: false, error: "Failed to calculate billable hours." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao calcular horas faturáveis." };
     }
 }
 
 export async function getRunningTimeLog(): Promise<ActionResponse> {
-    const session = await auth();
-    if (!session?.user?.id) return { success: false, error: "Unauthorized" };
-
     try {
+        const session = await requireAuth();
+
         const timeLog = await prisma.timeLog.findFirst({
             where: {
                 userId: session.user.id,
@@ -247,10 +257,10 @@ export async function getRunningTimeLog(): Promise<ActionResponse> {
             },
         });
 
-        if (!timeLog) return { success: true, data: null };
-        return { success: true, data: timeLog };
-    } catch (error) {
+        if (!timeLog) return { ok: true, success: true, data: null };
+        return { ok: true, success: true, data: timeLog };
+    } catch (error: any) {
         console.error("Failed to get running time log:", error);
-        return { success: false, error: "Failed to get running time log." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao obter cronômetro ativo." };
     }
 }

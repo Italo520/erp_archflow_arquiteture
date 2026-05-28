@@ -56,7 +56,7 @@ describe("Report Actions", () => {
             const result = await getTopProjects();
 
             expect(result.success).toBe(true);
-            expect(result.data[0].name).toBe("Unknown");
+            expect(result.data![0].name).toBe("Unknown");
         });
     });
 

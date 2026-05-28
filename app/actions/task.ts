@@ -5,7 +5,7 @@ import { auth } from "@/auth"
 import { z } from "zod"
 import { revalidatePath } from "next/cache"
 import { Priority, Role } from "@prisma/client"
-import { canEditTask, canDeleteTask } from "@/lib/permissions"
+import { requireProjectAccess } from "@/lib/server-utils"
 
 const TaskSchema = z.object({
     title: z.string().min(1, "Título obrigatório"),
@@ -38,23 +38,14 @@ interface HistoryItem {
 }
 
 export async function createTask(data: z.input<typeof TaskSchema>) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { success: false, error: "Não autorizado" };
-    }
-
-    // Role check for security using permission helpers
-    const userRole = (session.user.role as Role) || Role.VIEWER;
-    if (!canEditTask(userRole)) {
-        return { success: false, error: "Você não tem permissão para criar tarefas" };
-    }
-
     const validated = TaskSchema.safeParse(data);
     if (!validated.success) {
         return { success: false, error: "Dados inválidos: " + JSON.stringify(validated.error.flatten().fieldErrors) };
     }
 
     try {
+        const session = await requireProjectAccess(validated.data.projectId, [Role.OWNER, Role.EDITOR]);
+        
         const { title, description, priority, dueDate, projectId, stageId, assigneeId, tags, attachments, checklist } = validated.data;
         const user = session.user;
         const history: HistoryItem[] = [
@@ -103,17 +94,9 @@ export async function createTask(data: z.input<typeof TaskSchema>) {
 }
 
 export async function updateTaskStage(taskId: string, newStageId: string, projectId: string) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { success: false, error: "Não autorizado" };
-    }
-
-    const userRole = (session.user.role as Role) || Role.VIEWER;
-    if (!canEditTask(userRole)) {
-        return { success: false, error: "Você não tem permissão para editar tarefas" };
-    }
-
     try {
+        const session = await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+        
         const stage = await prisma.stage.findUnique({ where: { id: newStageId } });
         if (!stage) {
             return { success: false, error: "Etapa não encontrada" };
@@ -152,17 +135,9 @@ export async function updateTaskStage(taskId: string, newStageId: string, projec
 }
 
 export async function updateTask(taskId: string, projectId: string, data: Partial<z.infer<typeof TaskSchema>>) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { success: false, error: "Não autorizado" };
-    }
-
-    const userRole = (session.user.role as Role) || Role.VIEWER;
-    if (!canEditTask(userRole)) {
-        return { success: false, error: "Você não tem permissão para editar tarefas" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+        
         await prisma.task.update({
             where: { id: taskId },
             data: {
@@ -180,17 +155,9 @@ export async function updateTask(taskId: string, projectId: string, data: Partia
 }
 
 export async function deleteTask(taskId: string, projectId: string) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { success: false, error: "Não autorizado" };
-    }
-
-    const userRole = (session.user.role as Role) || Role.VIEWER;
-    if (!canDeleteTask(userRole)) {
-        return { success: false, error: "Você não tem permissão para excluir tarefas" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+        
         await prisma.task.delete({ where: { id: taskId } });
         revalidatePath(`/projects/${projectId}`);
         return { success: true };
@@ -201,17 +168,9 @@ export async function deleteTask(taskId: string, projectId: string) {
 }
 
 export async function updateTaskPositions(projectId: string, updates: { id: string; position: number; stageId: string }[]) {
-    const session = await auth();
-    if (!session?.user?.id) {
-        return { success: false, error: "Não autorizado" };
-    }
-
-    const userRole = (session.user.role as Role) || Role.VIEWER;
-    if (!canEditTask(userRole)) {
-        return { success: false, error: "Você não tem permissão para reordenar tarefas" };
-    }
-
     try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+        
         await prisma.$transaction(
             updates.map(u => prisma.task.update({
                 where: { id: u.id },
