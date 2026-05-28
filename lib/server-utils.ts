@@ -24,11 +24,9 @@ export async function requireProjectAccess(projectId: string, allowedRoles: Role
         throw new Error("Not Found: Project does not exist");
     }
 
-    // O dono do projeto implicitamente tem a role OWNER para o projeto
+    // O dono do projeto implicitamente tem permissão total para o projeto
     if (project.ownerId === userId) {
-        if (allowedRoles.includes(Role.OWNER)) {
-            return session;
-        }
+        return session;
     }
 
     const member = await prisma.projectMember.findUnique({

@@ -24,9 +24,10 @@ async function main() {
         await (prisma as any)[model].deleteMany()
     }
 
-    // 1. Criar Usuários
-    console.log('Seeding Users...')
+    // 1. Criar Usuários (Gerando pelo menos 20 usuários)
+    console.log('Seeding 20 Users...')
     const passwordHash = await hash('password123', 10)
+    const users: any[] = []
 
     const admin = await prisma.user.create({
         data: {
@@ -36,6 +37,7 @@ async function main() {
             role: 'OWNER'
         }
     })
+    users.push(admin)
 
     const architect = await prisma.user.create({
         data: {
@@ -45,9 +47,23 @@ async function main() {
             role: 'EDITOR'
         }
     })
+    users.push(architect)
 
-    // 2. Dados Mestres: Clientes e Projetos
-    console.log('Seeding Clients and Projects...')
+    // Mais 18 usuários de teste para somar 20 usuários
+    for (let i = 1; i <= 18; i++) {
+        const u = await prisma.user.create({
+            data: {
+                fullName: `Profissional Arch #${i}`,
+                email: `profissional${i}@archflow.local`,
+                passwordHash,
+                role: i % 3 === 0 ? 'OWNER' : (i % 3 === 1 ? 'EDITOR' : 'VIEWER')
+            }
+        })
+        users.push(u)
+    }
+
+    // 2. Dados Mestres: Clientes e Projetos (20 Clientes e 20 Projetos correspondentes)
+    console.log('Seeding 20 Clients and Projects...')
     const clientsBatch = [
         { name: 'Sampaio & Filhos', status: 'ACTIVE', category: 'COMMERCIAL', spent: 150000 },
         { name: 'Tech Park Offices', status: 'PROSPECT', category: 'INDUSTRIAL', spent: 0 },
@@ -59,29 +75,41 @@ async function main() {
         { name: 'Clínica Sorriso', status: 'ACTIVE', category: 'COMMERCIAL', spent: 65000 },
         { name: 'Escola Pequeno Aprendiz', status: 'ACTIVE', category: 'INSTITUTIONAL', spent: 500000 },
         { name: 'Academia FitMax', status: 'INACTIVE', category: 'COMMERCIAL', spent: 25000 },
+        { name: 'Residência Alphaville', status: 'ACTIVE', category: 'RESIDENTIAL', spent: 350000 },
+        { name: 'Edifício Corporate Tower', status: 'ACTIVE', category: 'COMMERCIAL', spent: 1200000 },
+        { name: 'Restaurante Sabor & Arte', status: 'ACTIVE', category: 'COMMERCIAL', spent: 180000 },
+        { name: 'Galpão Logística Norte', status: 'PROSPECT', category: 'INDUSTRIAL', spent: 0 },
+        { name: 'Casa de Praia Vista Alegre', status: 'ACTIVE', category: 'RESIDENTIAL', spent: 400000 },
+        { name: 'Estúdio Criativo Design', status: 'ACTIVE', category: 'COMMERCIAL', spent: 75000 },
+        { name: 'Coworking Smart Hub', status: 'ACTIVE', category: 'COMMERCIAL', spent: 220000 },
+        { name: 'Museu de Arte Moderna', status: 'ACTIVE', category: 'INSTITUTIONAL', spent: 950000 },
+        { name: 'Consultório Odonto Prime', status: 'ACTIVE', category: 'COMMERCIAL', spent: 90000 },
+        { name: 'Teatro Municipal Alpha', status: 'ACTIVE', category: 'INSTITUTIONAL', spent: 1100000 }
     ]
 
     for (let i = 0; i < clientsBatch.length; i++) {
         const cData = clientsBatch[i]
+        const assignedUser = users[i % users.length]
+        
         const client = await prisma.client.create({
             data: {
                 name: cData.name,
-                email: `contato@${cData.name.toLowerCase().replace(/ /g, '')}.com`,
+                email: `contato@${cData.name.toLowerCase().replace(/[^a-z0-9]/g, '')}.com`,
                 status: cData.status as ClientStatus,
                 category: cData.category as any,
                 totalSpent: cData.spent,
-                userId: i % 2 === 0 ? admin.id : architect.id,
-                document: `0000000001${i}`,
-                phone: `(11) 9999-000${i}`
+                userId: assignedUser.id,
+                document: `000000000${10 + i}`,
+                phone: `(11) 9999-00${10 + i}`
             }
         })
 
-        // Criar Projeto para cada cliente (iniciando com status temporário)
+        // Criar Projeto para cada cliente (20 projetos no total!)
         const project = await prisma.project.create({
             data: {
                 name: `Reforma ${cData.name}`,
                 status: 'PLANNING',
-                ownerId: i % 2 === 0 ? admin.id : architect.id,
+                ownerId: assignedUser.id,
                 clientId: client.id,
                 projectType: cData.category,
                 plannedCost: 50000 + (i * 10000),
@@ -91,7 +119,26 @@ async function main() {
             }
         })
 
-        // Criar as 4 colunas Kanban específicas e associadas a este projeto
+        // Associar o proprietário e o admin como membros (OWNER) do projeto
+        await prisma.projectMember.create({
+            data: {
+                projectId: project.id,
+                userId: assignedUser.id,
+                role: 'OWNER'
+            }
+        })
+
+        if (assignedUser.id !== admin.id) {
+            await prisma.projectMember.create({
+                data: {
+                    projectId: project.id,
+                    userId: admin.id,
+                    role: 'OWNER'
+                }
+            })
+        }
+
+        // Criar as 4 colunas Kanban específicas e associadas a este projeto (80 no total!)
         const colPlanning = await prisma.projectKanbanColumn.create({
             data: { title: 'Planejamento', color: 'bg-blue-500', order: 0, projectId: project.id }
         })
@@ -114,28 +161,23 @@ async function main() {
             data: { status: chosenCol.id }
         })
 
-        // 3. Detalhes do Projeto: Stages, Tasks, Budget, TimeLogs
-        await seedProjectDetails(project.id, admin.id, architect.id)
+        // 3. Detalhes do Projeto: Stages, Tasks, Budget, Estimates, TimeLogs, Deliverables
+        // Como o loop roda 20 vezes, teremos 20 Budgets, 20 Estimates e 20 TimeLogs criados!
+        await seedProjectDetails(project.id, admin.id, assignedUser.id)
     }
 
-    // 5. Atividades do Dia (Agenda) para o Dashboard
-    console.log('Seeding Agenda (Activities)...')
-    const agenda = [
-        { title: 'Reunião de Briefing - Residência K', type: 'MEETING', offset: 0 },
-        { title: 'Visita Técnica - Alpha HQ', type: 'SITE_VISIT', offset: 120 },
-        { title: 'Revisão de Plantas', type: 'DESIGN', offset: 240 },
-        { title: 'Call de Aprovação', type: 'CALL', offset: 360 }
-    ]
-
-    for (let i = 0; i < agenda.length; i++) {
+    // 5. Atividades do Dia (Agenda) para o Dashboard (20 Atividades no total!)
+    console.log('Seeding 20 Agenda Activities...')
+    const agendaTypes = ['MEETING', 'SITE_VISIT', 'DESIGN', 'CALL']
+    for (let i = 0; i < 20; i++) {
         const start = new Date()
-        start.setHours(9, 0, 0, 0)
-        start.setMinutes(start.getMinutes() + agenda[i].offset)
+        start.setDate(start.getDate() + (i - 10)) // distribui em datas passadas e futuras
+        start.setHours(9 + (i % 8), 0, 0, 0)
 
         await prisma.activity.create({
             data: {
-                title: agenda[i].title,
-                type: agenda[i].type as ActivityType,
+                title: `Atividade Técnica #${i + 1}`,
+                type: agendaTypes[i % agendaTypes.length] as ActivityType,
                 startTime: start,
                 endTime: new Date(start.getTime() + 60 * 60 * 1000),
                 createdById: admin.id,
@@ -144,15 +186,15 @@ async function main() {
         })
     }
 
-    // 6. Notificações e Audit
-    console.log('Seeding Notifications and Audit Logs...')
-    for (let i = 0; i < 10; i++) {
+    // 6. Notificações e Audit (20 Notificações e 20 AuditLogs!)
+    console.log('Seeding 20 Notifications and Audit Logs...')
+    for (let i = 0; i < 20; i++) {
         await prisma.notification.create({
             data: {
-                userId: admin.id,
-                title: `Notificação ${i}`,
-                message: `Isso é um alerta de teste número ${i} para o sistema.`,
-                type: 'INFO',
+                userId: users[i % users.length].id,
+                title: `Notificação Crítica #${i + 1}`,
+                message: `Este é um alerta automático de depuração número ${i + 1} para auditoria.`,
+                type: i % 2 === 0 ? 'INFO' : 'SYSTEM',
                 relatedEntityId: admin.id,
                 relatedEntityType: 'PROJECT'
             }
@@ -160,8 +202,8 @@ async function main() {
 
         await prisma.auditLog.create({
             data: {
-                userId: admin.id,
-                action: 'CREATE',
+                userId: users[i % users.length].id,
+                action: i % 3 === 0 ? 'CREATE' : (i % 3 === 1 ? 'UPDATE' : 'DELETE'),
                 entityType: 'PROJECT',
                 entityId: 'fake-id-' + i,
                 ipAddress: '127.0.0.1'
@@ -173,7 +215,7 @@ async function main() {
 }
 
 async function seedProjectDetails(projectId: string, adminId: string, architectId: string) {
-    // Stages
+    // Stages (3 Stages por projeto = 60 no total!)
     const phases = [
         { name: 'Levantamento', tasks: ['Medição In Loco', 'Fotos do Terreno', 'Entrevista Briefing'] },
         { name: 'Estudo Preliminar', tasks: ['Layout 2D', 'Conceito Criativo', 'Aprovação Estudo'] },
@@ -185,6 +227,7 @@ async function seedProjectDetails(projectId: string, adminId: string, architectI
             data: { name: phases[i].name, order: i, projectId }
         })
 
+        // Tasks (9 Tasks por projeto = 180 no total!)
         for (let j = 0; j < phases[i].tasks.length; j++) {
             const task = await prisma.task.create({
                 data: {
@@ -197,7 +240,7 @@ async function seedProjectDetails(projectId: string, adminId: string, architectI
                 }
             })
 
-            // Deliverables
+            // Deliverables (3 Deliverables por projeto = 60 no total!)
             if (j === 1) {
                 await prisma.deliverable.create({
                     data: {
@@ -214,7 +257,7 @@ async function seedProjectDetails(projectId: string, adminId: string, architectI
         }
     }
 
-    // Budget
+    // Budget (1 Budget por projeto = 20 no total!)
     await prisma.budget.create({
         data: {
             projectId,
@@ -225,7 +268,7 @@ async function seedProjectDetails(projectId: string, adminId: string, architectI
         }
     })
 
-    // Estimate
+    // Estimate (1 Estimate por projeto = 20 no total!)
     await prisma.estimate.create({
         data: {
             projectId,
@@ -235,7 +278,7 @@ async function seedProjectDetails(projectId: string, adminId: string, architectI
         }
     })
 
-    // TimeLogs
+    // TimeLogs (1 TimeLog por projeto = 20 no total!)
     await prisma.timeLog.create({
         data: {
             projectId,

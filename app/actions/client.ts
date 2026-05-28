@@ -8,6 +8,14 @@ import { requireAuth } from "@/lib/server-utils";
 import { canCreateClient } from "@/lib/permissions";
 import { Role } from "@prisma/client";
 
+function sanitizeClient(client: any) {
+  if (!client) return client;
+  return {
+    ...client,
+    totalSpent: client.totalSpent ? Number(client.totalSpent) : 0,
+  };
+}
+
 // Interface oficial de resposta para Server Actions
 export interface ActionResponse<T = any> {
   ok: boolean;
@@ -53,7 +61,7 @@ export async function createClient(data: z.infer<typeof clientSchema>): Promise<
         return { 
             ok: true, 
             success: true, 
-            data: client, 
+            data: sanitizeClient(client), 
             message: "Cliente criado com sucesso" 
         };
     } catch (error: any) {
@@ -94,7 +102,7 @@ export async function getClientById(id: string) {
                 },
             },
         });
-        return client;
+        return sanitizeClient(client);
     } catch (error) {
         console.error("Failed to get client:", error);
         return null;
@@ -137,7 +145,7 @@ export async function updateClient(id: string, data: z.infer<typeof updateClient
         return { 
             ok: true, 
             success: true, 
-            data: client, 
+            data: sanitizeClient(client), 
             message: "Cliente atualizado com sucesso" 
         };
     } catch (error: any) {
@@ -171,7 +179,7 @@ export async function softDeleteClient(id: string): Promise<ActionResponse> {
         return { 
             ok: true, 
             success: true, 
-            data: client, 
+            data: sanitizeClient(client), 
             message: "Cliente excluído com sucesso (deleção lógica)" 
         };
     } catch (error: any) {
@@ -242,7 +250,7 @@ export async function listClients({
         return {
             ok: true,
             success: true,
-            data: clients,
+            data: clients.map(sanitizeClient),
             metadata: {
                 total,
                 page,
