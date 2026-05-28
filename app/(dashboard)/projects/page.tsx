@@ -38,14 +38,28 @@ export default async function ProjectsPage({
     // RESILIENCE: If DB columns are missing but projects exist, create virtual columns from project statuses
     if (finalColumns.length === 0 && sanitizedProjects.length > 0) {
         console.warn("SERVER PAGE: Columns missing. Generating virtual columns from project statuses...");
+        
+        const defaultOrder = ['PLANNING', 'IN_PROGRESS', 'ON_HOLD', 'COMPLETED', 'CANCELLED'];
         const uniqueStatuses = Array.from(new Set(sanitizedProjects.map((p: any) => p.status)));
+        
+        // Mantém a ordem fixa para os quadros não ficarem trocando de posição sozinhos
+        uniqueStatuses.sort((a: any, b: any) => {
+            const indexA = defaultOrder.indexOf(a);
+            const indexB = defaultOrder.indexOf(b);
+            if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+            if (indexA !== -1) return -1;
+            if (indexB !== -1) return 1;
+            return a.localeCompare(b);
+        });
+
         finalColumns = uniqueStatuses.map((status: string, index: number) => ({
             id: status,
             title: status === 'PLANNING' ? 'Planejamento' :
                    status === 'IN_PROGRESS' ? 'Em Andamento' :
                    status === 'ON_HOLD' ? 'Pausado' :
-                   status === 'COMPLETED' ? 'Concluído' : status,
-            color: 'bg-blue-500',
+                   status === 'COMPLETED' ? 'Concluído' : 
+                   status === 'CANCELLED' ? 'Cancelado' : status,
+            color: 'bg-slate-400',
             order: index
         }));
     }

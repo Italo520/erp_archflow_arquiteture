@@ -52,7 +52,7 @@ export function DashboardCharts({ productivityData, projectDistribution }: Dashb
                     </div>
 
                     <TabsContent value="productivity" className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="99%" height={300}>
                             <BarChart data={formattedProductivity}>
                                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                                 <XAxis
@@ -84,7 +84,7 @@ export function DashboardCharts({ productivityData, projectDistribution }: Dashb
                     </TabsContent>
 
                     <TabsContent value="projects" className="h-[300px]">
-                        <ResponsiveContainer width="100%" height="100%">
+                        <ResponsiveContainer width="99%" height={300}>
                             <PieChart>
                                 <Pie
                                     data={projectDistribution}

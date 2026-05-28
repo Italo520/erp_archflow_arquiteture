@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getUserNotificationPreferences, updateUserNotificationPreference, NOTIFICATION_EVENTS } from '@/app/actions/notificationSettings';
+import { getUserNotificationPreferences, updateUserNotificationPreference } from '@/app/actions/notificationSettings';
+import { NOTIFICATION_EVENTS } from '@/lib/notification-constants';
 import { Bell, Loader2, ShieldAlert } from 'lucide-react';
 
 const UserPreferences = () => {

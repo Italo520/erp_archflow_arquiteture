@@ -7,6 +7,7 @@ import { BudgetStatus, EstimateStatus, Role } from "@prisma/client";
 import { requireProjectAccess } from "@/lib/server-utils";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/app/actions/audit";
+import { serializeData } from "@/lib/serialize";
 
 export interface ActionResponse<T = any> {
   ok: boolean;
@@ -104,8 +105,12 @@ export async function getProjectFinancials(projectId: string): Promise<ActionRes
         return {
             ok: true,
             success: true,
-            data: {
-                project,
+            data: serializeData({
+                project: {
+                    ...project,
+                    plannedCost: project.plannedCost ? Number(project.plannedCost) : null,
+                    actualCost: project.actualCost ? Number(project.actualCost) : null
+                },
                 budget: budget ? {
                     ...budget,
                     totalBudget: Number(budget.totalBudget),
@@ -130,7 +135,7 @@ export async function getProjectFinancials(projectId: string): Promise<ActionRes
                     isCritical: spentPercentage >= 100
                 },
                 timeLogs
-            }
+            })
         };
     } catch (error: any) {
         console.error("Failed to get financials:", error);
@@ -190,7 +195,7 @@ export async function saveBudget(projectId: string, data: { totalBudget: number,
         });
 
         revalidatePath(`/dashboard/projects/${projectId}`);
-        return { ok: true, success: true, data: budget, message: "Orçamento salvo com sucesso." };
+        return { ok: true, success: true, data: serializeData(budget), message: "Orçamento salvo com sucesso." };
     } catch (error: any) {
         console.error("Failed to save budget:", error);
         return { ok: false, success: false, error: error.message, message: "Falha ao salvar orçamento." };
@@ -246,7 +251,7 @@ export async function saveEstimate(
         });
 
         revalidatePath(`/dashboard/projects/${projectId}`);
-        return { ok: true, success: true, data: estimate, message: "Estimativa salva com sucesso." };
+        return { ok: true, success: true, data: serializeData(estimate), message: "Estimativa salva com sucesso." };
     } catch (error: any) {
         console.error("Failed to save estimate:", error);
         return { ok: false, success: false, error: error.message, message: "Falha ao salvar estimativa." };

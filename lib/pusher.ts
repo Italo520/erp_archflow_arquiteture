@@ -19,7 +19,7 @@ export async function triggerNotification(userId: string, notification: any) {
       id: notification.id,
       title: notification.title,
       message: notification.message,
-      type: notification.type.toLowerCase(), // frontend expects success, warning, error, info
+      type: notification.type ? notification.type.toLowerCase() : 'info', // frontend expects success, warning, error, info
       timestamp: notification.createdAt,
       read: notification.read,
       actionUrl: notification.actionUrl,

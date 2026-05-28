@@ -182,6 +182,8 @@ export async function deleteKanbanColumn(id: string): Promise<ActionResponse> {
     }
 }
 
+import { serializeData } from "@/lib/serialize";
+
 export async function updateProjectStatus(projectId: string, statusId: string): Promise<ActionResponse> {
     try {
         await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
@@ -196,7 +198,7 @@ export async function updateProjectStatus(projectId: string, statusId: string): 
         revalidatePath(`/projects/${projectId}`);
         revalidatePath("/");
         
-        return { ok: true, success: true, data: project, message: "Status do projeto atualizado com sucesso" };
+        return { ok: true, success: true, data: serializeData(project), message: "Status do projeto atualizado com sucesso" };
     } catch (error: any) {
         console.error("Failed to update project status:", error);
         return { ok: false, success: false, error: error.message, message: "Falha ao atualizar status do projeto: " + error.message };

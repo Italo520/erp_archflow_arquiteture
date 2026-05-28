@@ -58,7 +58,7 @@ export function ProjectOverview({ project }: ProjectOverviewProps) {
         ? Math.round((timeline.filter(e => e.status === 'completed').length / timeline.length) * 100)
         : 0
 
-    const team = [
+    const rawTeam = [
         ...(project.owner ? [{ id: project.owner.id, name: project.owner.fullName, role: "Proprietário", avatar: project.owner.avatar }] : []),
         ...(project.members || []).map((m: any) => ({
             id: m.user.id,
@@ -67,6 +67,8 @@ export function ProjectOverview({ project }: ProjectOverviewProps) {
             avatar: m.user.avatar
         }))
     ]
+
+    const team = Array.from(new Map(rawTeam.map(item => [item.id, item])).values());
 
     // Health calculation
     const calculateHealth = () => {

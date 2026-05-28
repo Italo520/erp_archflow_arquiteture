@@ -16,6 +16,8 @@ export async function requireProjectAccess(projectId: string, allowedRoles: Role
     const userId = session.user.id as string;
     const userRole = session.user.role as Role;
 
+    console.log("[DEBUG] requireProjectAccess - UserID:", userId, "UserRole:", userRole, "SessionRole:", session.user?.role);
+
     // Administradores globais (OWNER) do escritório têm acesso total a qualquer projeto
     if (userRole === Role.OWNER) {
         return session;

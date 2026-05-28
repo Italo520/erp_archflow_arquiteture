@@ -35,28 +35,36 @@
 
   --animate-accordion-down: accordion-down 0.2s ease-out;
   --animate-accordion-up: accordion-up 0.2s ease-out;
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.35s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
 
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-outfit), sans-serif;
 
   @keyframes accordion-down {
-    from {
-      height: 0;
-    }
-
-    to {
-      height: var(--radix-accordion-content-height);
-    }
+    from { height: 0; }
+    to { height: var(--radix-accordion-content-height); }
   }
 
   @keyframes accordion-up {
-    from {
-      height: var(--radix-accordion-content-height);
-    }
+    from { height: var(--radix-accordion-content-height); }
+    to { height: 0; }
+  }
 
-    to {
-      height: 0;
-    }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @keyframes scale-in {
+    from { opacity: 0; transform: scale(0.96); }
+    to { opacity: 1; transform: scale(1); }
   }
 }
 
@@ -87,76 +95,107 @@
 
 @layer base {
   :root {
-    /* Light Mode: Pastel Palette */
-    --background: 21 63% 95%; /* #FBF2ED */
-    --foreground: 202 28% 11%; /* #152026 (Dark Blue for contrast) */
+    /* ─── Light Mode: Warm Sand & Gold ─── */
 
-    --card: 0 0% 100%; /* White for cards to pop */
-    --card-foreground: 202 28% 11%;
+    --background:  30 33% 97%;          /* #FAF7F4 — areia muito clara      */
+    --foreground:  20 10% 11%;          /* #1C1917 — carvão quente           */
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 202 28% 11%;
+    --card:        0 0% 100%;           /* #FFFFFF                           */
+    --card-foreground: 20 10% 11%;
 
-    --primary: 91 15% 80%; /* #CDD5C6 (Greenish Pastel) */
-    --primary-foreground: 202 28% 11%;
+    --popover:     0 0% 100%;
+    --popover-foreground: 20 10% 11%;
 
-    --secondary: 202 5% 73%; /* #B7BCBF (Grey) */
-    --secondary-foreground: 202 28% 11%;
+    --primary:     34 46% 60%;          /* #C9A96E — ouro/bege dourado       */
+    --primary-foreground: 0 0% 100%;    /* branco                            */
 
-    --muted: 202 5% 90%;
-    --muted-foreground: 202 5% 45%;
+    --secondary:   30 30% 92%;          /* #F0EBE3 — areia pastel            */
+    --secondary-foreground: 20 10% 25%;
 
-    --accent: 24 42% 84%; /* #E8D4C6 (Beige) */
-    --accent-foreground: 202 28% 11%;
+    --muted:       30 20% 94%;          /* #F5F1EC                           */
+    --muted-foreground: 20 8% 55%;      /* #8C867F                           */
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --accent:      30 40% 87%;          /* #EBD9C4 — bege médio              */
+    --accent-foreground: 20 10% 20%;
 
-    --border: 202 5% 85%;
-    --input: 202 5% 85%;
-    --ring: 91 15% 80%;
+    --destructive: 4 86% 58%;           /* #E8432A                           */
+    --destructive-foreground: 0 0% 100%;
 
-    --radius: 0.5rem;
+    --border:      30 20% 88%;          /* #E8E1D8 — borda suave             */
+    --input:       30 20% 91%;          /* #EDE7DF                           */
+    --ring:        34 46% 60%;          /* = primary                         */
+
+    --radius: 0.75rem;
   }
 
   .dark {
-    /* Dark Mode: Deep Blue & Black Palette */
-    --background: 0 0% 5%; /* #0D0D0D (Deep Black) */
-    --foreground: 185 10% 61%; /* #92A4A6 (Light Text) */
+    /* ─── Dark Mode: Warm Charcoal & Gold ─── */
 
-    --card: 202 28% 11%; /* #152026 (Deep Blue) */
-    --card-foreground: 185 10% 61%;
+    --background:  20 12%  6%;          /* #0E0C0A — preto quente            */
+    --foreground:  30 25% 95%;          /* #F5F1EB — creme claro             */
 
-    --popover: 202 28% 11%;
-    --popover-foreground: 185 10% 61%;
+    --card:        20 10% 10%;          /* #1A1714 — carvão quente           */
+    --card-foreground: 30 25% 95%;
 
-    --primary: 91 15% 80%; /* #CDD5C6 (Same Pastel Green for consistency) */
-    --primary-foreground: 202 28% 11%;
+    --popover:     20 10% 10%;
+    --popover-foreground: 30 25% 95%;
 
-    --secondary: 196 26% 19%; /* #253840 (Slate) */
-    --secondary-foreground: 185 10% 61%;
+    --primary:     34 46% 60%;          /* #C9A96E — ouro (âncora de marca)  */
+    --primary-foreground: 20 12% 7%;
 
-    --muted: 196 26% 19%;
-    --muted-foreground: 196 16% 38%;
+    --secondary:   20 10% 14%;          /* #221E1A — carvão mais claro       */
+    --secondary-foreground: 30 20% 85%;
 
-    --accent: 196 26% 19%;
-    --accent-foreground: 185 10% 61%;
+    --muted:       20 10% 14%;          /* #221E1A                           */
+    --muted-foreground: 30 12% 58%;     /* #9A9088 — legível sem ser branco  */
 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 185 10% 61%;
+    --accent:      20 10% 17%;          /* #2B2520 — acento escuro           */
+    --accent-foreground: 30 22% 88%;
 
-    --border: 196 16% 38%; /* #516973 */
-    --input: 202 28% 11%;
-    --ring: 91 15% 80%;
+    --destructive: 4 75% 52%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border:      20 10% 20%;          /* #332E28 — borda mais visível      */
+    --input:       20 10% 14%;          /* #221E1A                           */
+    --ring:        34 46% 60%;          /* = primary                         */
   }
 }
 
 @layer base {
   * {
     @apply border-border;
+    transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+    transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    transition-duration: 150ms;
   }
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Scrollbar refinada */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.5);
+  }
+
+  /* Focus ring refinado */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring) / 0.7);
+    outline-offset: 2px;
+    border-radius: calc(var(--radius) - 2px);
   }
 }

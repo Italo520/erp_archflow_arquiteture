@@ -1,7 +1,8 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { getSystemNotificationRules, updateSystemNotificationRule, NOTIFICATION_EVENTS, NOTIFICATION_ROLES } from '@/app/actions/notificationSettings';
+import { getSystemNotificationRules, updateSystemNotificationRule } from '@/app/actions/notificationSettings';
+import { NOTIFICATION_EVENTS, NOTIFICATION_ROLES } from '@/lib/notification-constants';
 import { BellRing, ShieldAlert, Loader2 } from 'lucide-react';
 
 const NotificationRBAC = () => {

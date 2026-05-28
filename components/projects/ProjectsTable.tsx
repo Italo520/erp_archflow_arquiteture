@@ -61,11 +61,11 @@ function getProjectHealth(project: Project): 'ON_TRACK' | 'DELAYED' | 'COMPLETED
 function HealthBadge({ status }: { status: string }) {
     switch (status) {
         case 'ON_TRACK':
-            return <Badge variant="outline" className="bg-green-100 text-green-800 border-green-200">On Track</Badge>;
+            return <Badge variant="status-done">On Track</Badge>;
         case 'DELAYED':
-            return <Badge variant="destructive">Atrasado</Badge>;
+            return <Badge variant="status-blocked">Atrasado</Badge>;
         case 'AT_RISK':
-            return <Badge variant="outline" className="bg-yellow-100 text-yellow-800 border-yellow-200">Em Risco</Badge>;
+            return <Badge variant="status-todo">Em Risco</Badge>;
         case 'COMPLETED':
             return <Badge variant="secondary">Concluído</Badge>;
         default:
@@ -126,9 +126,9 @@ export default function ProjectsTable({ projects }: { projects: Project[] }) {
     }
 
     return (
-        <div className="rounded-md border bg-white shadow-sm overflow-x-auto">
+        <div className="rounded-xl border border-border bg-card shadow-card overflow-x-auto">
             <Table>
-                <TableHeader className="bg-muted/40">
+                <TableHeader className="bg-muted/30">
                     <TableRow>
                         <TableHead className="cursor-pointer hover:bg-muted/50" onClick={() => handleSort('name')}>
                             Projeto {sortConfig?.key === 'name' && (sortConfig.direction === 'asc' ? '↑' : '↓')}
@@ -165,7 +165,7 @@ export default function ProjectsTable({ projects }: { projects: Project[] }) {
                         const deadline = project.estimatedEndDate || project.deliveryDate;
 
                         return (
-                            <TableRow key={project.id} className="hover:bg-muted/5">
+                            <TableRow key={project.id} className="hover:bg-secondary/30 transition-colors">
                                 <TableCell className="font-medium">
                                     <div className="flex flex-col">
                                         <Link href={`/projects/${project.id}`} className="hover:underline text-base font-semibold text-primary">

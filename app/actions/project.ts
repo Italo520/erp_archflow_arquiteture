@@ -19,6 +19,8 @@ export interface ActionResponse<T = any> {
   format?: string; // Suporte para exportProjectData
 }
 
+import { serializeData } from "@/lib/serialize";
+
 // --- CORE CRUD ---
 
 export async function createProject(data: z.infer<typeof projectSchema>): Promise<ActionResponse> {
@@ -107,7 +109,7 @@ export async function getProjectById(id: string) {
                 },
             },
         });
-        return project;
+        return serializeData(project);
     } catch (error) {
         console.error("Failed to get project:", error);
         return null;
@@ -142,7 +144,7 @@ export async function updateProject(id: string, data: z.infer<typeof updateProje
         revalidatePath("/dashboard/projects");
         revalidatePath(`/dashboard/projects/${id}`);
         
-        return { ok: true, success: true, data: project, message: "Projeto atualizado com sucesso" };
+        return { ok: true, success: true, data: serializeData(project), message: "Projeto atualizado com sucesso" };
     } catch (error: any) {
         console.error("Failed to update project:", error);
         return { ok: false, success: false, error: error.message, message: "Falha ao atualizar projeto: " + error.message };
@@ -188,7 +190,7 @@ export async function listProjects(filters?: { clientId?: string; status?: strin
                 owner: { select: { fullName: true } }
             }
         });
-        return { ok: true, success: true, data: projects };
+        return { ok: true, success: true, data: serializeData(projects) };
     } catch (error: any) {
         console.error("Failed to list projects:", error);
         return { ok: false, success: false, error: error.message, message: "Falha ao listar projetos: " + error.message };
@@ -335,7 +337,7 @@ export async function associateArchitect(projectId: string, userId: string, role
     }
 }
 
-export const associateArchitectToProject = associateArchitect;
+export async function associateArchitectToProject(projectId: string, userId: string, role?: string) { return associateArchitect(projectId, userId, role); }
 
 export async function removeArchitect(projectId: string, userId: string): Promise<ActionResponse> {
     try {
@@ -353,7 +355,7 @@ export async function removeArchitect(projectId: string, userId: string): Promis
     }
 }
 
-export const removeArchitectFromProject = removeArchitect;
+export async function removeArchitectFromProject(projectId: string, userId: string) { return removeArchitect(projectId, userId); }
 
 // --- ANALYTICS & TIMELINE ---
 
@@ -377,13 +379,13 @@ export async function getProjectMetrics(projectId: string): Promise<ActionRespon
         return {
             ok: true,
             success: true,
-            data: {
+            data: serializeData({
                 totalHours,
                 budgetSpent: budget?.spentAmount || 0,
                 totalBudget: budget?.totalBudget || 0,
                 progress: calculateProgress(project.phases as any),
                 timeDistribution: timeLogs
-            }
+            })
         };
     } catch (error: any) {
         console.error("Failed to get metrics:", error);
@@ -401,7 +403,7 @@ export async function getProjectTimeline(projectId: string): Promise<ActionRespo
 
         if (!project) return { ok: false, success: false, error: "Projeto não encontrado", message: "Projeto não encontrado" };
 
-        return { ok: true, success: true, data: project };
+        return { ok: true, success: true, data: serializeData(project) };
     } catch (error: any) {
         return { ok: false, success: false, error: error.message, message: "Falha ao obter linha do tempo: " + error.message };
     }
@@ -423,11 +425,11 @@ export async function getProjectBudgetStatus(projectId: string): Promise<ActionR
         return {
             ok: true,
             success: true,
-            data: {
+            data: serializeData({
                 plannedCost: project.plannedCost,
                 actualCost: project.actualCost,
                 budgetRecord: budget
-            }
+            })
         };
     } catch (error: any) {
         return { ok: false, success: false, error: error.message, message: "Falha ao obter orçamento: " + error.message };
