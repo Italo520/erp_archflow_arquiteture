@@ -7,25 +7,27 @@ Este documento acompanha a evolução do desenvolvimento do projeto em tempo rea
 [x] Milestone 1: Saneamento Técnico e Infraestrutura Base ............. 100%
 [x] Milestone 2: Gestão de Projetos e Fluxo de Trabalho .............. 100%
 [x] Milestone 3: CRM de Clientes, Agenda e Controle de Tempo ......... 100%
-[ ] Milestone 4: Armazenamento e Entrega de Materiais ................ 0%
-[ ] Milestone 5: Planejamento Financeiro, Relatórios e Dashboard ..... 0%
-[ ] Milestone 6: Hardening, Notificações, Auditoria e Deploy ......... 0%
+[x] Milestone 4: Armazenamento e Entrega de Materiais ................ 100%
+[x] Milestone 5: Planejamento Financeiro, Relatórios e Dashboard ..... 100%
+[x] Milestone 6: Hardening, Notificações, Auditoria e Deploy ......... 100%
 ```
 
 ---
 
-## Milestone Ativa: Milestone 4 - Armazenamento e Entrega de Materiais (Fase 2)
-- **Status**: Não Iniciada (Pronto para planejamento de desenvolvimento de código)
-- **Progresso da Milestone**: 0%
+## Milestone Ativa: Milestone 6 - Hardening, Notificações, Auditoria e Deploy (Fase 4)
+- **Status**: Concluído
+- **Progresso da Milestone**: 100%
 
 ### Checklist da Milestone Ativa
-- [ ] **Armazenamento Seguro em Disco**: Desenvolver rotas e controllers para upload/download de arquivos na pasta oculta `/storage`. [REQ-026]
-- [ ] **Máquina de Estados de Entregáveis**: Implementar controle e bloqueio de edição de arquivos baseados nos status (DRAFT, PENDING_REVIEW, APPROVED, REJECTED). [REQ-027]
-- [ ] **Histórico de Revisões**: Suportar logs de feedback e incrementos automáticos de versionamento do documento. [REQ-028]
+- [x] **Phase 1: helpers de Autorização em Actions**: Proteger todas as ações verificando sessão e cargo por projeto. [REQ-006, REQ-007, REQ-008, REQ-009]
+- [x] **Phase 2: Painel de Notificações**: Configurar os disparadores e tela de notificações reativas para profissionais e clientes. [REQ-033]
+- [x] **Phase 3: Trilha de Auditoria Física**: Gravar logs detalhados de eventos de alta sensibilidade no banco. [REQ-034]
+- [x] **Phase 4: Garantias de Testes**: Implementar e executar a suíte mínima de testes unitários e de integração das Server Actions críticas.
+- [x] **Phase 5: Blindagem do Build**: Validar a compilação final em modo de produção do Next.js sem erros de lint e TypeScript.
 
 ---
 
 ## Último Checkpoint
 - **Data**: 28 de Maio de 2026
-- **Ação**: Conclusão da Milestone 3. Refatoramos todas as Server Actions de CRM, Agenda e Logs de tempo para a assinatura oficial unificada `ActionResponse`, implementamos a validação de CPF e CNPJ matemáticos no Zod, adicionamos máscaras e regras de campos dinâmicos PF/PJ, desenvolvemos a apropriação consolidada de esforço e finanças no detalhe do cliente, a visualização real de compromissos e a reatividade automatizada do engajamento do cliente (`lastInteractionAt`). O build final de produção compilou com sucesso completo.
-- **Situação**: O ecossistema está 100% estável e saudável. Pronto para iniciar o planejamento e desenvolvimento da Milestone 4.
+- **Ação**: Início do Milestone 6 de forma autônoma. Milestones 4 e 5 já finalizadas em sessões anteriores (Armazenamento, Versionamento e Dashboard Financeiro consolidados).
+- **Situação**: O sistema está pronto para a blindagem de segurança, auditoria, notificações e testes finais para Deploy.

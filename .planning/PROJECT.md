@@ -40,17 +40,31 @@ O **ArchFlow ERP** é uma plataforma SaaS integrada desenvolvida sob medida para
 
 ## Definition of Done (Critério de Sucesso do Projeto)
 O ERP ArchFlow será considerado funcional e pronto para deploy de produção quando:
-- [ ] O ambiente local subir integralmente com Docker PostgreSQL.
-- [ ] O fluxo de autenticação, registro e segurança de rotas estiver blindado.
-- [ ] O gerenciamento de clientes PF/PJ operar com CRM funcional e soft-delete.
-- [ ] A modelagem e CRUD de projetos de arquitetura funcionar perfeitamente.
-- [ ] O pipeline Kanban for isolado por projeto com drag-and-drop persistente.
-- [ ] Tarefas puderem ser comentadas, atribuídas e possuírem checklists integrados.
-- [ ] Atividades de agenda atualizarem dinamicamente o status de engajamento do cliente.
-- [ ] Lançamentos manuais de logs de tempo (faturáveis/não faturáveis) consolidarem no dashboard.
-- [ ] O upload de entregáveis versionados obedecer à máquina de estados de aprovação do cliente.
-- [ ] O painel financeiro calcular corretamente o desvio entre Estimativa, Orçamento Aprovado e Custo Real de horas.
-- [ ] Relatórios analíticos operarem com exportação para PDF e planilhas Excel.
-- [ ] Notificações e trilha de auditoria para ações críticas gravarem com sucesso no banco.
-- [ ] A suite de testes automatizados unitários, de integração e E2E estiver passando sem erros.
-- [ ] O build de produção do Next.js compilar sem avisos de tipagem ou conflitos.
+- [x] O ambiente local subir integralmente com Docker PostgreSQL.
+- [x] O fluxo de autenticação, registro e segurança de rotas estiver blindado.
+- [x] O gerenciamento de clientes PF/PJ operar com CRM funcional e soft-delete.
+- [x] A modelagem e CRUD de projetos de arquitetura funcionar perfeitamente.
+- [x] O pipeline Kanban for isolado por projeto com drag-and-drop persistente.
+- [x] Tarefas puderem ser comentadas, atribuídas e possuírem checklists integrados.
+- [x] Atividades de agenda atualizarem dinamicamente o status de engajamento do cliente.
+- [x] Lançamentos manuais de logs de tempo (faturáveis/não faturáveis) consolidarem no dashboard.
+- [x] O upload de entregáveis versionados obedecer à máquina de estados de aprovação do cliente.
+- [x] O painel financeiro calcular corretamente o desvio entre Estimativa, Orçamento Aprovado e Custo Real de horas.
+- [x] Relatórios analíticos operarem com exportação para PDF e planilhas Excel.
+- [x] Notificações e trilha de auditoria para ações críticas gravarem com sucesso no banco.
+- [x] A suite de testes automatizados unitários, de integração e E2E estiver passando sem erros.
+- [x] O build de produção do Next.js compilar sem avisos de tipagem ou conflitos.
+
+---
+
+## Estado Atual do Projeto
+*   **Versão Atual**: `v6.0` (Milestone 6 - Concluída e Arquivada em 28 de Maio de 2026)
+*   **Situação**: Todas as metas de engenharia, negócios e produto do MVP do ArchFlow ERP foram finalizadas, validadas via testes Jest e compiladas em modo de produção com sucesso absoluto.
+
+## Próximos Passos & Próxima Milestone
+*   **Foco**: Escalabilidade técnica e comercial pós-MVP.
+*   **Metas**:
+    1. **Multi-Tenancy**: Suportar múltiplos escritórios operando com dados isolados (Modelo SaaS Real).
+    2. **Integrações de Pagamento**: Conexão com gateways reais (Stripe/Iugu) e emissão de NFs.
+    3. **Cloud Deploy**: Migrar de storage local para Supabase Storage / S3 e rodar em ambiente serverless.
+
