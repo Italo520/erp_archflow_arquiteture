@@ -46,21 +46,7 @@ async function main() {
         }
     })
 
-    // 2. Colunas do Kanban de Projetos
-    console.log('Seeding Project Kanban Columns...')
-    const columns = [
-        { id: 'PLANNING', title: 'Planejamento', color: 'bg-blue-500', order: 0 },
-        { id: 'IN_PROGRESS', title: 'Em Andamento', color: 'bg-emerald-500', order: 1 },
-        { id: 'ON_HOLD', title: 'Pausado', color: 'bg-amber-500', order: 2 },
-        { id: 'COMPLETED', title: 'Concluído', color: 'bg-slate-500', order: 3 }
-    ]
-
-    const columnIds = columns.map(c => c.id)
-    for (const col of columns) {
-        await prisma.projectKanbanColumn.create({ data: col })
-    }
-
-    // 3. Dados Mestres: Clientes e Projetos
+    // 2. Dados Mestres: Clientes e Projetos
     console.log('Seeding Clients and Projects...')
     const clientsBatch = [
         { name: 'Sampaio & Filhos', status: 'ACTIVE', category: 'COMMERCIAL', spent: 150000 },
@@ -90,11 +76,11 @@ async function main() {
             }
         })
 
-        // Criar Projeto para cada cliente
+        // Criar Projeto para cada cliente (iniciando com status temporário)
         const project = await prisma.project.create({
             data: {
                 name: `Reforma ${cData.name}`,
-                status: columnIds[i % columnIds.length],
+                status: 'PLANNING',
                 ownerId: i % 2 === 0 ? admin.id : architect.id,
                 clientId: client.id,
                 projectType: cData.category,
@@ -105,7 +91,30 @@ async function main() {
             }
         })
 
-        // 4. Detalhes do Projeto: Stages, Tasks, Budget, TimeLogs
+        // Criar as 4 colunas Kanban específicas e associadas a este projeto
+        const colPlanning = await prisma.projectKanbanColumn.create({
+            data: { title: 'Planejamento', color: 'bg-blue-500', order: 0, projectId: project.id }
+        })
+        const colInProgress = await prisma.projectKanbanColumn.create({
+            data: { title: 'Em Andamento', color: 'bg-emerald-500', order: 1, projectId: project.id }
+        })
+        const colOnHold = await prisma.projectKanbanColumn.create({
+            data: { title: 'Pausado', color: 'bg-amber-500', order: 2, projectId: project.id }
+        })
+        const colCompleted = await prisma.projectKanbanColumn.create({
+            data: { title: 'Concluído', color: 'bg-slate-500', order: 3, projectId: project.id }
+        })
+
+        const projectCols = [colPlanning, colInProgress, colOnHold, colCompleted]
+        const chosenCol = projectCols[i % projectCols.length]
+
+        // Atualizar o status real do projeto com o ID da coluna Kanban específica dele
+        await prisma.project.update({
+            where: { id: project.id },
+            data: { status: chosenCol.id }
+        })
+
+        // 3. Detalhes do Projeto: Stages, Tasks, Budget, TimeLogs
         await seedProjectDetails(project.id, admin.id, architect.id)
     }
 

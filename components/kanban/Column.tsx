@@ -5,8 +5,8 @@ import { useSortable } from '@dnd-kit/sortable';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { TaskCard } from './TaskCard';
-import { createTask } from '@/actions/task';
-import { updateStage } from '@/actions/stage';
+import { createTask } from '@/app/actions/task';
+import { updateStage } from '@/app/actions/stage';
 import { 
     Plus, 
     X, 

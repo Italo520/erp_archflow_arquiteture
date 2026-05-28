@@ -28,7 +28,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 password: { label: "Password", type: "password" }
             },
             async authorize(credentials) {
-                console.log("NextAuth Authorize attempt for:", credentials?.email);
                 const parsedCredentials = z
                     .object({ email: z.string().email(), password: z.string().min(6) })
                     .safeParse(credentials);
@@ -39,25 +38,19 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                     const user = await getUser(normalizedEmail);
                     
                     if (!user) {
-                        console.log("Auth Fail: User not found in DB:", normalizedEmail);
                         return null;
                     }
 
                     const passwordsMatch = await bcrypt.compare(password, user.passwordHash);
  
                     if (passwordsMatch) {
-                        console.log("Auth Success: Password match for:", normalizedEmail);
                         return {
                             id: user.id,
                             name: user.fullName,
                             email: user.email,
                             role: user.role
                         };
-                    } else {
-                        console.log("Auth Fail: Password mismatch for:", normalizedEmail);
                     }
-                } else {
-                    console.error("Auth Fail: Invalid email/password format", parsedCredentials.error.format());
                 }
  
                 return null;

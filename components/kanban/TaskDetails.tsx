@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useTransition } from 'react';
-import { updateTask, deleteTask } from '@/actions/task';
+import { updateTask, deleteTask } from '@/app/actions/task';
 // Assuming using native Dialog from radix or simple div overlay if Dialog not fully configured in project context,
 // but the user has @radix-ui/react-dialog installed. I'll use a custom Sheet implementation using Tailwind for "Rich Aesthetics" as requested.
 // A slide-over sheet.

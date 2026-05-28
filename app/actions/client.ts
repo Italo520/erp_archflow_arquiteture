@@ -15,7 +15,11 @@ export async function createClient(data: z.infer<typeof clientSchema>) {
 
     try {
         const client = await prisma.client.create({
-            data: result.data,
+            data: {
+                ...result.data,
+                userId: result.data.userId || undefined,
+                address: result.data.address ? (result.data.address as any) : undefined,
+            },
         });
 
         revalidatePath("/dashboard/clients");
@@ -54,7 +58,11 @@ export async function updateClient(id: string, data: z.infer<typeof updateClient
     try {
         const client = await prisma.client.update({
             where: { id },
-            data: result.data,
+            data: {
+                ...result.data,
+                userId: result.data.userId || undefined,
+                address: result.data.address ? (result.data.address as any) : undefined,
+            },
         });
 
         revalidatePath("/dashboard/clients");

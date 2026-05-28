@@ -19,6 +19,11 @@ import {
     PencilRuler
 } from 'lucide-react';
 
+const getInitials = (name) => {
+    if (!name) return 'U';
+    return name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+};
+
 const Layout = ({ children }) => {
     const router = useRouter();
     const pathname = usePathname();
@@ -195,10 +200,16 @@ const Layout = ({ children }) => {
                             <p className="text-foreground text-sm font-bold">{session?.user?.name || 'Usuário'}</p>
                             <p className="text-muted-foreground text-xs">{session?.user?.email || 'Admin'}</p>
                         </div>
-                        <div
-                            className="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-border"
-                                style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDcQ26BLXXZiGcztd8nNmej4VGpUM-rSNITPSDiOkQjoR2N6qlWWAoY31IBhOAcdvMuh8O7xDChNxdLLiGWlZitRYOJIwJj_cOyx1XPjKDAsKIb-rVn4LdoEQ2iITFVdy7yI6lRuJHup8-0rjh7rmyr6YEmD_b3o3p3EJ8EbKKj8DIiSpMvTZMUgwJe6fYnUg2NzlTI_rWZiDzcc7hyJSkXNa5GRMqRl6kbY6OQ1IRGQc0uK7bCZ1MDASrziIJ9RS7gwW3tqNAIalo")' }}
-                            ></div>
+                        {session?.user?.image ? (
+                            <div
+                                className="bg-center bg-no-repeat bg-cover rounded-full size-10 border-2 border-border"
+                                style={{ backgroundImage: `url("${session.user.image}")` }}
+                            />
+                        ) : (
+                            <div className="flex items-center justify-center rounded-full size-10 border-2 border-border bg-primary text-primary-foreground font-bold text-sm">
+                                {getInitials(session?.user?.name || 'Usuário')}
+                            </div>
+                        )}
                         </div>
                     </div>
                 </header>

@@ -3,11 +3,19 @@
 import { prisma } from "@/lib/prisma"
 import { auth } from "@/auth"
 import { revalidatePath } from "next/cache"
-import { z } from "zod"
+import { Role } from "@prisma/client"
+import { canEditTask } from "@/lib/permissions"
 
 export async function updateStageOrder(projectId: string, updates: { id: string; order: number }[]) {
     const session = await auth();
-    if (!session?.user) throw new Error("Unauthorized");
+    if (!session?.user?.id) {
+        return { success: false, error: "Não autorizado" };
+    }
+
+    const userRole = (session.user.role as Role) || Role.VIEWER;
+    if (!canEditTask(userRole)) {
+        return { success: false, error: "Você não tem permissão para reordenar etapas" };
+    }
 
     try {
         await prisma.$transaction(
@@ -18,15 +26,22 @@ export async function updateStageOrder(projectId: string, updates: { id: string;
         );
         revalidatePath(`/projects/${projectId}`);
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to update stage order", error);
-        throw new Error("Failed to update stage order");
+        return { success: false, error: "Falha ao atualizar ordem das etapas: " + error.message };
     }
 }
 
 export async function updateStage(stageId: string, projectId: string, data: { name: string }) {
     const session = await auth();
-    if (!session?.user) throw new Error("Unauthorized");
+    if (!session?.user?.id) {
+        return { success: false, error: "Não autorizado" };
+    }
+
+    const userRole = (session.user.role as Role) || Role.VIEWER;
+    if (!canEditTask(userRole)) {
+        return { success: false, error: "Você não tem permissão para editar etapas" };
+    }
 
     try {
         await prisma.stage.update({
@@ -35,8 +50,8 @@ export async function updateStage(stageId: string, projectId: string, data: { na
         });
         revalidatePath(`/projects/${projectId}`);
         return { success: true };
-    } catch (error) {
+    } catch (error: any) {
         console.error("Failed to update stage", error);
-        throw new Error("Failed to update stage");
+        return { success: false, error: "Falha ao atualizar etapa: " + error.message };
     }
 }

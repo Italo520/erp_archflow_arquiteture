@@ -20,7 +20,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
     const project = await getProjectById(id);
     // Fetch metrics
     const metricsResult = await getProjectMetrics(id);
-    const metrics = metricsResult.success ? metricsResult.data : null;
+    const metrics = metricsResult.ok ? metricsResult.data : null;
 
     if (!project) {
         return notFound();

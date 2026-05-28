@@ -13,6 +13,7 @@ const getPusher = () => {
     if (!pusherInstance && typeof window !== 'undefined') {
         pusherInstance = new Pusher(pusherKey, {
             cluster: pusherCluster,
+            authEndpoint: '/api/pusher/auth',
         });
     }
     return pusherInstance;
@@ -31,9 +32,7 @@ export function useWebSocket(userId = 'global') {
             pusher.connection.bind('error', () => setIsConnected(false));
 
             const channelName = `private-notifications-${userId}`;
-            // For simple setup without auth endpoint right now, we can use public channel
-            // In a real app this should be a private channel with authentication
-            const channel = pusher.subscribe(`notifications-${userId}`);
+            const channel = pusher.subscribe(channelName);
 
             channel.bind('new-notification', (data) => {
                 setNotifications(prev => {
@@ -43,7 +42,7 @@ export function useWebSocket(userId = 'global') {
             });
 
             return () => {
-                pusher.unsubscribe(`notifications-${userId}`);
+                pusher.unsubscribe(channelName);
                 // Don't disconnect global instance to allow other hooks to use it, just unbind
                 channel.unbind('new-notification');
             };
@@ -54,7 +53,6 @@ export function useWebSocket(userId = 'global') {
 
     const markAsRead = useCallback((id) => {
         setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-        // Note: Real application should also call an API endpoint to mark as read in the database
     }, []);
 
     const unreadCount = notifications.filter(n => !n.read).length;

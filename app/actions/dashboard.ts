@@ -226,7 +226,7 @@ export async function getDashboardMetrics(userId?: string): Promise<DashboardMet
             productivityMap.set(dateKey, log._sum.duration || 0);
         });
 
-        const formattedProductivity = [];
+        const formattedProductivity: { date: string; hours: number }[] = [];
         for (let i = 0; i < 7; i++) {
             const d = subDays(new Date(), i); // 0 = today, 1 = yesterday...
             const dateKey = format(d, 'yyyy-MM-dd');

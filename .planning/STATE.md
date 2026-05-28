@@ -4,7 +4,7 @@ Este documento acompanha a evolução do desenvolvimento do projeto em tempo rea
 
 ## Progresso Geral do Projeto
 ```
-[ ] Milestone 1: Saneamento Técnico e Infraestrutura Base ............. 0%
+[x] Milestone 1: Saneamento Técnico e Infraestrutura Base ............. 100%
 [ ] Milestone 2: Gestão de Projetos e Fluxo de Trabalho .............. 0%
 [ ] Milestone 3: CRM de Clientes, Agenda e Controle de Tempo ......... 0%
 [ ] Milestone 4: Armazenamento e Entrega de Materiais ................ 0%
@@ -14,21 +14,21 @@ Este documento acompanha a evolução do desenvolvimento do projeto em tempo rea
 
 ---
 
-## Milestone Ativa: Milestone 1 - Saneamento Técnico e Infraestrutura Base
-- **Status**: Não Iniciada (Pronto para início de execução)
+## Milestone Ativa: Milestone 2 - Gestão de Projetos e Fluxo de Trabalho (Fase 1 - Parte A)
+- **Status**: Não Iniciada (Pronto para planejamento de desenvolvimento de código)
 - **Progresso da Milestone**: 0%
 
 ### Checklist da Milestone Ativa
-- [ ] **Configuração do Datasource no Prisma**: Adicionar `DATABASE_URL` ao `schema.prisma`. [REQ-001]
-- [ ] **Ambiente de Banco com Docker**: Criar `docker-compose.yml` com imagem PostgreSQL e volumes de persistência. [REQ-002]
-- [ ] **Configuração de Variáveis de Ambiente**: Criar `.env.example`. [REQ-003]
-- [ ] **Singleton de Conexão do ORM**: Revisar e blindar `lib/prisma.ts`. [REQ-004]
-- [ ] **Saneamento Geral**: Ajustar `.gitignore`, limpar pastas temporárias e arquivos órfãos. [REQ-005]
-- [ ] **Validação do Bootstrap**: Testar `prisma generate`, `migrate dev` e subida local da aplicação.
+- [ ] **Campos Arquitetônicos de Projetos**: Atualizar o `schema.prisma` com os campos especializados de arquitetura e rodar migração. [REQ-015]
+- [ ] **CRUD de Projetos com Actions**: Refatorar e padronizar rotas e Server Actions de projetos com a assinatura de retorno oficial. [REQ-016]
+- [ ] **Isolamento do Kanban**: Criar migration adicionando `projectId` no modelo `ProjectKanbanColumn`. [REQ-018]
+- [ ] **UX do Kanban Board**: Ajustar a tela do painel de Kanban para persistir movimentações de cards por drag-and-drop. [REQ-019]
+- [ ] **Duplicação de Projetos**: Consolidar a Server Action de clonagem de projetos. [REQ-017]
 
 ---
 
 ## Último Checkpoint
-- **Data**: 27 de Maio de 2026
-- **Ação**: Ingestão de documentos de produto e planejamento realizada via `/gsd-ingest-docs`. A estrutura do diretório `.planning/` foi totalmente inicializada em Net-new bootstrap.
-- **Situação**: O projeto está perfeitamente planejado, com requisitos rastreáveis catalogados e restrições travadas. O próximo passo operacional de execução é iniciar o **Milestone 1** (Fase 0 - Saneamento Técnico).
+- **Data**: 28 de Maio de 2026
+- **Ação**: Conclusão da Milestone 1. Subida bem-sucedida do banco de dados local PostgreSQL em contêiner na porta `5436`, saneamento completo de variáveis de ambiente (.env), blindagem do singleton do Prisma e execução bem-sucedida das migrações (`npx prisma migrate dev`) e seeding completo de dados pro-max no WSL.
+- **Situação**: O ambiente de desenvolvimento do ArchFlow ERP está 100% operacional e o build de produção do Next.js compila sem quaisquer erros de lint ou TypeScript. Pronto para a Milestone 2.
+

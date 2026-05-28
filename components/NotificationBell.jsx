@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import NotificationService from '@/services/notification.service';
+import { getNotifications, markAsRead as markAsReadDb, clearNotifications as clearNotificationsDb } from '@/app/actions/notification';
 import { useSession } from 'next-auth/react';
 import { Bell, BellOff, Info, CheckCircle2, AlertTriangle, XCircle } from 'lucide-react';
 
@@ -15,7 +15,7 @@ const NotificationBell = () => {
         isConnected,
         unreadCount,
         markAsRead: wsMarkAsRead,
-        clearNotifications,
+        clearNotifications: wsClearNotifications,
         setInitialNotifications
     } = useWebSocket(userId);
 
@@ -25,8 +25,7 @@ const NotificationBell = () => {
     useEffect(() => {
         const loadNotifications = async () => {
             try {
-                // If the service doesn't work, this will fail gracefully
-                const data = await NotificationService.getNotifications();
+                const data = await getNotifications();
                 if (data && Array.isArray(data)) {
                     setInitialNotifications(data);
                 }
@@ -45,9 +44,18 @@ const NotificationBell = () => {
         wsMarkAsRead(notificationId);
 
         try {
-            await NotificationService.markAsRead(notificationId);
+            await markAsReadDb(notificationId);
         } catch (error) {
             console.error('Failed to mark as read on server', error);
+        }
+    };
+
+    const handleClearNotifications = async () => {
+        wsClearNotifications();
+        try {
+            await clearNotificationsDb();
+        } catch (error) {
+            console.error('Failed to clear notifications on server', error);
         }
     };
 
@@ -103,7 +111,7 @@ const NotificationBell = () => {
                             </h3>
                             {notifications.length > 0 && (
                                 <button
-                                    onClick={clearNotifications}
+                                    onClick={handleClearNotifications}
                                     className="text-xs text-text-secondary hover:text-primary transition-colors"
                                 >
                                     Limpar tudo

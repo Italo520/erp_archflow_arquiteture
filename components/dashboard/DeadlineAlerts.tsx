@@ -8,7 +8,7 @@ interface Project {
     id: string;
     name: string;
     clientName: string;
-    deadline: string | Date;
+    deadline: string | Date | null;
 }
 
 interface DeadlineAlertsProps {
@@ -16,12 +16,15 @@ interface DeadlineAlertsProps {
 }
 
 export function DeadlineAlerts({ projects }: DeadlineAlertsProps) {
-    const getDeadlineStatus = (deadline: string | Date) => {
+    const getDeadlineStatus = (deadline: string | Date | null) => {
+        if (!deadline) {
+            return { label: "Sem prazo", variant: "secondary", color: "bg-gray-500", days: 999 };
+        }
         const today = new Date();
         // Normalize to start of day for accurate day difference
         today.setHours(0, 0, 0, 0);
 
-        let date = typeof deadline === 'string' ? parseISO(deadline) : deadline;
+        let date = typeof deadline === 'string' ? parseISO(deadline) : new Date(deadline);
         date.setHours(0, 0, 0, 0);
 
         const days = differenceInDays(date, today);
@@ -71,9 +74,9 @@ export function DeadlineAlerts({ projects }: DeadlineAlertsProps) {
                                         </Link>
                                     </p>
                                     <p className="text-xs text-muted-foreground">
-                                        {project.clientName} • {daysLeft >= 0 ?
+                                        {project.clientName} • {daysLeft === 999 ? "Sem prazo" : (daysLeft >= 0 ?
                                             (daysLeft === 0 ? "Hoje" : (daysLeft === 1 ? "Amanhã" : `${daysLeft} dias`))
-                                            : `${Math.abs(daysLeft)} dias atrasado`}
+                                            : `${Math.abs(daysLeft)} dias atrasado`)}
                                     </p>
                                 </div>
                                 <Badge variant={badgeVariant} className={cn(badgeClasses)}>

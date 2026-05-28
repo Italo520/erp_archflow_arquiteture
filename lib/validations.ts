@@ -45,10 +45,10 @@ export const addressSchema = z.object({
 
 // --- Client Schemas ---
 export const clientSchema = z.object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
+    name: z.string().min(2, "O nome deve ter pelo menos 2 caracteres"),
+    email: z.string().email("Endereço de email inválido"),
     phone: z.string().optional().nullable(),
-    website: z.string().url("Invalid URL").optional().nullable().or(z.literal("")),
+    website: z.string().url("URL inválida").optional().nullable().or(z.literal("")),
     legalType: ClientLegalTypeEnum.optional().nullable(),
     document: z.string().optional().nullable(),
     razaoSocial: z.string().optional().nullable(),
@@ -59,7 +59,7 @@ export const clientSchema = z.object({
     status: ClientStatusEnum.default(ClientStatus.PROSPECT),
     rating: z.number().min(0).max(5).optional().nullable(),
     totalSpent: z.number().nonnegative().optional().nullable(),
-    avatar: z.string().url("Invalid Image URL").optional().nullable().or(z.literal("")),
+    avatar: z.string().url("URL de imagem inválida").optional().nullable().or(z.literal("")),
     notes: z.string().optional().nullable(),
     contactPreference: ContactPreferenceEnum.optional().nullable(),
     userId: z.string().uuid().optional().nullable(),
@@ -74,7 +74,7 @@ export const updateClientSchema = clientSchema.partial().extend({
 // --- Activity Schemas ---
 export const activityBaseSchema = z.object({
     type: ActivityTypeEnum,
-    title: z.string().min(2, "Title is required"),
+    title: z.string().min(2, "O título é obrigatório"),
     description: z.string().optional().nullable(),
     duration: z.number().int().nonnegative().optional().nullable(), // minutes
     startTime: z.coerce.date(),
@@ -95,7 +95,7 @@ export const activitySchema = activityBaseSchema.refine((data) => {
     }
     return true;
 }, {
-    message: "End time must be after start time",
+    message: "A data/hora de término deve ser após a data/hora de início",
     path: ["endTime"],
 });
 
@@ -105,7 +105,7 @@ export const updateActivitySchema = activityBaseSchema.partial().extend({
 
 // --- TimeLog Schemas ---
 export const timeLogSchema = z.object({
-    duration: z.number().positive("Duration must be positive"), // hours
+    duration: z.number().positive("A duração deve ser positiva"), // hours
     category: TimeLogCategoryEnum,
     description: z.string().optional().nullable(),
     date: z.coerce.date(),
@@ -125,10 +125,10 @@ export const updateTimeLogSchema = timeLogSchema.partial().extend({
 
 // --- Deliverable Schemas ---
 export const deliverableSchema = z.object({
-    name: z.string().min(2, "Name is required"),
+    name: z.string().min(2, "O nome é obrigatório"),
     type: DeliverableTypeEnum,
     description: z.string().optional().nullable(),
-    fileUrl: z.string().url("File URL is required"),
+    fileUrl: z.string().url("A URL do arquivo é obrigatória"),
     fileSize: z.number().int().nonnegative().optional().nullable(),
     mimeType: z.string().optional().nullable(),
     version: z.number().int().positive().default(1),
@@ -167,10 +167,10 @@ export const projectPhaseSchema = z.object({
 });
 
 export const projectSchema = z.object({
-    name: z.string().min(2, "Project name is required"),
+    name: z.string().min(2, "O nome do projeto é obrigatório"),
     clientName: z.string().optional().nullable(),
     status: z.string().default("PLANNING"),
-    imageUrl: z.string().url("Invalid Image URL").optional().nullable().or(z.literal("")),
+    imageUrl: z.string().url("URL de imagem inválida").optional().nullable().or(z.literal("")),
     clientId: z.string().uuid().optional().nullable(),
     projectType: z.string().optional().nullable(),
     address: z.string().optional().nullable(),
@@ -195,9 +195,9 @@ export const updateProjectSchema = projectSchema.partial().extend({
 
 // --- User Schemas ---
 export const userSchema = z.object({
-    fullName: z.string().min(2, "Full name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
-    passwordHash: z.string().min(6, "Password must be at least 6 characters"),
+    fullName: z.string().min(2, "O nome completo deve ter pelo menos 2 caracteres"),
+    email: z.string().email("Endereço de email inválido"),
+    passwordHash: z.string().min(6, "A senha deve ter pelo menos 6 caracteres"),
 });
 
 export const updateUserSchema = userSchema.partial().extend({
@@ -205,17 +205,46 @@ export const updateUserSchema = userSchema.partial().extend({
 });
 
 // --- Task Schemas ---
+export const taskAttachmentSchema = z.object({
+    id: z.string(),
+    name: z.string(),
+    url: z.string().url("URL de anexo inválida"),
+    type: z.string().optional()
+});
+
+export const taskCommentSchema = z.object({
+    id: z.string(),
+    text: z.string().min(1, "O comentário não pode ser vazio"),
+    userId: z.string().uuid(),
+    userName: z.string(),
+    createdAt: z.string()
+});
+
+export const taskChecklistItemSchema = z.object({
+    id: z.string(),
+    text: z.string().min(1, "O item do checklist não pode ser vazio"),
+    checked: z.boolean().default(false)
+});
+
+export const taskHistoryItemSchema = z.object({
+    date: z.string(),
+    userId: z.string(),
+    userName: z.string(),
+    type: z.string(),
+    details: z.string()
+});
+
 export const taskSchema = z.object({
-    title: z.string().min(1, "Title is required"),
+    title: z.string().min(1, "O título da tarefa é obrigatório"),
     description: z.string().optional().nullable(),
     priority: PriorityEnum.optional().nullable(),
     dueDate: z.coerce.date().optional().nullable(),
 
     tags: z.array(z.string()).optional(),
-    attachments: z.any().optional().nullable(),
-    comments: z.any().optional().nullable(),
-    checklist: z.any().optional().nullable(),
-    historico: z.any().optional().nullable(),
+    attachments: z.array(taskAttachmentSchema).optional().nullable(),
+    comments: z.array(taskCommentSchema).optional().nullable(),
+    checklist: z.array(taskChecklistItemSchema).optional().nullable(),
+    historico: z.array(taskHistoryItemSchema).optional().nullable(),
 
     projectId: z.string().uuid(),
     stageId: z.string().uuid(),

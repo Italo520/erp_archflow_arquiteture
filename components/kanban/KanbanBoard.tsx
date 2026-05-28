@@ -22,8 +22,8 @@ import {
     horizontalListSortingStrategy,
     SortableContext
 } from '@dnd-kit/sortable';
-import { updateTaskPositions } from '@/actions/task';
-import { updateStageOrder } from '@/actions/stage';
+import { updateTaskPositions } from '@/app/actions/task';
+import { updateStageOrder } from '@/app/actions/stage';
 import Link from 'next/link';
 import { KanbanColumn } from './Column';
 import { TaskCard } from './TaskCard';
@@ -43,9 +43,9 @@ const dropAnimation = {
 
 export default function KanbanBoard({ project }) {
     const [stages, setStages] = useState(project.stages);
-    const [activeColumn, setActiveColumn] = useState(null);
-    const [activeTask, setActiveTask] = useState(null);
-    const [selectedTask, setSelectedTask] = useState(null);
+    const [activeColumn, setActiveColumn] = useState<any>(null);
+    const [activeTask, setActiveTask] = useState<any>(null);
+    const [selectedTask, setSelectedTask] = useState<any>(null);
 
     const stagesIds = useMemo(() => stages.map((stage) => stage.id), [stages]);
 
@@ -222,7 +222,7 @@ export default function KanbanBoard({ project }) {
         // So the state 'stages' is already visually correct.
         // We just need to persist the FINAL state of 'stages' to DB.
 
-        const updates = [];
+        const updates: { id: string; position: number; stageId: string }[] = [];
         stages.forEach(stage => {
             stage.tasks.forEach((task, index) => {
                 updates.push({
