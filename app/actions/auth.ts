@@ -75,6 +75,7 @@ export async function signUp(data: z.infer<typeof signUpSchema>) {
                 email: email.toLowerCase(),
                 fullName: name,
                 passwordHash,
+                role: "OWNER",
             },
         });
 

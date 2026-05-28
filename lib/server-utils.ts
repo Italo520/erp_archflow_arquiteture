@@ -14,6 +14,12 @@ export async function requireAuth() {
 export async function requireProjectAccess(projectId: string, allowedRoles: Role[]) {
     const session = await requireAuth();
     const userId = session.user.id as string;
+    const userRole = session.user.role as Role;
+
+    // Administradores globais (OWNER) do escritório têm acesso total a qualquer projeto
+    if (userRole === Role.OWNER) {
+        return session;
+    }
 
     const project = await prisma.project.findUnique({
         where: { id: projectId },
