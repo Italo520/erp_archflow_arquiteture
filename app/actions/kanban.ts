@@ -41,9 +41,7 @@ export async function getKanbanColumns(projectId?: string): Promise<ActionRespon
                 { title: 'Concluído', color: 'bg-slate-500', order: 3, projectId }
             ];
 
-            for (const col of defaultCols) {
-                await model.create({ data: col });
-            }
+            await model.createMany({ data: defaultCols });
 
             columns = await model.findMany({
                 where: { projectId },
