@@ -68,7 +68,7 @@ export function ProjectOverview({ project }: ProjectOverviewProps) {
         }))
     ]
 
-    const team = Array.from(new Map(rawTeam.map(item => [item.id, item])).values());
+    const team = Array.from(rawTeam.reduce((map, item) => map.set(item.id, item), new Map<any, any>()).values());
 
     // Health calculation
     const calculateHealth = () => {
@@ -175,7 +175,7 @@ export function ProjectOverview({ project }: ProjectOverviewProps) {
                     </CardHeader>
                     <CardContent>
                         <div className="flex -space-x-2">
-                            {team.map((m) => (
+                            {team.map((m: any) => (
                                 <Avatar key={m.id} className="border-2 border-background h-8 w-8">
                                     <AvatarImage src={m.avatar || undefined} />
                                     <AvatarFallback>{m.name.charAt(0)}</AvatarFallback>
