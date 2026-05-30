@@ -2,6 +2,7 @@
 
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from './auth';
+import { resend } from '@/lib/resend';
 import { generateBusinessReportPDF, generateProductivityReportPDF } from '@/lib/export-pdf';
 import { generateBusinessReportExcel, generateProductivityReportExcel } from '@/lib/export-excel';
 import { startOfMonth, endOfMonth, subMonths, format, startOfWeek, endOfWeek, startOfQuarter, endOfQuarter, subDays } from 'date-fns';
@@ -204,6 +205,10 @@ export async function emailReport(
             return { success: false, error: 'Não autorizado' };
         }
 
+        if (!user.email) {
+            return { success: false, error: 'Usuário não possui email cadastrado' };
+        }
+
         // Generate PDF
         const reportData = await fetchReportData(filters, type);
         let blob: Blob;
@@ -222,24 +227,21 @@ export async function emailReport(
             return { success: false, error: 'Tipo de relatório não suportado' };
         }
 
-        // TODO: Implement email sending with Resend
-        // const arrayBuffer = await blob.arrayBuffer();
-        // const buffer = Buffer.from(arrayBuffer);
-        // 
-        // await resend.emails.send({
-        //   from: 'ArchFlow <reports@archflow.com>',
-        //   to: user.email,
-        //   subject: `Relatório de ${type === 'business' ? 'Negócio' : 'Produtividade'} - ArchFlow`,
-        //   html: `<p>Segue em anexo o relatório solicitado.</p>`,
-        //   attachments: [
-        //     {
-        //       filename: `relatorio-${type}-${Date.now()}.pdf`,
-        //       content: buffer,
-        //     },
-        //   ],
-        // });
+        const arrayBuffer = await blob.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        console.log('Email would be sent to:', user.email);
+        await resend.emails.send({
+          from: 'ArchFlow <reports@archflow.com>',
+          to: user.email || '',
+          subject: `Relatório de ${type === 'business' ? 'Negócio' : 'Produtividade'} - ArchFlow`,
+          html: `<p>Segue em anexo o relatório solicitado.</p>`,
+          attachments: [
+            {
+              filename: `relatorio-${type}-${Date.now()}.pdf`,
+              content: buffer,
+            },
+          ],
+        });
 
         return { success: true };
     } catch (error) {
