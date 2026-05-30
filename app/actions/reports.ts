@@ -7,6 +7,7 @@ import { generateBusinessReportExcel, generateProductivityReportExcel } from '@/
 import { startOfMonth, endOfMonth, subMonths, format, startOfWeek, endOfWeek, startOfQuarter, endOfQuarter, subDays } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { auth } from '@/auth';
+import { resend } from "@/lib/resend";
 
 export type ReportType = 'business' | 'productivity' | 'financial';
 export type ExportFormat = 'pdf' | 'excel';
@@ -222,24 +223,32 @@ export async function emailReport(
             return { success: false, error: 'Tipo de relatório não suportado' };
         }
 
-        // TODO: Implement email sending with Resend
-        // const arrayBuffer = await blob.arrayBuffer();
-        // const buffer = Buffer.from(arrayBuffer);
-        // 
-        // await resend.emails.send({
-        //   from: 'ArchFlow <reports@archflow.com>',
-        //   to: user.email,
-        //   subject: `Relatório de ${type === 'business' ? 'Negócio' : 'Produtividade'} - ArchFlow`,
-        //   html: `<p>Segue em anexo o relatório solicitado.</p>`,
-        //   attachments: [
-        //     {
-        //       filename: `relatorio-${type}-${Date.now()}.pdf`,
-        //       content: buffer,
-        //     },
-        //   ],
-        // });
+        const arrayBuffer = await blob.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
 
-        console.log('Email would be sent to:', user.email);
+        if (!user.email) {
+            return { success: false, error: 'Usuário sem email cadastrado' };
+        }
+
+        const { data, error } = await resend.emails.send({
+          from: 'ArchFlow <reports@archflow.com>',
+          to: user.email,
+          subject: `Relatório de ${type === 'business' ? 'Negócio' : 'Produtividade'} - ArchFlow`,
+          html: `<p>Segue em anexo o relatório solicitado.</p>`,
+          attachments: [
+            {
+              filename: `relatorio-${type}-${Date.now()}.pdf`,
+              content: buffer,
+            },
+          ],
+        });
+
+        if (error) {
+            console.error('Error sending report email via Resend:', error);
+            return { success: false, error: 'Erro ao enviar email via Resend' };
+        }
+
+        console.log('Email successfully sent to:', user.email, 'id:', data?.id);
 
         return { success: true };
     } catch (error) {
