@@ -223,21 +223,6 @@ export async function emailReport(
         }
 
         // TODO: Implement email sending with Resend
-        // const arrayBuffer = await blob.arrayBuffer();
-        // const buffer = Buffer.from(arrayBuffer);
-        // 
-        // await resend.emails.send({
-        //   from: 'ArchFlow <reports@archflow.com>',
-        //   to: user.email,
-        //   subject: `Relatório de ${type === 'business' ? 'Negócio' : 'Produtividade'} - ArchFlow`,
-        //   html: `<p>Segue em anexo o relatório solicitado.</p>`,
-        //   attachments: [
-        //     {
-        //       filename: `relatorio-${type}-${Date.now()}.pdf`,
-        //       content: buffer,
-        //     },
-        //   ],
-        // });
 
         console.log('Email would be sent to:', user.email);
 
