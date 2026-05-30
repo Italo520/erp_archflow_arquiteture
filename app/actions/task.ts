@@ -119,7 +119,7 @@ export async function updateTaskStage(taskId: string, newStageId: string, projec
         });
 
         await prisma.task.update({
-            where: { id: taskId },
+            where: { id: taskId, projectId },
             data: {
                 stageId: newStageId,
                 historico: currentHistory as any
@@ -139,7 +139,7 @@ export async function updateTask(taskId: string, projectId: string, data: Partia
         await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
         
         await prisma.task.update({
-            where: { id: taskId },
+            where: { id: taskId, projectId },
             data: {
                 ...data,
                 dueDate: data.dueDate ? new Date(data.dueDate) : undefined
