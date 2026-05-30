@@ -64,7 +64,7 @@ describe('KPICard Component', () => {
         );
         const trendElement = screen.getByText('+15%');
         expect(trendElement).toBeInTheDocument();
-        expect(trendElement).toHaveClass('text-green-600');
+        expect(trendElement.parentElement).toHaveClass('text-emerald-600');
     });
 
     it('renders negative trend with positive intent as red', () => {
@@ -78,7 +78,7 @@ describe('KPICard Component', () => {
         );
         const trendElement = screen.getByText('-10%');
         expect(trendElement).toBeInTheDocument();
-        expect(trendElement).toHaveClass('text-red-600');
+        expect(trendElement.parentElement).toHaveClass('text-red-500');
     });
 
     it('renders positive trend with negative intent as red', () => {
@@ -90,7 +90,7 @@ describe('KPICard Component', () => {
             />
         );
         const trendElement = screen.getByText('+5%');
-        expect(trendElement).toHaveClass('text-red-600');
+        expect(trendElement.parentElement).toHaveClass('text-red-500');
     });
 
     it('renders neutral intent with muted color', () => {
@@ -102,7 +102,7 @@ describe('KPICard Component', () => {
             />
         );
         const trendElement = screen.getByText('+10%');
-        expect(trendElement).toHaveClass('text-muted-foreground');
+        expect(trendElement.parentElement).toHaveClass('text-muted-foreground');
     });
 
     it('renders trend label when provided', () => {

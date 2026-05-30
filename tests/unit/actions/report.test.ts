@@ -1,4 +1,4 @@
-import { getTopProjects, getTimeBreakdownByClient, getFullProjectBreakdown } from "@/app/actions/report";
+import { getTopProjects, getTimeBreakdownByClient, getFullProjectBreakdown, getDailyProductivity } from "@/app/actions/report";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { DeepMockProxy } from "jest-mock-extended";
@@ -23,6 +23,43 @@ describe("Report Actions", () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    });
+
+
+    describe("getDailyProductivity", () => {
+        it("should return formatted daily hours", async () => {
+            const dateStr = "2023-10-15T00:00:00Z";
+            mockPrisma.timeLog.groupBy.mockResolvedValue([
+                { date: new Date(dateStr), _sum: { duration: 8 } },
+                { date: new Date("2023-10-16T00:00:00Z"), _sum: { duration: null } }
+            ] as any);
+
+            const result = await getDailyProductivity(7);
+
+            expect(result.success).toBe(true);
+            expect(result.data).toEqual([
+                { date: "10/15", hours: 8 },
+                { date: "10/16", hours: 0 }
+            ]);
+        });
+
+        it("should return unauthorized if not logged in", async () => {
+            mockAuth.mockResolvedValue(null);
+
+            const result = await getDailyProductivity(7);
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe("Unauthorized");
+        });
+
+        it("should return error when fetch fails", async () => {
+            mockPrisma.timeLog.groupBy.mockRejectedValue(new Error("Database error"));
+
+            const result = await getDailyProductivity(7);
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe("Failed to fetch trends");
+        });
     });
 
     describe("getTopProjects", () => {
