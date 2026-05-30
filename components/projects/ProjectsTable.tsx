@@ -52,9 +52,6 @@ function getProjectHealth(project: Project): 'ON_TRACK' | 'DELAYED' | 'COMPLETED
         return 'DELAYED';
     }
 
-    // Check Budget Risks (if we had budget data populated)
-    // if (project.actualCost > project.plannedCost) return 'AT_RISK';
-
     return 'ON_TRACK';
 }
 
