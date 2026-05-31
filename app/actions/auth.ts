@@ -147,13 +147,11 @@ export async function requestPasswordReset(data: z.infer<typeof forgotPasswordSc
         });
 
         // Send email (MOCK)
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const resetLink = `${baseUrl}/reset-password?token=${token}`;
+        // const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+        // const resetLink = `${baseUrl}/reset-password?token=${token}`;
 
-        console.log("\n--- PASSWORD RESET ---");
-        console.log(`User: ${email}`);
-        console.log(`Link: ${resetLink}`);
-        console.log("----------------------\n");
+        // TODO: Implement actual email sending service (e.g. Resend)
+        // For now, we just return success without logging the sensitive token
 
         return { success: true, message: "Link de recuperação enviado para o seu e-mail." };
     } catch (error) {
