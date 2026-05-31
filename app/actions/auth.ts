@@ -147,13 +147,7 @@ export async function requestPasswordReset(data: z.infer<typeof forgotPasswordSc
         });
 
         // Send email (MOCK)
-        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-        const resetLink = `${baseUrl}/reset-password?token=${token}`;
-
-        console.log("\n--- PASSWORD RESET ---");
-        console.log(`User: ${email}`);
-        console.log(`Link: ${resetLink}`);
-        console.log("----------------------\n");
+        // TODO: Integrate with an actual email service like Resend
 
         return { success: true, message: "Link de recuperação enviado para o seu e-mail." };
     } catch (error) {
