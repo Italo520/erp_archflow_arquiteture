@@ -33,9 +33,7 @@ export async function getKanbanColumns() {
                 { id: 'COMPLETED', title: 'Concluído', color: 'bg-slate-500', order: 3 }
             ];
 
-            for (const col of defaultCols) {
-                await model.create({ data: col });
-            }
+            await model.createMany({ data: defaultCols });
 
             columns = await model.findMany({
                 orderBy: { order: 'asc' }
