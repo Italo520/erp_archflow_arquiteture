@@ -57,7 +57,9 @@ export class DiskStorageProvider implements StorageProvider {
       try {
         const metaData = await fs.readFile(metaPath, "utf-8");
         const meta = JSON.parse(metaData);
-        if (meta.mimeType) mimeType = meta.mimeType;
+        if (meta && typeof meta === "object" && typeof meta.mimeType === "string") {
+          mimeType = meta.mimeType;
+        }
       } catch {
         // Fallback se não houver meta file
       }
