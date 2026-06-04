@@ -75,7 +75,7 @@ export function ProjectForm({ initialData, isEditing = false }: ProjectFormProps
                 if (isEditing) {
                     router.push(`/projects/${result.data?.id || initialData?.id}`);
                 } else {
-                    router.push('/dashboard/projects?view=kanban');
+                    router.push('/projects?view=kanban');
                 }
                 router.refresh();
             } else {
@@ -158,11 +158,13 @@ export function ProjectForm({ initialData, isEditing = false }: ProjectFormProps
                                 <div className="space-y-2">
                                     <Label htmlFor="startDate">Data de Início</Label>
                                     <Input type="date" id="startDate" {...form.register("startDate")} />
+                                    {form.formState.errors.startDate && <p className="text-sm text-destructive">{String(form.formState.errors.startDate.message)}</p>}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="estimatedEndDate">Previsão de Entrega</Label>
                                     <Input type="date" id="estimatedEndDate" {...form.register("estimatedEndDate")} />
+                                    {form.formState.errors.estimatedEndDate && <p className="text-sm text-destructive">{String(form.formState.errors.estimatedEndDate.message)}</p>}
                                 </div>
                             </div>
                         </CardContent>
@@ -218,6 +220,7 @@ export function ProjectForm({ initialData, isEditing = false }: ProjectFormProps
                                         {...form.register("totalArea", { valueAsNumber: true })}
                                         step="0.01"
                                     />
+                                    {form.formState.errors.totalArea && <p className="text-sm text-destructive">{String(form.formState.errors.totalArea.message)}</p>}
                                 </div>
 
                                 <div className="space-y-2">
@@ -228,6 +231,7 @@ export function ProjectForm({ initialData, isEditing = false }: ProjectFormProps
                                         {...form.register("plannedCost", { valueAsNumber: true })}
                                         step="0.01"
                                     />
+                                    {form.formState.errors.plannedCost && <p className="text-sm text-destructive">{String(form.formState.errors.plannedCost.message)}</p>}
                                 </div>
 
                                 <div className="space-y-2">

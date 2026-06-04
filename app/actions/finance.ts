@@ -34,7 +34,6 @@ export async function getProjectFinancials(projectId: string): Promise<ActionRes
             return { ok: false, success: false, error: "NotFound", message: "Projeto não encontrado" };
         }
 
-<<<<<<< HEAD
         const totalHours = timeLogs.reduce((acc, log) => acc + log.duration, 0);
         const billableHours = timeLogs
             .filter(log => log.billable)
@@ -43,21 +42,6 @@ export async function getProjectFinancials(projectId: string): Promise<ActionRes
         const actualCostOfHours = timeLogs
             .filter(log => log.billable)
             .reduce((acc, log) => acc + (log.duration * Number(log.billRate || 0)), 0);
-=======
-        // Calcula horas e custos reais com base nos logs de tempo
-        let totalHours = 0;
-        let billableHours = 0;
-        let actualCostOfHours = 0;
-
-        for (let i = 0; i < timeLogs.length; i++) {
-            const log = timeLogs[i];
-            totalHours += log.duration;
-            if (log.billable) {
-                billableHours += log.duration;
-                actualCostOfHours += log.duration * Number(log.billRate || 0);
-            }
-        }
->>>>>>> 591e5c1bacd201fb66f050286f617a29990bd5b0
 
         const totalBudgetVal = budget ? Number(budget.totalBudget) : Number(project.plannedCost || 0);
         const budgetSpent = actualCostOfHours;

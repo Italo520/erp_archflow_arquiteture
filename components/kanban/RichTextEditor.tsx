@@ -11,6 +11,7 @@ export function RichTextEditor({ content, onChange }: { content: string, onChang
             StarterKit,
         ],
         content: content || '',
+        immediatelyRender: false,
         onUpdate: ({ editor }) => {
             onChange(editor.getHTML());
         },

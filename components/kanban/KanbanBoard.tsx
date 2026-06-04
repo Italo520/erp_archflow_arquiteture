@@ -50,6 +50,22 @@ export default function KanbanBoard({ project }) {
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
 
+    useEffect(() => {
+        const savedViewMode = localStorage.getItem('kanbanViewMode');
+        if (savedViewMode === 'kanban' || savedViewMode === 'list') {
+            setViewMode(savedViewMode);
+        }
+    }, []);
+
+    useEffect(() => {
+        setStages(project.stages);
+    }, [project.stages]);
+
+    const changeViewMode = (mode: 'kanban' | 'list') => {
+        setViewMode(mode);
+        localStorage.setItem('kanbanViewMode', mode);
+    };
+
     const stagesIds = useMemo(() => stages.map((stage) => stage.id), [stages]);
 
     const sensors = useSensors(
@@ -166,15 +182,19 @@ export default function KanbanBoard({ project }) {
                 if (activeStageIndex === overStageIndex) return stages;
 
                 const newStages = [...stages];
+                const activeStage = newStages[activeStageIndex];
+                const overStage = newStages[overStageIndex];
+
+                const activeTaskIndex = activeStage.tasks.findIndex((task) => task.id === activeId);
                 
-                const newActiveTasks = [...newStages[activeStageIndex].tasks];
+                const newActiveTasks = [...activeStage.tasks];
                 const [movedTask] = newActiveTasks.splice(activeTaskIndex, 1);
 
-                const newOverTasks = [...newStages[overStageIndex].tasks];
+                const newOverTasks = [...overStage.tasks];
                 newOverTasks.push({ ...movedTask, stageId: overStage.id });
 
-                newStages[activeStageIndex] = { ...newStages[activeStageIndex], tasks: newActiveTasks };
-                newStages[overStageIndex] = { ...newStages[overStageIndex], tasks: newOverTasks };
+                newStages[activeStageIndex] = { ...activeStage, tasks: newActiveTasks };
+                newStages[overStageIndex] = { ...overStage, tasks: newOverTasks };
 
                 return newStages;
             });
@@ -267,14 +287,14 @@ export default function KanbanBoard({ project }) {
                     </div>
                     <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
                         <button
-                            onClick={() => setViewMode('kanban')}
+                            onClick={() => changeViewMode('kanban')}
                             className={`p-1.5 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-colors ${viewMode === 'kanban' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                         >
                             <LayoutGrid className="h-4 w-4" />
                             Quadro
                         </button>
                         <button
-                            onClick={() => setViewMode('list')}
+                            onClick={() => changeViewMode('list')}
                             className={`p-1.5 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
                         >
                             <LayoutList className="h-4 w-4" />

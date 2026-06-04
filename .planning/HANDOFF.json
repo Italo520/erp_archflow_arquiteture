@@ -1,54 +1,35 @@
 {
   "version": "1.0",
-  "timestamp": "2026-05-27T17:55:00-03:00",
-  "phase": "0",
-  "phase_name": "Saneamento Técnico e Infraestrutura Base",
+  "timestamp": "2026-06-04T16:22:00-03:00",
+  "phase": "8",
+  "phase_name": "QA Completo e Testes E2E",
   "phase_dir": "",
   "plan": 0,
-  "task": 0,
+  "task": 4,
   "total_tasks": 6,
   "status": "paused",
   "completed_tasks": [
-    {
-      "id": 1,
-      "name": "Ingestão dos Documentos de Planejamento",
-      "status": "done",
-      "commit": "ce0e338"
-    },
-    {
-      "id": 2,
-      "name": "Estruturação dos Arquivos do GSD no .planning/",
-      "status": "done",
-      "commit": "ce0e338"
-    }
+    {"id": 1, "name": "Onda 1: Autenticação & Layout Global", "status": "done"},
+    {"id": 2, "name": "Onda 2: Dashboard Principal", "status": "done"},
+    {"id": 3, "name": "Onda 3: Gestão de Clientes", "status": "done"},
+    {"id": 4, "name": "Onda 4: Gestão de Projetos & Kanban", "status": "done"}
   ],
   "remaining_tasks": [
-    {
-      "id": 3,
-      "name": "Iniciar a Milestone 1 - Saneamento Técnico e Infraestrutura Base",
-      "status": "not_started"
-    }
+    {"id": 5, "name": "Onda 5: Atividades & Time Tracking", "status": "not_started"},
+    {"id": 6, "name": "Onda 6: Relatórios", "status": "not_started"}
   ],
   "blockers": [],
   "human_actions_pending": [],
   "decisions": [
     {
-      "decision": "Uso de PostgreSQL local em Docker Compose para o desenvolvimento do MVP",
-      "rationale": "Garante estabilidade, facilidade de onboarding e remove dependência de recursos pagos externos em fase de desenvolvimento",
-      "phase": "0"
-    },
-    {
-      "decision": "Padronização do retorno de Server Actions com ActionResponse",
-      "rationale": "Fornece consistência de interface de comunicação entre o cliente e o servidor Next.js",
-      "phase": "0"
-    },
-    {
-      "decision": "Restrição de Kanban Columns de forma dependente por projeto",
-      "rationale": "Corrige o bug estrutural do modelo original e reflete as necessidades operacionais de escritórios de arquitetura",
-      "phase": "0"
+      "decision": "Soft Delete de Projetos validado direto no banco",
+      "rationale": "Verificado que o projeto duplicado excluído teve a coluna deletedAt corretamente preenchida, confirmando o comportamento de exclusão lógica",
+      "phase": "8"
     }
   ],
-  "uncommitted_files": [],
-  "next_action": "/gsd-plan-phase 1",
-  "context_notes": "A inicialização e ingestão de documentos foram concluídas com sucesso. O planejamento macro está estruturado nos arquivos do .planning/. O próximo agente deve iniciar o planejamento da Milestone 1 (Fase 0 - Saneamento Técnico) para configurar o banco de dados e preparar o ambiente para os fluxos centrais."
+  "uncommitted_files": [
+    "verify-project-delete.ts"
+  ],
+  "next_action": "Retomar testes E2E iniciando pela Onda 5 (Atividades & Time Tracking)",
+  "context_notes": "Concluímos com sucesso todos os testes E2E da Onda 4 (Projetos e Kanban), validando desde a visualização e persistência de layout até criação, duplicação, abas de detalhes e soft delete de projetos. Identificamos bugs importantes como a exibição de UUID de status em vez do nome amigável e problemas de validação de data no form. O próximo agente deve iniciar os testes da Onda 5 em /activities."
 }

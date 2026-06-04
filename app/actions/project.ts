@@ -33,12 +33,14 @@ export async function createProject(data: z.infer<typeof projectSchema>): Promis
         // o banco reverte automaticamente para o estado anterior.
         const updatedProject = await prisma.$transaction(async (tx: any) => {
             // 1. Cria o projeto sem coluna ainda
+            const { status, clientId, phases, ...rest } = result.data;
             const project = await tx.project.create({
                 data: {
-                    ...result.data,
+                    ...rest,
+                    clientId: clientId === "" ? null : clientId,
                     currentColumnId: null,
                     ownerId: session.user.id,
-                    phases: result.data.phases as any,
+                    phases: phases as any,
                 },
             });
 
@@ -89,7 +91,12 @@ export async function getProjectById(id: string) {
             include: {
                 client: true,
                 stages: {
-                    include: { tasks: true },
+                    include: { 
+                        tasks: {
+                            where: { deletedAt: null },
+                            orderBy: { position: 'asc' }
+                        }
+                    },
                     orderBy: { order: 'asc' }
                 },
                 members: {
@@ -121,11 +128,13 @@ export async function updateProject(id: string, data: z.infer<typeof updateProje
             const errs = result.error.flatten().fieldErrors;
             return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
         }
+        const { status, clientId, phases, ...rest } = result.data;
         const project = await (prisma as any).project.update({
             where: { id },
             data: {
-                ...result.data,
-                phases: result.data.phases ? (result.data.phases as any) : undefined,
+                ...rest,
+                clientId: clientId === "" ? null : clientId,
+                phases: phases ? (phases as any) : undefined,
             },
         });
 

@@ -245,29 +245,39 @@ export const projectPhaseSchema = z.object({
     status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED"]).default("PENDING"),
 });
 
-export const projectSchema = z.object({
+export const projectBaseSchema = z.object({
     name: z.string().min(2, "O nome do projeto é obrigatório"),
     clientName: z.string().optional().nullable(),
     status: z.string().default("PLANNING"),
     imageUrl: z.string().url("URL de imagem inválida").optional().nullable().or(z.literal("")),
-    clientId: z.string().uuid().optional().nullable(),
+    clientId: z.string().uuid().optional().nullable().or(z.literal("")),
     projectType: z.string().optional().nullable(),
     address: z.string().optional().nullable(),
     startDate: z.coerce.date().optional().nullable(),
     deliveryDate: z.coerce.date().optional().nullable(), // Legacy field map
     estimatedEndDate: z.coerce.date().optional().nullable(),
     actualEndDate: z.coerce.date().optional().nullable(),
-    totalArea: z.number().nonnegative().optional().nullable(),
-    plannedCost: z.number().optional().nullable(), // Decimal handled as number in Zod input
+    totalArea: z.number().nonnegative("A área total deve ser maior ou igual a zero").optional().nullable(),
+    plannedCost: z.number().nonnegative("O orçamento deve ser maior ou igual a zero").optional().nullable(),
     actualCost: z.number().optional().nullable(), // Decimal handled as number in Zod input
     attachedDocuments: z.any().optional().nullable(),
-    ownerId: z.string().uuid(),
+    ownerId: z.string().uuid().optional(),
     // Spread architectural fields
     ...projectArchitectureSchema.shape,
     phases: z.array(projectPhaseSchema).optional(),
 });
 
-export const updateProjectSchema = projectSchema.partial().extend({
+export const projectSchema = projectBaseSchema.refine((data) => {
+    if (data.startDate && data.estimatedEndDate) {
+        return new Date(data.estimatedEndDate) >= new Date(data.startDate);
+    }
+    return true;
+}, {
+    message: "A data de entrega deve ser posterior à data de início",
+    path: ["estimatedEndDate"],
+});
+
+export const updateProjectSchema = projectBaseSchema.partial().extend({
     id: z.string().uuid(),
     phases: z.array(projectPhaseSchema).optional(),
 });

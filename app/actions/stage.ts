@@ -24,6 +24,7 @@ export async function updateStageOrder(projectId: string, updates: { id: string;
                 data: { order: u.order }
             }))
         );
+        revalidatePath(`/projects/${projectId}`);
         revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
@@ -48,6 +49,7 @@ export async function updateStage(stageId: string, projectId: string, data: { na
             where: { id: stageId },
             data: { name: data.name }
         });
+        revalidatePath(`/projects/${projectId}`);
         revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
@@ -75,6 +77,7 @@ export async function createStage(projectId: string, data: { name: string, order
                 order: data.order
             }
         });
+        revalidatePath(`/projects/${projectId}`);
         revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true, stage };
     } catch (error: any) {
@@ -98,6 +101,7 @@ export async function deleteStage(stageId: string, projectId: string) {
         await prisma.stage.delete({
             where: { id: stageId }
         });
+        revalidatePath(`/projects/${projectId}`);
         revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {

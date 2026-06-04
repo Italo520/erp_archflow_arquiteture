@@ -86,6 +86,7 @@ export async function createTask(data: z.input<typeof TaskSchema>) {
         });
 
         // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/projects/${projectId}`);
         revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true, data: task };
     } catch (error: any) {
@@ -128,6 +129,7 @@ export async function updateTaskStage(taskId: string, newStageId: string, projec
         });
 
         // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/projects/${projectId}`);
         revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
@@ -149,6 +151,7 @@ export async function updateTask(taskId: string, projectId: string, data: Partia
         });
 
         // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/projects/${projectId}`);
         revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
@@ -169,6 +172,7 @@ export async function deleteTask(taskId: string, projectId: string) {
         });
 
         // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/projects/${projectId}`);
         revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
@@ -188,6 +192,7 @@ export async function updateTaskPositions(projectId: string, updates: { id: stri
             }))
         );
         // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/projects/${projectId}`);
         revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
