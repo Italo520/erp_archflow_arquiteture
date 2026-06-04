@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useRef } from 'react';
 import { updateTask, deleteTask } from '@/app/actions/task';
-// Assuming using native Dialog from radix or simple div overlay if Dialog not fully configured in project context,
-// but the user has @radix-ui/react-dialog installed. I'll use a custom Sheet implementation using Tailwind for "Rich Aesthetics" as requested.
-// A slide-over sheet.
+import { RichTextEditor } from './RichTextEditor';
+import { Paperclip, File, X, UploadCloud, Calendar, Flag, AlignLeft } from 'lucide-react';
 
 interface TaskDetailsProps {
     task: any; // Type this properly if possible, but 'any' matches current loose typing in existing files
@@ -17,6 +16,8 @@ export function TaskDetails({ task, projectId, onClose }: TaskDetailsProps) {
     const [description, setDescription] = useState(task.description || '');
     const [priority, setPriority] = useState(task.priority || 'MEDIUM');
     const [dueDate, setDueDate] = useState(task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '');
+    const [documents, setDocuments] = useState<File[]>([]);
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const [isPending, startTransition] = useTransition();
 
     const handleSave = () => {
@@ -47,6 +48,18 @@ export function TaskDetails({ task, projectId, onClose }: TaskDetailsProps) {
                 alert("Erro ao excluir tarefa");
             }
         });
+    };
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files) {
+            setDocuments([...documents, ...Array.from(e.target.files)]);
+        }
+    };
+
+    const removeFile = (index: number) => {
+        const newDocs = [...documents];
+        newDocs.splice(index, 1);
+        setDocuments(newDocs);
     };
 
     return (
@@ -102,13 +115,57 @@ export function TaskDetails({ task, projectId, onClose }: TaskDetailsProps) {
 
                     {/* Description */}
                     <div>
-                        <label className="block text-xs font-semibold text-slate-500 uppercase mb-1">Descrição</label>
-                        <textarea
-                            className="w-full h-32 p-3 rounded bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-sm resize-none focus:ring-1 focus:ring-primary"
-                            placeholder="Adicione detalhes sobre essa tarefa..."
-                            value={description}
-                            onChange={e => setDescription(e.target.value)}
+                        <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase mb-2">
+                            <AlignLeft className="h-4 w-4" />
+                            Descrição
+                        </label>
+                        <RichTextEditor 
+                            content={description} 
+                            onChange={setDescription} 
                         />
+                    </div>
+
+                    {/* Documents / Attachments */}
+                    <div>
+                        <label className="flex items-center gap-1.5 text-xs font-semibold text-slate-500 uppercase mb-2">
+                            <Paperclip className="h-4 w-4" />
+                            Anexos
+                        </label>
+                        
+                        <div 
+                            onClick={() => fileInputRef.current?.click()}
+                            className="w-full border-2 border-dashed border-gray-200 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5 rounded-xl p-6 flex flex-col items-center justify-center cursor-pointer transition-colors"
+                        >
+                            <UploadCloud className="h-8 w-8 text-slate-400 mb-2" />
+                            <p className="text-sm font-medium text-slate-700 dark:text-slate-300">Clique para anexar arquivos</p>
+                            <p className="text-xs text-slate-500 mt-1">PDF, Imagens, Planilhas (Max 5MB)</p>
+                            <input 
+                                type="file" 
+                                ref={fileInputRef} 
+                                className="hidden" 
+                                multiple 
+                                onChange={handleFileChange}
+                            />
+                        </div>
+
+                        {documents.length > 0 && (
+                            <div className="mt-3 space-y-2">
+                                {documents.map((file, i) => (
+                                    <div key={i} className="flex items-center justify-between p-2.5 bg-slate-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg">
+                                        <div className="flex items-center gap-2 overflow-hidden">
+                                            <File className="h-4 w-4 text-slate-400 flex-shrink-0" />
+                                            <span className="text-xs font-medium text-slate-700 dark:text-slate-300 truncate">{file.name}</span>
+                                        </div>
+                                        <button 
+                                            onClick={() => removeFile(i)}
+                                            className="p-1 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full text-slate-400 hover:text-red-500"
+                                        >
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
                     </div>
 
                     {/* Actions */}

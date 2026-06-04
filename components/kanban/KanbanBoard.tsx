@@ -27,8 +27,10 @@ import { updateStageOrder } from '@/app/actions/stage';
 import Link from 'next/link';
 import { KanbanColumn } from './Column';
 import { TaskCard } from './TaskCard';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, LayoutList, LayoutGrid } from 'lucide-react';
 import { TaskDetails } from './TaskDetails';
+import { AddColumnButton } from './AddColumnButton';
+import { TaskListView } from './TaskListView';
 import { createPortal } from 'react-dom';
 
 const dropAnimation = {
@@ -46,6 +48,7 @@ export default function KanbanBoard({ project }) {
     const [activeColumn, setActiveColumn] = useState<any>(null);
     const [activeTask, setActiveTask] = useState<any>(null);
     const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
 
     const stagesIds = useMemo(() => stages.map((stage) => stage.id), [stages]);
 
@@ -118,11 +121,11 @@ export default function KanbanBoard({ project }) {
                 // Same column
                 if (activeStageIndex === overStageIndex) {
                     const newStages = [...stages];
-                    newStages[activeStageIndex].tasks = arrayMove(
-                        newStages[activeStageIndex].tasks,
-                        activeTaskIndex,
-                        overTaskIndex
-                    );
+                    const newTasks = [...newStages[activeStageIndex].tasks];
+                    newStages[activeStageIndex] = {
+                        ...newStages[activeStageIndex],
+                        tasks: arrayMove(newTasks, activeTaskIndex, overTaskIndex)
+                    };
                     return newStages;
                 }
 
@@ -137,9 +140,14 @@ export default function KanbanBoard({ project }) {
                 const newIndex = overTaskIndex >= 0 ? overTaskIndex + modifier : overStage.tasks.length + 1;
 
                 const newStages = [...stages];
-                const [movedTask] = newStages[activeStageIndex].tasks.splice(activeTaskIndex, 1);
-                movedTask.stageId = overStage.id;
-                newStages[overStageIndex].tasks.splice(newIndex, 0, movedTask);
+                const newActiveTasks = [...newStages[activeStageIndex].tasks];
+                const [movedTask] = newActiveTasks.splice(activeTaskIndex, 1);
+                
+                const newOverTasks = [...newStages[overStageIndex].tasks];
+                newOverTasks.splice(newIndex, 0, { ...movedTask, stageId: overStage.id });
+
+                newStages[activeStageIndex] = { ...newStages[activeStageIndex], tasks: newActiveTasks };
+                newStages[overStageIndex] = { ...newStages[overStageIndex], tasks: newOverTasks };
 
                 return newStages;
             });
@@ -158,14 +166,15 @@ export default function KanbanBoard({ project }) {
                 if (activeStageIndex === overStageIndex) return stages;
 
                 const newStages = [...stages];
-                const activeStage = newStages[activeStageIndex];
-                const overStage = newStages[overStageIndex];
+                
+                const newActiveTasks = [...newStages[activeStageIndex].tasks];
+                const [movedTask] = newActiveTasks.splice(activeTaskIndex, 1);
 
-                const activeTaskIndex = activeStage.tasks.findIndex((task) => task.id === activeId);
-                const [movedTask] = activeStage.tasks.splice(activeTaskIndex, 1);
+                const newOverTasks = [...newStages[overStageIndex].tasks];
+                newOverTasks.push({ ...movedTask, stageId: overStage.id });
 
-                movedTask.stageId = overStage.id;
-                overStage.tasks.push(movedTask);
+                newStages[activeStageIndex] = { ...newStages[activeStageIndex], tasks: newActiveTasks };
+                newStages[overStageIndex] = { ...newStages[overStageIndex], tasks: newOverTasks };
 
                 return newStages;
             });
@@ -222,18 +231,21 @@ export default function KanbanBoard({ project }) {
         // So the state 'stages' is already visually correct.
         // We just need to persist the FINAL state of 'stages' to DB.
 
-        const updates: { id: string; position: number; stageId: string }[] = [];
-        stages.forEach(stage => {
-            stage.tasks.forEach((task, index) => {
-                updates.push({
-                    id: task.id,
-                    position: index,
-                    stageId: stage.id
+        // We use setStages to access the latest state safely and persist it
+        setStages((currentStages) => {
+            const updates: { id: string; position: number; stageId: string }[] = [];
+            currentStages.forEach(stage => {
+                stage.tasks.forEach((task, index) => {
+                    updates.push({
+                        id: task.id,
+                        position: index,
+                        stageId: stage.id
+                    });
                 });
             });
+            updateTaskPositions(project.id, updates).catch(console.error);
+            return currentStages;
         });
-
-        await updateTaskPositions(project.id, updates);
     };
 
     return (
@@ -253,21 +265,46 @@ export default function KanbanBoard({ project }) {
                         </Link>
                         <h1 className="text-xl font-bold text-slate-900 dark:text-white">{project.name}</h1>
                     </div>
+                    <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                        <button
+                            onClick={() => setViewMode('kanban')}
+                            className={`p-1.5 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-colors ${viewMode === 'kanban' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                        >
+                            <LayoutGrid className="h-4 w-4" />
+                            Quadro
+                        </button>
+                        <button
+                            onClick={() => setViewMode('list')}
+                            className={`p-1.5 rounded-md flex items-center gap-1.5 text-xs font-semibold transition-colors ${viewMode === 'list' ? 'bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+                        >
+                            <LayoutList className="h-4 w-4" />
+                            Lista
+                        </button>
+                    </div>
                 </header>
 
-                <div className="flex-1 flex overflow-x-auto p-6 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 items-start">
-                    <SortableContext items={stagesIds} strategy={horizontalListSortingStrategy}>
-                        {stages.map(stage => (
-                            <KanbanColumn
-                                key={stage.id}
-                                stage={stage}
-                                tasks={stage.tasks}
-                                projectId={project.id}
-                                onTaskClick={setSelectedTask}
+                {viewMode === 'kanban' ? (
+                    <div className="flex-1 flex overflow-x-auto p-6 scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-gray-700 items-start">
+                        <SortableContext items={stagesIds} strategy={horizontalListSortingStrategy}>
+                            {stages.map(stage => (
+                                <KanbanColumn
+                                    key={stage.id}
+                                    stage={stage}
+                                    tasks={stage.tasks}
+                                    projectId={project.id}
+                                    onTaskClick={setSelectedTask}
+                                />
+                            ))}
+                            <AddColumnButton 
+                                projectId={project.id} 
+                                order={stages.length} 
+                                onAdded={(newStage) => setStages([...stages, newStage])}
                             />
-                        ))}
-                    </SortableContext>
-                </div>
+                        </SortableContext>
+                    </div>
+                ) : (
+                    <TaskListView stages={stages} onTaskClick={setSelectedTask} />
+                )}
             </div>
 
             {typeof window !== 'undefined' && createPortal(

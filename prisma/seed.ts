@@ -2,6 +2,9 @@ import { PrismaClient, Role, ClientStatus, Priority, ActivityType, ActivityStatu
 import { hash } from 'bcryptjs'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
+import * as dotenv from 'dotenv'
+
+dotenv.config()
 
 // Configuração do Adapter para compatibilidade com Supabase/PG
 const connectionString = process.env.DATABASE_URL

@@ -6,12 +6,13 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities';
 import { TaskCard } from './TaskCard';
 import { createTask } from '@/app/actions/task';
-import { updateStage } from '@/app/actions/stage';
 import { 
     Plus, 
     X, 
-    Loader2 
+    Loader2,
+    Trash2
 } from 'lucide-react';
+import { deleteStage } from '@/app/actions/stage';
 
 interface Task {
     id: string;
@@ -112,6 +113,26 @@ export function KanbanColumn({ stage, tasks, projectId, onTaskClick }: KanbanCol
         });
     };
 
+    const handleDeleteStage = async () => {
+        if (tasks.length > 0) {
+            alert("Não é possível deletar uma coluna que contém tarefas. Mova as tarefas primeiro.");
+            return;
+        }
+        if (!confirm(`Tem certeza que deseja deletar a coluna "${stage.name}"?`)) return;
+
+        startTransition(async () => {
+            try {
+                const result = await deleteStage(stage.id, projectId || stage.projectId);
+                if (!result.success) {
+                    alert(result.error);
+                }
+            } catch (error) {
+                console.error("Failed to delete stage", error);
+                alert("Erro ao deletar etapa");
+            }
+        });
+    };
+
     return (
         <div
             ref={setNodeRef}
@@ -173,6 +194,19 @@ export function KanbanColumn({ stage, tasks, projectId, onTaskClick }: KanbanCol
                     <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 shadow-sm">
                         {tasks.length}
                     </span>
+                </div>
+                <div className="flex items-center">
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleDeleteStage();
+                        }}
+                        disabled={isPending}
+                        className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded opacity-0 group-hover/header:opacity-100 transition-all"
+                        title="Deletar coluna"
+                    >
+                        <Trash2 className="h-4 w-4" />
+                    </button>
                 </div>
             </div>
 
