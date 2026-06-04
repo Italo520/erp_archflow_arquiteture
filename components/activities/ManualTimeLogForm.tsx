@@ -28,7 +28,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
 const manualLogSchema = z.object({
-    projectId: z.string().uuid("Project is required"),
+    projectId: z.string().min(1, "Project is required").uuid("Project is required"),
     description: z.string().optional(),
     category: z.nativeEnum(TimeLogCategory),
     date: z.string(), // YYYY-MM-DD
@@ -45,6 +45,7 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
     const form = useForm<any>({
         resolver: zodResolver(manualLogSchema) as any,
         defaultValues: {
+            projectId: "",
             category: "DESIGN",
             date: new Date().toISOString().split('T')[0],
             startTime: "09:00",

@@ -207,11 +207,12 @@ model Client {
 }
 
 model Project {
-  id         String    @id @default(uuid())
-  name       String
-  clientName String?   @map("client_name")
-  status     String
-  imageUrl   String?   @map("image_url")
+  id              String               @id @default(uuid())
+  name            String
+  clientName      String?              @map("client_name")
+  currentColumnId String?              @map("current_column_id")
+  currentColumn   ProjectKanbanColumn? @relation("ProjectCurrentColumn", fields: [currentColumnId], references: [id])
+  imageUrl        String?              @map("image_url")
   createdAt  DateTime  @default(now()) @map("created_at")
   updatedAt  DateTime  @default(now()) @updatedAt @map("updated_at")
   deletedAt  DateTime? @map("deleted_at")
@@ -264,7 +265,7 @@ model Project {
   estimate Estimate?
   budget   Budget?
 
-  @@index([status])
+  @@index([currentColumnId])
   @@index([ownerId])
   @@index([createdAt])
   @@map("projects")
@@ -584,8 +585,9 @@ model ProjectKanbanColumn {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  projectId String  @map("project_id")
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectId        String    @map("project_id")
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  projectsInColumn Project[] @relation("ProjectCurrentColumn")
 
   @@index([projectId])
   @@map("project_kanban_columns")

@@ -108,7 +108,7 @@ async function main() {
         const project = await prisma.project.create({
             data: {
                 name: `Reforma ${cData.name}`,
-                status: 'PLANNING',
+                currentColumnId: null,
                 ownerId: assignedUser.id,
                 clientId: client.id,
                 projectType: cData.category,
@@ -158,7 +158,7 @@ async function main() {
         // Atualizar o status real do projeto com o ID da coluna Kanban específica dele
         await prisma.project.update({
             where: { id: project.id },
-            data: { status: chosenCol.id }
+            data: { currentColumnId: chosenCol.id }
         })
 
         // 3. Detalhes do Projeto: Stages, Tasks, Budget, Estimates, TimeLogs, Deliverables

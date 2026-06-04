@@ -60,7 +60,7 @@ export async function createTask(data: z.input<typeof TaskSchema>) {
 
         // Get current max position in this stage
         const lastTask = await prisma.task.findFirst({
-            where: { stageId },
+            where: { stageId, deletedAt: null },
             orderBy: { position: 'desc' },
             select: { position: true }
         });
@@ -85,7 +85,8 @@ export async function createTask(data: z.input<typeof TaskSchema>) {
             }
         });
 
-        revalidatePath(`/projects/${projectId}`);
+        // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true, data: task };
     } catch (error: any) {
         console.error("Failed to create task:", error);
@@ -126,7 +127,8 @@ export async function updateTaskStage(taskId: string, newStageId: string, projec
             }
         });
 
-        revalidatePath(`/projects/${projectId}`);
+        // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
         console.error("Failed to update task stage:", error);
@@ -146,7 +148,8 @@ export async function updateTask(taskId: string, projectId: string, data: Partia
             }
         });
 
-        revalidatePath(`/projects/${projectId}`);
+        // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
         console.error("Failed to update task:", error);
@@ -154,12 +157,19 @@ export async function updateTask(taskId: string, projectId: string, data: Partia
     }
 }
 
+// BUG 8: Soft delete — usa deletedAt em vez de prisma.task.delete()
+// para manter integridade referencial com TimeLogs e Deliverables associados.
 export async function deleteTask(taskId: string, projectId: string) {
     try {
         await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
         
-        await prisma.task.delete({ where: { id: taskId } });
-        revalidatePath(`/projects/${projectId}`);
+        await prisma.task.update({
+            where: { id: taskId },
+            data: { deletedAt: new Date() }
+        });
+
+        // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
         console.error("Failed to delete task:", error);
@@ -177,10 +187,31 @@ export async function updateTaskPositions(projectId: string, updates: { id: stri
                 data: { position: u.position, stageId: u.stageId }
             }))
         );
-        revalidatePath(`/projects/${projectId}`);
+        // BUG 9: caminho padronizado com /dashboard/
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
         console.error("Failed to update task positions", error);
         return { success: false, error: "Falha ao atualizar posições das tarefas: " + error.message };
+    }
+}
+
+// BUG 8: Todas as listagens de tasks filtram deletedAt: null
+export async function listTasks(projectId: string, stageId?: string) {
+    try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
+        
+        const where: any = { projectId, deletedAt: null };
+        if (stageId) where.stageId = stageId;
+
+        const tasks = await prisma.task.findMany({
+            where,
+            orderBy: [{ position: 'asc' }, { createdAt: 'asc' }],
+        });
+
+        return { success: true, data: tasks };
+    } catch (error: any) {
+        console.error("Failed to list tasks:", error);
+        return { success: false, error: "Falha ao listar tarefas: " + error.message };
     }
 }

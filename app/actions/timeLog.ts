@@ -6,16 +6,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAuth, requireProjectAccess } from "@/lib/server-utils";
 import { TimeLogCategory, Role } from "@prisma/client";
+import type { ActionResponse } from "@/lib/types/action-response";
 
-// Interface oficial de resposta para Server Actions
-export interface ActionResponse<T = any> {
-  ok: boolean;
-  success?: boolean; // Retrocompatibilidade
-  message?: string;
-  data?: T;
-  error?: string | any; // Retrocompatibilidade
-  errors?: Record<string, string[]> | string;
-}
+export type { ActionResponse };
 
 // Schema para iniciar um timer - exclui a obrigatoriedade de duration
 const startTimeLogSchema = z.object({

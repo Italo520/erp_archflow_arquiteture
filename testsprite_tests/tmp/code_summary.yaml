@@ -1,0 +1,84 @@
+version: "2"
+type: backend
+tech_stack:
+  - TypeScript
+  - Next.js (App Router)
+  - Prisma ORM
+  - PostgreSQL (Supabase)
+  - NextAuth.js
+  - TailwindCSS
+  - Shadcn/ui
+features:
+  - name: Authentication
+    description: User authentication, registration, session management and password hashing.
+    files:
+      - app/actions/auth.ts
+      - auth.ts
+      - auth.config.ts
+    endpoints:
+      - method: POST
+        path: /api/auth/callback/credentials
+        description: Authenticate user using credentials
+        auth_required: false
+      - method: POST
+        path: /api/auth/signout
+        description: Sign out the authenticated user
+        auth_required: true
+  - name: Client Management
+    description: CRUD operations for managing client details, contacts, and relationship records.
+    files:
+      - app/actions/client.ts
+    endpoints:
+      - method: GET
+        path: /app/actions/client.ts (getClients)
+        description: Retrieve list of clients with optional filters
+        auth_required: true
+      - method: POST
+        path: /app/actions/client.ts (createClient)
+        description: Create a new client record
+        auth_required: true
+  - name: Project Management
+    description: Architectural project workflows including creation, update, stage tracking, and deliverables management.
+    files:
+      - app/actions/project.ts
+      - app/actions/stage.ts
+      - app/actions/deliverable.ts
+    endpoints:
+      - method: GET
+        path: /app/actions/project.ts (getProjects)
+        description: List all architectural projects
+        auth_required: true
+      - method: POST
+        path: /app/actions/project.ts (createProject)
+        description: Create a new architectural project
+        auth_required: true
+  - name: Kanban & Tasks
+    description: Task management and visual Kanban board progression.
+    files:
+      - app/actions/kanban.ts
+      - app/actions/task.ts
+    endpoints:
+      - method: GET
+        path: /app/actions/kanban.ts (getKanbanBoard)
+        description: Get lists, tasks, and card positions for a project
+        auth_required: true
+  - name: Time Tracking
+    description: Time logging and activity tracking for architects and project managers.
+    files:
+      - app/actions/timeLog.ts
+      - app/actions/activity.ts
+    endpoints:
+      - method: POST
+        path: /app/actions/timeLog.ts (logTime)
+        description: Record working hours on specific project tasks
+        auth_required: true
+  - name: Finance Management
+    description: Managing expenses, budgets, revenues, and invoices related to projects.
+    files:
+      - app/actions/finance.ts
+    endpoints:
+      - method: GET
+        path: /app/actions/finance.ts (getFinancialSummary)
+        description: Get income, expenses, and cash flow data for a project
+        auth_required: true
+known_limitations: []

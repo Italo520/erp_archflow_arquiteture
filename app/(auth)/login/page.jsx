@@ -160,6 +160,7 @@ const Login = () => {
                                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-200" />
                                 <input
                                     id="email"
+                                    name="email"
                                     type="text"
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
@@ -188,6 +189,7 @@ const Login = () => {
                                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground group-focus-within:text-primary transition-colors duration-200" />
                                 <input
                                     id="password"
+                                    name="password"
                                     type={showPassword ? "text" : "password"}
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}

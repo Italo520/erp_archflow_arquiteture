@@ -5,15 +5,10 @@ import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { Role } from "@prisma/client";
 import { requireAuth, requireProjectAccess } from "@/lib/server-utils";
+import type { ActionResponse } from "@/lib/types/action-response";
+import { serializeData } from "@/lib/serialize";
 
-export interface ActionResponse<T = any> {
-  ok: boolean;
-  success?: boolean; // Retrocompatibilidade
-  message?: string;
-  data?: T;
-  error?: string | any; // Retrocompatibilidade
-  errors?: Record<string, string[]> | string;
-}
+export type { ActionResponse };
 
 export async function getKanbanColumns(projectId?: string): Promise<ActionResponse> {
     try {
@@ -23,10 +18,8 @@ export async function getKanbanColumns(projectId?: string): Promise<ActionRespon
         }
 
         await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
-        
-        const model = (prisma as any).projectKanbanColumn || (prisma as any).ProjectKanbanColumn;
-        
-        let columns = await model.findMany({
+
+        let columns = await prisma.projectKanbanColumn.findMany({
             where: { projectId },
             orderBy: { order: 'asc' }
         });
@@ -34,18 +27,16 @@ export async function getKanbanColumns(projectId?: string): Promise<ActionRespon
         // Inicializa colunas padrão do projeto se nenhuma existir (tolerância a falhas)
         if (columns.length === 0) {
             console.log(`INITIALIZING KANBAN: Criando colunas padrão para o projeto ${projectId}...`);
-            const defaultCols = [
-                { title: 'Planejamento', color: 'bg-blue-500', order: 0, projectId },
-                { title: 'Em Andamento', color: 'bg-emerald-500', order: 1, projectId },
-                { title: 'Pausado', color: 'bg-amber-500', order: 2, projectId },
-                { title: 'Concluído', color: 'bg-slate-500', order: 3, projectId }
-            ];
+            await prisma.projectKanbanColumn.createMany({
+                data: [
+                    { title: 'Planejamento', color: 'bg-blue-500', order: 0, projectId },
+                    { title: 'Em Andamento', color: 'bg-emerald-500', order: 1, projectId },
+                    { title: 'Pausado', color: 'bg-amber-500', order: 2, projectId },
+                    { title: 'Concluído', color: 'bg-slate-500', order: 3, projectId }
+                ]
+            });
 
-            for (const col of defaultCols) {
-                await model.create({ data: col });
-            }
-
-            columns = await model.findMany({
+            columns = await prisma.projectKanbanColumn.findMany({
                 where: { projectId },
                 orderBy: { order: 'asc' }
             });
@@ -58,52 +49,39 @@ export async function getKanbanColumns(projectId?: string): Promise<ActionRespon
     }
 }
 
-export async function createKanbanColumn(projectIdOrTitle: string, title?: string, color?: string): Promise<ActionResponse> {
+// BUG 7: Assinatura explícita — projectId e title são obrigatórios.
+// Removido o bloco de fallback que buscava o primeiro projeto ativo.
+export async function createKanbanColumn(
+    projectId: string,
+    title: string,
+    color?: string
+): Promise<ActionResponse> {
     try {
-        await requireAuth();
-        
-        let projectId: string;
-        let columnTitle: string;
-
-        if (title === undefined) {
-            columnTitle = projectIdOrTitle;
-            const firstProj = await (prisma as any).project.findFirst({ where: { deletedAt: null } });
-            if (!firstProj) {
-                return { ok: false, success: false, error: "Nenhum projeto ativo", message: "Nenhum projeto ativo" };
-            }
-            projectId = firstProj.id;
-        } else {
-            projectId = projectIdOrTitle;
-            columnTitle = title;
-        }
-
-        if (!projectId || !columnTitle) {
-            return { ok: false, success: false, error: "ID e título obrigatórios", message: "ID e título obrigatórios" };
+        if (!projectId || !title) {
+            return { ok: false, success: false, error: "projectId e title são obrigatórios", message: "projectId e title são obrigatórios" };
         }
 
         await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
-        
-        const model = (prisma as any).projectKanbanColumn || (prisma as any).ProjectKanbanColumn;
-        
-        const lastColumn = await model.findFirst({
+
+        const lastColumn = await prisma.projectKanbanColumn.findFirst({
             where: { projectId },
             orderBy: { order: 'desc' }
         });
         const order = lastColumn ? lastColumn.order + 1 : 0;
 
-        const column = await model.create({
+        const column = await prisma.projectKanbanColumn.create({
             data: {
-                title: columnTitle,
+                title,
                 color: color || 'bg-blue-500',
                 order,
                 projectId
             }
         });
 
-        revalidatePath("/projects");
-        revalidatePath(`/projects/${projectId}`);
-        revalidatePath("/");
-        
+        // BUG 9: Caminhos padronizados com /dashboard/
+        revalidatePath("/dashboard/projects");
+        revalidatePath(`/dashboard/projects/${projectId}`);
+
         return { ok: true, success: true, data: column, message: "Coluna criada com sucesso" };
     } catch (error: any) {
         console.error("Failed to create column:", error);
@@ -114,22 +92,21 @@ export async function createKanbanColumn(projectIdOrTitle: string, title?: strin
 export async function updateKanbanColumn(id: string, data: { title?: string, color?: string, order?: number }): Promise<ActionResponse> {
     try {
         await requireAuth();
-        const model = (prisma as any).projectKanbanColumn || (prisma as any).ProjectKanbanColumn;
-        
-        const existing = await model.findUnique({ where: { id } });
+
+        const existing = await prisma.projectKanbanColumn.findUnique({ where: { id } });
         if (existing) {
             await requireProjectAccess(existing.projectId, [Role.OWNER, Role.EDITOR]);
         }
-        
-        const column = await model.update({
+
+        const column = await prisma.projectKanbanColumn.update({
             where: { id },
             data
         });
 
-        revalidatePath("/projects");
-        revalidatePath(`/projects/${column.projectId}`);
-        revalidatePath("/");
-        
+        // BUG 9: Caminhos padronizados com /dashboard/
+        revalidatePath("/dashboard/projects");
+        revalidatePath(`/dashboard/projects/${column.projectId}`);
+
         return { ok: true, success: true, data: column, message: "Coluna atualizada com sucesso" };
     } catch (error: any) {
         console.error("Failed to update column:", error);
@@ -140,41 +117,38 @@ export async function updateKanbanColumn(id: string, data: { title?: string, col
 export async function deleteKanbanColumn(id: string): Promise<ActionResponse> {
     try {
         await requireAuth();
-        const model = (prisma as any).projectKanbanColumn || (prisma as any).ProjectKanbanColumn;
-        const column = await model.findUnique({ where: { id } });
+        const column = await prisma.projectKanbanColumn.findUnique({ where: { id } });
         if (!column) {
             return { ok: false, success: false, error: "Coluna não encontrada", message: "Coluna não encontrada" };
         }
 
         const projectId = column.projectId;
         await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
-        
 
         // Move os projetos que estavam com o status apontado para essa coluna para a primeira disponível do projeto
-        const firstColumn = await model.findFirst({
-            where: { 
+        const firstColumn = await prisma.projectKanbanColumn.findFirst({
+            where: {
                 projectId,
-                id: { not: id } 
+                id: { not: id }
             },
             orderBy: { order: 'asc' }
         });
 
         if (firstColumn) {
-            await (prisma as any).project.updateMany({
-                where: { 
-                    id: projectId,
-                    status: id 
+            await prisma.project.updateMany({
+                where: {
+                    currentColumnId: id
                 },
-                data: { status: firstColumn.id }
+                data: { currentColumnId: firstColumn.id }
             });
         }
 
-        await model.delete({ where: { id } });
+        await prisma.projectKanbanColumn.delete({ where: { id } });
 
-        revalidatePath("/projects");
-        revalidatePath(`/projects/${projectId}`);
-        revalidatePath("/");
-        
+        // BUG 9: Caminhos padronizados com /dashboard/
+        revalidatePath("/dashboard/projects");
+        revalidatePath(`/dashboard/projects/${projectId}`);
+
         return { ok: true, success: true, message: "Coluna excluída com sucesso" };
     } catch (error: any) {
         console.error("Failed to delete column:", error);
@@ -182,22 +156,19 @@ export async function deleteKanbanColumn(id: string): Promise<ActionResponse> {
     }
 }
 
-import { serializeData } from "@/lib/serialize";
-
 export async function updateProjectStatus(projectId: string, statusId: string): Promise<ActionResponse> {
     try {
         await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
-        
-        const projectModel = (prisma as any).project || (prisma as any).Project;
-        const project = await projectModel.update({
+
+        const project = await prisma.project.update({
             where: { id: projectId },
-            data: { status: statusId }
+            data: { currentColumnId: statusId }
         });
 
-        revalidatePath("/projects");
-        revalidatePath(`/projects/${projectId}`);
-        revalidatePath("/");
-        
+        // BUG 9: Caminhos padronizados com /dashboard/
+        revalidatePath("/dashboard/projects");
+        revalidatePath(`/dashboard/projects/${projectId}`);
+
         return { ok: true, success: true, data: serializeData(project), message: "Status do projeto atualizado com sucesso" };
     } catch (error: any) {
         console.error("Failed to update project status:", error);

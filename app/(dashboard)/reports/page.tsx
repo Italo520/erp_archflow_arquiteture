@@ -9,7 +9,7 @@ import { PeriodSelector } from "@/components/dashboard/PeriodSelector";
 import { ProjectFilter } from "@/components/dashboard/ProjectFilter";
 import { BusinessReport } from "@/components/reports/BusinessReport";
 import { ProductivityReport } from "@/components/reports/ProductivityReport";
-import { FileDown, Printer } from "lucide-react";
+import { ReportActions } from "@/components/reports/ReportActions";
 import { startOfMonth, endOfMonth, subMonths, format, startOfQuarter, endOfQuarter, startOfWeek, endOfWeek } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -185,16 +185,7 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
                     </p>
                 </div>
 
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={() => window.print()}>
-                        <Printer className="mr-2 h-4 w-4" />
-                        Imprimir
-                    </Button>
-                    <Button variant="outline" size="sm">
-                        <FileDown className="mr-2 h-4 w-4" />
-                        Exportar PDF
-                    </Button>
-                </div>
+                <ReportActions />
             </div>
 
             {/* Filters */}

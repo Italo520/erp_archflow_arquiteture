@@ -68,10 +68,12 @@ type KanbanColumnData = {
 
 export default function ProjectKanban({ 
     projects: initialProjects, 
-    columns: initialColumns 
+    columns: initialColumns,
+    projectId
 }: { 
     projects: KanbanProject[], 
-    columns: KanbanColumnData[] 
+    columns: KanbanColumnData[],
+    projectId?: string
 }) {
     const router = useRouter();
     const [projects, setProjects] = useState(initialProjects);
@@ -162,7 +164,12 @@ export default function ProjectKanban({
 
     const handleCreateColumn = async () => {
         if (!newColumnTitle.trim()) return;
-        const result = await createKanbanColumn(newColumnTitle);
+        if (!projectId) {
+            toast.error("Selecione um projeto específico para criar colunas.");
+            setIsCreatingColumn(false);
+            return;
+        }
+        const result = await createKanbanColumn(projectId, newColumnTitle);
         if (result.success) {
             setNewColumnTitle('');
             setIsCreatingColumn(false);

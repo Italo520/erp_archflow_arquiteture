@@ -8,18 +8,10 @@ import { Role } from "@prisma/client";
 import { canCreateProject, canDeleteProject } from "@/lib/permissions";
 import { requireAuth, requireProjectAccess } from "@/lib/server-utils";
 import { logAudit } from "@/app/actions/audit";
-
-export interface ActionResponse<T = any> {
-  ok: boolean;
-  success?: boolean; // Retrocompatibilidade do frontend
-  message?: string;
-  data?: T;
-  error?: string | any; // Retrocompatibilidade do frontend
-  errors?: Record<string, string[]> | string;
-  format?: string; // Suporte para exportProjectData
-}
-
+import type { ActionResponse } from "@/lib/types/action-response";
 import { serializeData } from "@/lib/serialize";
+
+export type { ActionResponse };
 
 // --- CORE CRUD ---
 
@@ -36,35 +28,38 @@ export async function createProject(data: z.infer<typeof projectSchema>): Promis
             const errs = result.error.flatten().fieldErrors;
             return { ok: false, success: false, error: errs, message: "Erro de validação nos campos", errors: errs as any };
         }
-        // 1. Cria o projeto inicialmente com status temporário
-        const project = await (prisma as any).project.create({
-            data: {
-                ...result.data,
-                status: 'PLANNING',
-                ownerId: session.user.id,
-                phases: result.data.phases as any, // Cast JSON
-            },
-        });
 
-        // 2. Instancia as 4 colunas Kanban padrão dedicadas e isoladas para este projeto
-        const modelCol = (prisma as any).projectKanbanColumn || (prisma as any).ProjectKanbanColumn;
-        const colPlanning = await modelCol.create({
-            data: { title: 'Planejamento', color: 'bg-blue-500', order: 0, projectId: project.id }
-        });
-        await modelCol.create({
-            data: { title: 'Em Andamento', color: 'bg-emerald-500', order: 1, projectId: project.id }
-        });
-        await modelCol.create({
-            data: { title: 'Pausado', color: 'bg-amber-500', order: 2, projectId: project.id }
-        });
-        await modelCol.create({
-            data: { title: 'Concluído', color: 'bg-slate-500', order: 3, projectId: project.id }
-        });
+        // Toda a criação do projeto é atômica: se qualquer etapa falhar,
+        // o banco reverte automaticamente para o estado anterior.
+        const updatedProject = await prisma.$transaction(async (tx: any) => {
+            // 1. Cria o projeto sem coluna ainda
+            const project = await tx.project.create({
+                data: {
+                    ...result.data,
+                    currentColumnId: null,
+                    ownerId: session.user.id,
+                    phases: result.data.phases as any,
+                },
+            });
 
-        // 3. Atualiza o status do projeto recém-criado para apontar para a sua coluna real de Planejamento
-        const updatedProject = await (prisma as any).project.update({
-            where: { id: project.id },
-            data: { status: colPlanning.id }
+            // 2. Cria as 4 colunas Kanban padrão dentro da mesma transação
+            const colPlanning = await tx.projectKanbanColumn.create({
+                data: { title: 'Planejamento', color: 'bg-blue-500', order: 0, projectId: project.id }
+            });
+
+            await tx.projectKanbanColumn.createMany({
+                data: [
+                    { title: 'Em Andamento', color: 'bg-emerald-500', order: 1, projectId: project.id },
+                    { title: 'Pausado',      color: 'bg-amber-500',   order: 2, projectId: project.id },
+                    { title: 'Concluído',    color: 'bg-slate-500',   order: 3, projectId: project.id },
+                ]
+            });
+
+            // 3. Aponta o projeto para a coluna de Planejamento — ainda dentro da transação
+            return tx.project.update({
+                where: { id: project.id },
+                data: { currentColumnId: colPlanning.id }
+            });
         });
 
         await logAudit({
@@ -84,6 +79,7 @@ export async function createProject(data: z.infer<typeof projectSchema>): Promis
         return { ok: false, success: false, error: error.message, message: "Falha ao criar projeto: " + error.message };
     }
 }
+
 
 export async function getProjectById(id: string) {
     try {
@@ -180,7 +176,7 @@ export async function listProjects(filters?: { clientId?: string; status?: strin
         await requireAuth();
         const where: any = { deletedAt: null };
         if (filters?.clientId) where.clientId = filters.clientId;
-        if (filters?.status) where.status = filters.status;
+        if (filters?.status) where.currentColumnId = filters.status;
 
         const projects = await (prisma as any).project.findMany({
             where,
@@ -229,7 +225,7 @@ export async function addProjectPhase(projectId: string, phase: any): Promise<Ac
             data: { phases: updatedPhases }
         });
 
-        revalidatePath(`/projects/${projectId}`);
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { ok: true, success: true, data: updatedProject, message: "Etapa adicionada com sucesso" };
     } catch (error: any) {
         console.error("Failed to add phase:", error);
@@ -253,7 +249,7 @@ export async function completeProjectPhase(projectId: string, phaseName: string)
             data: { phases: updatedPhases }
         });
 
-        revalidatePath(`/projects/${projectId}`);
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { ok: true, success: true, data: updatedProject, message: "Etapa concluída com sucesso" };
     } catch (error: any) {
         console.error("Failed to complete phase:", error);
@@ -278,7 +274,7 @@ export async function uploadProjectDocument(projectId: string, fileUrl: string, 
             data: { attachedDocuments: updatedDocs }
         });
 
-        revalidatePath(`/projects/${projectId}`);
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { ok: true, success: true, data: updatedDocs, message: "Documento anexado com sucesso" };
     } catch (error: any) {
         console.error("Failed to upload document:", error);
@@ -310,7 +306,7 @@ export async function deleteProjectDocument(projectId: string, docUrl: string): 
             data: { attachedDocuments: updatedDocs }
         });
 
-        revalidatePath(`/projects/${projectId}`);
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { ok: true, success: true, message: "Documento excluído com sucesso" };
     } catch (error: any) {
         return { ok: false, success: false, error: error.message, message: "Falha ao excluir documento: " + error.message };
@@ -329,7 +325,7 @@ export async function associateArchitect(projectId: string, userId: string, role
                 role: role as any
             }
         });
-        revalidatePath(`/projects/${projectId}`);
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { ok: true, success: true, message: "Membro associado ao projeto com sucesso" };
     } catch (error: any) {
         console.error("Failed to associate architect:", error);
@@ -348,7 +344,7 @@ export async function removeArchitect(projectId: string, userId: string): Promis
                 userId
             }
         });
-        revalidatePath(`/projects/${projectId}`);
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { ok: true, success: true, message: "Membro removido do projeto com sucesso" };
     } catch (error: any) {
         return { ok: false, success: false, error: error.message, message: "Falha ao remover membro: " + error.message };
@@ -468,7 +464,7 @@ export async function duplicateProject(projectId: string, newName: string, optio
             data: {
                 ...data,
                 name: newName,
-                status: "PLANNING",
+                currentColumnId: null,
                 phases: options?.keepPhases ? data.phases : [],
                 stages: undefined,
             }
@@ -498,15 +494,15 @@ export async function duplicateProject(projectId: string, newName: string, optio
             }
 
             // Mapeia o status do novo projeto para a nova coluna correspondente
-            if (original.status && colMapping[original.status]) {
-                newStatus = colMapping[original.status];
+            if (original.currentColumnId && colMapping[original.currentColumnId]) {
+                newStatus = colMapping[original.currentColumnId];
             } else if (originalColumns[0] && colMapping[originalColumns[0].id]) {
                 newStatus = colMapping[originalColumns[0].id];
             }
 
             await (prisma as any).project.update({
                 where: { id: newProject.id },
-                data: { status: newStatus }
+                data: { currentColumnId: newStatus }
             });
         } else {
             // Fallback: cria colunas padrão locais
@@ -525,7 +521,7 @@ export async function duplicateProject(projectId: string, newName: string, optio
 
             await (prisma as any).project.update({
                 where: { id: newProject.id },
-                data: { status: colPlanning.id }
+                data: { currentColumnId: colPlanning.id }
             });
         }
 
@@ -573,7 +569,7 @@ export async function bulkUpdateProjects(filters: any, updates: any): Promise<Ac
     try {
         await requireAuth();
         const where: any = {};
-        if (filters.status) where.status = filters.status;
+        if (filters.status) where.currentColumnId = filters.status;
         if (filters.clientId) where.clientId = filters.clientId;
 
         const result = await (prisma as any).project.updateMany({
@@ -581,7 +577,7 @@ export async function bulkUpdateProjects(filters: any, updates: any): Promise<Ac
             data: updates
         });
 
-        revalidatePath("/projects");
+        revalidatePath("/dashboard/projects");
         return { ok: true, success: true, data: result.count, message: `Atualização em massa concluída para ${result.count} projetos.` };
     } catch (error: any) {
         return { ok: false, success: false, error: error.message, message: "Falha na atualização em massa: " + error.message };

@@ -9,7 +9,7 @@ test.describe('Dashboard Page', () => {
     test.beforeEach(async ({ page }) => {
         // Login first (adjust based on your auth flow)
         await page.goto('/login');
-        await page.fill('[name="email"]', 'test@example.com');
+        await page.fill('[name="email"]', 'admin@archflow.local');
         await page.fill('[name="password"]', 'password123');
         await page.click('button[type="submit"]');
 
@@ -21,7 +21,7 @@ test.describe('Dashboard Page', () => {
         await page.goto('/dashboard');
 
         // Check page title
-        await expect(page.locator('h2')).toContainText('Dashboard');
+        await expect(page.getByRole('heading', { name: 'Dashboard' }).first()).toBeVisible();
     });
 
     test('displays KPI cards with data (not skeleton)', async ({ page }) => {
@@ -43,7 +43,7 @@ test.describe('Dashboard Page', () => {
         await expect(receitaMes).toBeVisible();
 
         // Verify skeletons are gone (no animate-pulse class on main content)
-        await expect(page.locator('.animate-pulse').first()).not.toBeVisible({ timeout: 5000 });
+        await expect(page.locator('main div.animate-pulse').first()).not.toBeVisible({ timeout: 5000 });
     });
 
     test('displays charts after loading', async ({ page }) => {
@@ -103,7 +103,7 @@ test.describe('Reports Page', () => {
     test.beforeEach(async ({ page }) => {
         // Login
         await page.goto('/login');
-        await page.fill('[name="email"]', 'test@example.com');
+        await page.fill('[name="email"]', 'admin@archflow.local');
         await page.fill('[name="password"]', 'password123');
         await page.click('button[type="submit"]');
         await page.waitForURL('**/dashboard', { timeout: 10000 });
@@ -112,7 +112,10 @@ test.describe('Reports Page', () => {
     test('loads reports page', async ({ page }) => {
         await page.goto('/reports');
 
-        await expect(page.locator('h2')).toContainText('Relatórios');
+        // Wait for page to load completely (so skeleton goes away)
+        await page.waitForLoadState('networkidle');
+
+        await expect(page.getByRole('heading', { name: 'Relatórios' })).toBeVisible();
     });
 
     test('displays filter section', async ({ page }) => {
@@ -211,7 +214,7 @@ test.describe('Reports Page', () => {
 test.describe('Dashboard to Reports Navigation', () => {
     test.beforeEach(async ({ page }) => {
         await page.goto('/login');
-        await page.fill('[name="email"]', 'test@example.com');
+        await page.fill('[name="email"]', 'admin@archflow.local');
         await page.fill('[name="password"]', 'password123');
         await page.click('button[type="submit"]');
         await page.waitForURL('**/dashboard', { timeout: 10000 });

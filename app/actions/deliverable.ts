@@ -9,16 +9,9 @@ import { DeliverableStatus, Role } from "@prisma/client";
 import { requireProjectAccess } from "@/lib/server-utils";
 import nodeCrypto from "crypto";
 import { logAudit } from "@/app/actions/audit";
+import type { ActionResponse } from "@/lib/types/action-response";
 
-// Interface unificada oficial
-export interface ActionResponse<T = any> {
-  ok: boolean;
-  success?: boolean; // Retrocompatibilidade
-  message?: string;
-  data?: T;
-  error?: string | any; // Retrocompatibilidade
-  errors?: Record<string, string[]> | string;
-}
+export type { ActionResponse };
 
 export async function createDeliverable(data: z.infer<typeof deliverableSchema>): Promise<ActionResponse> {
     const result = deliverableSchema.safeParse(data);

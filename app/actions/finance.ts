@@ -8,21 +8,15 @@ import { requireProjectAccess } from "@/lib/server-utils";
 import { revalidatePath } from "next/cache";
 import { logAudit } from "@/app/actions/audit";
 import { serializeData } from "@/lib/serialize";
+import type { ActionResponse } from "@/lib/types/action-response";
 
-export interface ActionResponse<T = any> {
-  ok: boolean;
-  success?: boolean; // Retrocompatibilidade
-  message?: string;
-  data?: T;
-  error?: string | any;
-  errors?: Record<string, string[]> | string;
-}
+export type { ActionResponse };
 
 export async function getProjectFinancials(projectId: string): Promise<ActionResponse> {
     try {
         await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
         
-        // Busca orçamentos, estimativas e time logs
+        // Somente leitura — sem nenhum side effect de escrita no banco
         const [project, budget, estimate, timeLogs] = await Promise.all([
             prisma.project.findUnique({
                 where: { id: projectId },
@@ -40,7 +34,6 @@ export async function getProjectFinancials(projectId: string): Promise<ActionRes
             return { ok: false, success: false, error: "NotFound", message: "Projeto não encontrado" };
         }
 
-        // Calcula horas e custos reais com base nos logs de tempo
         const totalHours = timeLogs.reduce((acc, log) => acc + log.duration, 0);
         const billableHours = timeLogs
             .filter(log => log.billable)
@@ -50,56 +43,17 @@ export async function getProjectFinancials(projectId: string): Promise<ActionRes
             .filter(log => log.billable)
             .reduce((acc, log) => acc + (log.duration * Number(log.billRate || 0)), 0);
 
-        let budgetSpent = actualCostOfHours;
-        let totalBudgetVal = budget ? Number(budget.totalBudget) : Number(project.plannedCost || 0);
+        const totalBudgetVal = budget ? Number(budget.totalBudget) : Number(project.plannedCost || 0);
+        const budgetSpent = actualCostOfHours;
+        const spentPercentage = totalBudgetVal > 0 ? (budgetSpent / totalBudgetVal) * 100 : 0;
+        const remainingAmount = totalBudgetVal - budgetSpent;
 
-        let spentPercentage = totalBudgetVal > 0 ? (budgetSpent / totalBudgetVal) * 100 : 0;
-        let remainingAmount = totalBudgetVal - budgetSpent;
-
-        // Se o orçamento foi estourado, atualiza o status para EXCEEDED
+        // Status calculado localmente — sem atualizar o banco
         let currentBudgetStatus = budget?.status || BudgetStatus.DRAFT;
-        if (totalBudgetVal > 0 && budgetSpent > totalBudgetVal && currentBudgetStatus !== BudgetStatus.EXCEEDED) {
+        if (totalBudgetVal > 0 && budgetSpent > totalBudgetVal) {
             currentBudgetStatus = BudgetStatus.EXCEEDED;
-            await prisma.budget.update({
-                where: { projectId },
-                data: { status: BudgetStatus.EXCEEDED }
-            });
         } else if (totalBudgetVal > 0 && budgetSpent <= totalBudgetVal && currentBudgetStatus === BudgetStatus.EXCEEDED) {
             currentBudgetStatus = BudgetStatus.ACTIVE;
-            await prisma.budget.update({
-                where: { projectId },
-                data: { status: BudgetStatus.ACTIVE }
-            });
-        }
-
-        // Sincroniza custos reais no projeto se diferirem substancialmente
-        if (Number(project.actualCost || 0) !== actualCostOfHours) {
-            await prisma.project.update({
-                where: { id: projectId },
-                data: { actualCost: actualCostOfHours }
-            });
-        }
-
-        // Sincroniza spentAmount e remainingAmount no Budget
-        if (budget && (Number(budget.spentAmount) !== budgetSpent || Number(budget.remainingAmount) !== remainingAmount)) {
-            await prisma.budget.update({
-                where: { id: budget.id },
-                data: {
-                    spentAmount: budgetSpent,
-                    remainingAmount: remainingAmount >= 0 ? remainingAmount : 0
-                }
-            });
-        }
-
-        // Sincroniza actualHours e actualCost na Estimate
-        if (estimate && (estimate.actualHours !== totalHours || Number(estimate.actualCost || 0) !== actualCostOfHours)) {
-            await prisma.estimate.update({
-                where: { id: estimate.id },
-                data: {
-                    actualHours: totalHours,
-                    actualCost: actualCostOfHours
-                }
-            });
         }
 
         return {
@@ -140,6 +94,74 @@ export async function getProjectFinancials(projectId: string): Promise<ActionRes
     } catch (error: any) {
         console.error("Failed to get financials:", error);
         return { ok: false, success: false, error: error.message, message: "Falha ao carregar dados financeiros." };
+    }
+}
+
+/**
+ * Sincroniza os campos calculados (actualCost, spentAmount, remainingAmount, status)
+ * de volta para o banco. Deve ser chamado somente após escritas (criar/editar TimeLogs),
+ * nunca em leituras do dashboard.
+ */
+export async function syncProjectFinancials(projectId: string): Promise<ActionResponse> {
+    try {
+        await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
+
+        const [budget, estimate, timeLogs, project] = await Promise.all([
+            prisma.budget.findUnique({ where: { projectId } }),
+            prisma.estimate.findUnique({ where: { projectId } }),
+            prisma.timeLog.findMany({ where: { projectId } }),
+            prisma.project.findUnique({ where: { id: projectId }, select: { actualCost: true } }),
+        ]);
+
+        const totalHours = timeLogs.reduce((acc, log) => acc + log.duration, 0);
+        const actualCostOfHours = timeLogs
+            .filter(log => log.billable)
+            .reduce((acc, log) => acc + (log.duration * Number(log.billRate || 0)), 0);
+
+        const totalBudgetVal = budget ? Number(budget.totalBudget) : 0;
+        const remainingAmount = totalBudgetVal - actualCostOfHours;
+
+        await prisma.$transaction(async (tx) => {
+            // Sincroniza actualCost no projeto
+            if (Number(project?.actualCost || 0) !== actualCostOfHours) {
+                await tx.project.update({
+                    where: { id: projectId },
+                    data: { actualCost: actualCostOfHours }
+                });
+            }
+
+            // Sincroniza status e valores no Budget
+            if (budget) {
+                const newStatus =
+                    totalBudgetVal > 0 && actualCostOfHours > totalBudgetVal
+                        ? BudgetStatus.EXCEEDED
+                        : totalBudgetVal > 0 && budget.status === BudgetStatus.EXCEEDED
+                        ? BudgetStatus.ACTIVE
+                        : budget.status;
+
+                await tx.budget.update({
+                    where: { id: budget.id },
+                    data: {
+                        status: newStatus,
+                        spentAmount: actualCostOfHours,
+                        remainingAmount: remainingAmount >= 0 ? remainingAmount : 0
+                    }
+                });
+            }
+
+            // Sincroniza actualHours e actualCost na Estimate
+            if (estimate) {
+                await tx.estimate.update({
+                    where: { id: estimate.id },
+                    data: { actualHours: totalHours, actualCost: actualCostOfHours }
+                });
+            }
+        });
+
+        return { ok: true, success: true, message: "Financeiros sincronizados com sucesso" };
+    } catch (error: any) {
+        console.error("Failed to sync financials:", error);
+        return { ok: false, success: false, error: error.message, message: "Falha ao sincronizar dados financeiros." };
     }
 }
 

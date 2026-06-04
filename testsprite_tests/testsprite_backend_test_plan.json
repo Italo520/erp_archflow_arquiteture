@@ -1,0 +1,52 @@
+[
+  {
+    "id": "TC001",
+    "title": "postapiauthcallbackcredentialswithvalidcredentials",
+    "description": "Verify that POST /api/auth/callback/credentials with valid credentials returns 200 with authenticated session or JWT and allows access to protected routes with authenticated user context."
+  },
+  {
+    "id": "TC002",
+    "title": "postapiauthcallbackcredentialswithinvalidcredentials",
+    "description": "Verify that POST /api/auth/callback/credentials with invalid credentials returns 401 unauthorized and blocks access to protected routes."
+  },
+  {
+    "id": "TC003",
+    "title": "postapiauthsignoutwithauthenticatedsession",
+    "description": "Verify that POST /api/auth/signout with an authenticated session returns 200 confirmation, clears the session, and requires login for further protected requests."
+  },
+  {
+    "id": "TC004",
+    "title": "getappactionsclienttsgetclientswithvalidauthandfilters",
+    "description": "Verify that GET /app/actions/client.ts (getClients) with valid authentication and optional filters returns 200 with a list of clients displayed in the dashboard."
+  },
+  {
+    "id": "TC005",
+    "title": "postappactionsclienttscreateclientwithvaliddata",
+    "description": "Verify that POST /app/actions/client.ts (createClient) with valid client data returns 200 with the created client record available in listings and detail views."
+  },
+  {
+    "id": "TC006",
+    "title": "getappactionsprojecttsgetprojectswithauthenticateduser",
+    "description": "Verify that GET /app/actions/project.ts (getProjects) with authenticated user returns 200 with a collection of projects rendered in list or Kanban view."
+  },
+  {
+    "id": "TC007",
+    "title": "postappactionsprojecttscreateprojectwithvaliddata",
+    "description": "Verify that POST /app/actions/project.ts (createProject) with valid project and client data returns 200 with the created project appearing in project list and dashboard metrics."
+  },
+  {
+    "id": "TC008",
+    "title": "getappactionskanbantsgetkanbanboardwithvalidprojectcontext",
+    "description": "Verify that GET /app/actions/kanban.ts (getKanbanBoard) with valid project context returns 200 with lists, tasks, and card positions to render the Kanban board."
+  },
+  {
+    "id": "TC009",
+    "title": "postappactionstimelogtslogtimewithvaliddata",
+    "description": "Verify that POST /app/actions/timeLog.ts (logTime) with valid project, task, duration, and category returns 200 with saved time log included in timesheet and project metrics."
+  },
+  {
+    "id": "TC010",
+    "title": "getappactionsfinancetsgetfinancialsummarywithauthenticateduserandvalidproject",
+    "description": "Verify that GET /app/actions/finance.ts (getFinancialSummary) with authenticated user and valid project returns 200 with income, expenses, and cash flow data displayed in the finance dashboard."
+  }
+]

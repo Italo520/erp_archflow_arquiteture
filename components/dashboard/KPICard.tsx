@@ -29,13 +29,13 @@ export function KPICard({
 
     if (intent === "positive") {
         trendColor = isPositive
-            ? "text-emerald-600 dark:text-emerald-400"
-            : "text-red-500 dark:text-red-400";
+            ? "text-green-600 dark:text-green-400"
+            : "text-red-600 dark:text-red-400";
         TrendIcon = isPositive ? TrendingUp : TrendingDown;
     } else if (intent === "negative") {
         trendColor = isPositive
-            ? "text-red-500 dark:text-red-400"
-            : "text-emerald-600 dark:text-emerald-400";
+            ? "text-red-600 dark:text-red-400"
+            : "text-green-600 dark:text-green-400";
         TrendIcon = isPositive ? TrendingUp : TrendingDown;
     }
 
@@ -80,7 +80,7 @@ export function KPICard({
                         {trend !== undefined && (
                             <div className={cn("flex items-center gap-0.5", trendColor)}>
                                 <TrendIcon className="size-3" />
-                                <span className="text-xs font-semibold">
+                                <span className={cn("text-xs font-semibold", trendColor)}>
                                     {trend > 0 ? "+" : ""}{trend}%
                                 </span>
                             </div>

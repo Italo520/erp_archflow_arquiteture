@@ -24,7 +24,7 @@ export async function updateStageOrder(projectId: string, updates: { id: string;
                 data: { order: u.order }
             }))
         );
-        revalidatePath(`/projects/${projectId}`);
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
         console.error("Failed to update stage order", error);
@@ -48,7 +48,7 @@ export async function updateStage(stageId: string, projectId: string, data: { na
             where: { id: stageId },
             data: { name: data.name }
         });
-        revalidatePath(`/projects/${projectId}`);
+        revalidatePath(`/dashboard/projects/${projectId}`);
         return { success: true };
     } catch (error: any) {
         console.error("Failed to update stage", error);

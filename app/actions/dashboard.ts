@@ -62,8 +62,10 @@ export async function getDashboardMetrics(userId?: string): Promise<DashboardMet
         // Note: Adjust specific status strings based on your app's convention
         const activeProjectsQuery = db.project.count({
             where: {
-                status: {
-                    notIn: ['COMPLETED', 'ARCHIVED', 'CANCELLED']
+                currentColumn: {
+                    title: {
+                        notIn: ['Concluído', 'Arquivado', 'Cancelado']
+                    }
                 }
             }
         });
@@ -98,8 +100,10 @@ export async function getDashboardMetrics(userId?: string): Promise<DashboardMet
                 estimatedEndDate: {
                     gte: now
                 },
-                status: {
-                    notIn: ['COMPLETED', 'ARCHIVED']
+                currentColumn: {
+                    title: {
+                        notIn: ['Concluído', 'Arquivado']
+                    }
                 }
             },
             orderBy: {
@@ -152,14 +156,6 @@ export async function getDashboardMetrics(userId?: string): Promise<DashboardMet
             }
         });
 
-        // 7. Chart: Project Status Distribution
-        const projectDistQuery = db.project.groupBy({
-            by: ['status'],
-            _count: {
-                id: true
-            }
-        });
-
         // Execute parallel queries
         const [
             activeProjectsCount,
@@ -168,7 +164,7 @@ export async function getDashboardMetrics(userId?: string): Promise<DashboardMet
             urgentProjects,
             todayActivities,
             productivityLogs,
-            projectDist
+            projectsForDistribution
         ] = await Promise.all([
             activeProjectsQuery,
             revenueQuery,
@@ -176,8 +172,28 @@ export async function getDashboardMetrics(userId?: string): Promise<DashboardMet
             urgentProjectsQuery,
             todayActivitiesQuery,
             productivityQuery,
-            projectDistQuery
+            db.project.findMany({
+                where: { deletedAt: null },
+                select: {
+                    currentColumn: {
+                        select: {
+                            title: true
+                        }
+                    }
+                }
+            })
         ]);
+
+        const distributionMap = new Map<string, number>();
+        projectsForDistribution.forEach(p => {
+            const statusName = p.currentColumn?.title || 'Sem Status';
+            distributionMap.set(statusName, (distributionMap.get(statusName) || 0) + 1);
+        });
+
+        const projectDist = Array.from(distributionMap.entries()).map(([status, count]) => ({
+            status,
+            _count: { id: count }
+        }));
 
         // Process Revenue
         const monthlyRevenue = revenueLogs.reduce((acc, log) => {

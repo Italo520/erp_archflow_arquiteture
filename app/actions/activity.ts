@@ -6,16 +6,9 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAuth } from "@/lib/server-utils";
 import { ActivityStatus } from "@prisma/client";
+import type { ActionResponse } from "@/lib/types/action-response";
 
-// Interface oficial unificada
-export interface ActionResponse<T = any> {
-  ok: boolean;
-  success?: boolean; // Retrocompatibilidade
-  message?: string;
-  data?: T;
-  error?: string | any; // Retrocompatibilidade
-  errors?: Record<string, string[]> | string;
-}
+export type { ActionResponse };
 
 export async function createActivity(data: z.infer<typeof activitySchema>): Promise<ActionResponse> {
     const result = activitySchema.safeParse(data);

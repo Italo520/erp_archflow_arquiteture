@@ -7,6 +7,9 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/server-utils";
 import { canCreateClient } from "@/lib/permissions";
 import { Role } from "@prisma/client";
+import type { ActionResponse } from "@/lib/types/action-response";
+
+export type { ActionResponse };
 
 function sanitizeClient(client: any) {
   if (!client) return client;
@@ -14,17 +17,6 @@ function sanitizeClient(client: any) {
     ...client,
     totalSpent: client.totalSpent ? Number(client.totalSpent) : 0,
   };
-}
-
-// Interface oficial de resposta para Server Actions
-export interface ActionResponse<T = any> {
-  ok: boolean;
-  success?: boolean; // Retrocompatibilidade do frontend
-  message?: string;
-  data?: T;
-  error?: string | any; // Retrocompatibilidade do frontend
-  errors?: Record<string, string[]> | string;
-  metadata?: any; // Para paginações retrocompatíveis
 }
 
 export async function createClient(data: z.infer<typeof clientSchema>): Promise<ActionResponse> {

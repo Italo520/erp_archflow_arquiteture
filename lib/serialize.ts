@@ -16,5 +16,11 @@ export function serializeData(data: any): any {
     for (const key in data) {
         serialized[key] = serializeData(data[key]);
     }
+    
+    // Retrocompatibilidade para Project: status = currentColumnId
+    if (data && typeof data === 'object' && 'currentColumnId' in data && data.currentColumnId !== undefined) {
+        serialized.status = data.currentColumnId;
+    }
+    
     return serialized;
 }
