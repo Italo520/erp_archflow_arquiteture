@@ -1,4 +1,4 @@
-import { getTopProjects, getTimeBreakdownByClient, getFullProjectBreakdown } from "@/app/actions/report";
+import { getTopProjects, getTimeBreakdownByClient, getFullProjectBreakdown, getTimeDistributionByCategory } from "@/app/actions/report";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 import { DeepMockProxy } from "jest-mock-extended";
@@ -23,6 +23,55 @@ describe("Report Actions", () => {
     beforeEach(() => {
         jest.clearAllMocks();
         mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+    });
+
+
+    describe("getTimeDistributionByCategory", () => {
+        it("should return time distribution by category", async () => {
+            mockPrisma.timeLog.groupBy.mockResolvedValue([
+                { category: "Desenvolvimento", _sum: { duration: 15 } },
+                { category: "Reunião", _sum: { duration: 5 } },
+            ] as any);
+
+            const result = await getTimeDistributionByCategory();
+
+            expect(result.success).toBe(true);
+            expect(result.data).toEqual([
+                { name: "Desenvolvimento", value: 15 },
+                { name: "Reunião", value: 5 },
+            ]);
+        });
+
+        it("should return unauthorized when user is not logged in", async () => {
+            mockAuth.mockResolvedValueOnce(null);
+
+            const result = await getTimeDistributionByCategory();
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe("Unauthorized");
+        });
+
+        it("should handle missing duration sum as 0", async () => {
+            mockPrisma.timeLog.groupBy.mockResolvedValue([
+                { category: "Pesquisa", _sum: { duration: null } },
+            ] as any);
+
+            const result = await getTimeDistributionByCategory();
+
+            expect(result.success).toBe(true);
+            expect(result.data).toEqual([
+                { name: "Pesquisa", value: 0 },
+            ]);
+        });
+
+        it("should handle database errors", async () => {
+            mockPrisma.timeLog.groupBy.mockRejectedValue(new Error("Database connection failed"));
+
+            const result = await getTimeDistributionByCategory();
+
+            expect(result.success).toBe(false);
+            expect(result.error).toBe("Failed to fetch distribution");
+        });
     });
 
     describe("getTopProjects", () => {

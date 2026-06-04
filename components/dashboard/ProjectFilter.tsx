@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { useCallback, useState, useEffect } from "react";
+import { useCallback, useState, useEffect, useMemo } from "react";
 import { Check, ChevronsUpDown, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,7 @@ export function ProjectFilter({ projects, className }: ProjectFilterProps) {
     }, [pathname, router, searchParams]);
 
     const handleSelect = (projectId: string) => {
-        const newSelected = selected.includes(projectId)
+        const newSelected = selectedSet.has(projectId)
             ? selected.filter((id) => id !== projectId)
             : [...selected, projectId];
 
@@ -73,7 +73,8 @@ export function ProjectFilter({ projects, className }: ProjectFilterProps) {
         updateURL([]);
     };
 
-    const selectedProjects = projects.filter((p) => selected.includes(p.id));
+    const selectedSet = useMemo(() => new Set(selected), [selected]);
+    const selectedProjects = projects.filter((p) => selectedSet.has(p.id));
 
     return (
         <div className={cn("flex flex-col gap-2", className)}>
@@ -105,7 +106,7 @@ export function ProjectFilter({ projects, className }: ProjectFilterProps) {
                                     <Check
                                         className={cn(
                                             "mr-2 h-4 w-4",
-                                            selected.includes(project.id) ? "opacity-100" : "opacity-0"
+                                            selectedSet.has(project.id) ? "opacity-100" : "opacity-0"
                                         )}
                                     />
                                     {project.name}

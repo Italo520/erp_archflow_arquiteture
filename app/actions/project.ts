@@ -481,16 +481,33 @@ export async function duplicateProject(projectId: string, newName: string, optio
         let newStatus = 'PLANNING';
 
         if (originalColumns.length > 0) {
+            // Create all columns in a single query
+            await modelCol.createMany({
+                data: originalColumns.map((col: any) => ({
+                    title: col.title,
+                    color: col.color,
+                    order: col.order,
+                    projectId: newProject.id
+                }))
+            });
+
+            // Fetch the newly created columns to build the mapping
+            const newColumns = await modelCol.findMany({
+                where: { projectId: newProject.id }
+            });
+
+            // Build a quick lookup for matching based on title and order since they are cloned exactly
+            // Using a Map for O(1) lookups as per guidelines
+            const newColMap = new Map();
+            for (const newCol of newColumns) {
+                newColMap.set(`${newCol.title}-${newCol.order}`, newCol.id);
+            }
+
             for (const col of originalColumns) {
-                const newCol = await modelCol.create({
-                    data: {
-                        title: col.title,
-                        color: col.color,
-                        order: col.order,
-                        projectId: newProject.id
-                    }
-                });
-                colMapping[col.id] = newCol.id;
+                const newId = newColMap.get(`${col.title}-${col.order}`);
+                if (newId) {
+                    colMapping[col.id] = newId;
+                }
             }
 
             // Mapeia o status do novo projeto para a nova coluna correspondente

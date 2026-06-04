@@ -36,7 +36,13 @@ export async function getKanbanColumns(projectId?: string): Promise<ActionRespon
                 ]
             });
 
+<<<<<<< HEAD
             columns = await prisma.projectKanbanColumn.findMany({
+=======
+            await model.createMany({ data: defaultCols });
+
+            columns = await model.findMany({
+>>>>>>> 591e5c1bacd201fb66f050286f617a29990bd5b0
                 where: { projectId },
                 orderBy: { order: 'asc' }
             });
