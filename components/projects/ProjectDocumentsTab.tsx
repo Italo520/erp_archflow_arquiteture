@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Table,
   TableBody,
@@ -114,11 +114,7 @@ export default function ProjectDocumentsTab({ project }: { project: any }) {
   const [reviewComment, setReviewComment] = useState("");
 
   // Carrega entregáveis técnicos ao carregar a página
-  useEffect(() => {
-    loadDeliverables();
-  }, [project.id]);
-
-  async function loadDeliverables() {
+  const loadDeliverables = useCallback(async () => {
     try {
       const result = await listDeliverables(project.id);
       if (result.ok && result.data) {
@@ -127,7 +123,11 @@ export default function ProjectDocumentsTab({ project }: { project: any }) {
     } catch (error) {
       console.error("Erro ao carregar entregáveis:", error);
     }
-  }
+  }, [project.id]);
+
+  useEffect(() => {
+    loadDeliverables();
+  }, [loadDeliverables]);
 
   // --- FUNÇÕES DOCUMENTOS GERAIS ---
   const filteredDocuments = documents.filter((doc) =>

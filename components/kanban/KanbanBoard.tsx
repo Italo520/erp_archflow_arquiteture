@@ -48,18 +48,13 @@ export default function KanbanBoard({ project }) {
     const [activeColumn, setActiveColumn] = useState<any>(null);
     const [activeTask, setActiveTask] = useState<any>(null);
     const [selectedTask, setSelectedTask] = useState<any>(null);
-    const [viewMode, setViewMode] = useState<'kanban' | 'list'>('kanban');
-
-    useEffect(() => {
-        const savedViewMode = localStorage.getItem('kanbanViewMode');
-        if (savedViewMode === 'kanban' || savedViewMode === 'list') {
-            setViewMode(savedViewMode);
+    const [viewMode, setViewMode] = useState<'kanban' | 'list'>(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('kanbanViewMode');
+            if (saved === 'kanban' || saved === 'list') return saved;
         }
-    }, []);
-
-    useEffect(() => {
-        setStages(project.stages);
-    }, [project.stages]);
+        return 'kanban';
+    });
 
     const changeViewMode = (mode: 'kanban' | 'list') => {
         setViewMode(mode);

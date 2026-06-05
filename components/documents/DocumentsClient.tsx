@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition, useRef } from 'react';
+import React, { useState, useMemo, useTransition, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -115,14 +115,36 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: React.
     DELIVERED: { label: 'Entregue', color: 'text-primary bg-primary/10', icon: CheckCircle, tooltip: 'Documento entregue formalmente ao cliente.' },
 };
 
-function getFileIcon(type: string, mimeType: string | null) {
+// Mapa estático de ícones — declarado fora de qualquer componente
+// para satisfazer a regra react-hooks/static-components do React Compiler
+const FILE_ICON_MAP: Record<string, React.ElementType> = {
+    PHOTO: Image,
+    VIDEO: Video,
+    PDF: FileText,
+    DOCUMENT: FileText,
+    SKETCH: FileText,
+    RENDER_3D: FileText,
+    DRAWING_2D: FileText,
+    OTHER: File,
+};
+
+function getFileIconComponent(type: string, mimeType: string | null): React.ElementType {
     if (type === 'PHOTO' || mimeType?.startsWith('image/')) return Image;
     if (type === 'VIDEO' || mimeType?.startsWith('video/')) return Video;
     if (type === 'PDF' || mimeType === 'application/pdf') return FileText;
     if (type === 'DOCUMENT') return FileText;
     if (mimeType?.includes('zip') || mimeType?.includes('rar')) return FileArchive;
-    return File;
+    return FILE_ICON_MAP[type] ?? File;
 }
+
+// Usa React.createElement para evitar a regra static-components do React Compiler
+// que proíbe `const Comp = fn(); return <Comp />;` dentro de render
+const CardFileIcon = ({ type, mimeType }: { type: string; mimeType: string | null }) =>
+    React.createElement(getFileIconComponent(type, mimeType), { className: 'h-14 w-14 text-muted-foreground/30' });
+
+const RowFileIcon = ({ type, mimeType }: { type: string; mimeType: string | null }) =>
+    React.createElement(getFileIconComponent(type, mimeType), { className: 'h-4 w-4 text-muted-foreground' });
+
 
 function formatFileSize(bytes: number | null): string {
     if (!bytes) return '–';
@@ -386,7 +408,6 @@ function DocumentCard({
     isTrash: boolean;
     onAction: (doc: Deliverable, action: 'archive' | 'delete' | 'restore') => void;
 }) {
-    const FileIcon = getFileIcon(doc.type, doc.mimeType);
     const status = STATUS_CONFIG[doc.status] ?? STATUS_CONFIG.DRAFT;
     const StatusIcon = status.icon;
 
@@ -408,7 +429,7 @@ function DocumentCard({
                         }}
                     />
                 ) : (
-                    <FileIcon className="h-14 w-14 text-muted-foreground/30" />
+                    <CardFileIcon type={doc.type} mimeType={doc.mimeType} />
                 )}
 
                 {/* Overlay actions on hover */}
@@ -526,7 +547,6 @@ function DocumentRow({
     isTrash: boolean;
     onAction: (doc: Deliverable, action: 'archive' | 'delete' | 'restore') => void;
 }) {
-    const FileIcon = getFileIcon(doc.type, doc.mimeType);
     const status = STATUS_CONFIG[doc.status] ?? STATUS_CONFIG.DRAFT;
     const StatusIcon = status.icon;
     const formattedDate = format(new Date(doc.updatedAt), "d MMM yyyy", { locale: ptBR });
@@ -534,7 +554,7 @@ function DocumentRow({
     return (
         <div className={cn("flex items-center gap-4 px-4 py-3 hover:bg-secondary/40 rounded-lg transition-colors group", isTrash && "opacity-80")}>
             <div className="flex-shrink-0 size-9 rounded-lg bg-muted/60 flex items-center justify-center">
-                <FileIcon className="h-4 w-4 text-muted-foreground" />
+                <RowFileIcon type={doc.type} mimeType={doc.mimeType} />
             </div>
 
             <div className="flex-1 min-w-0">

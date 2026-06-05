@@ -136,10 +136,12 @@ export function ClientForm({ initialData }: ClientFormProps) {
   const watchLegalType = form.watch("legalType");
 
   // Limpa o documento ao alternar o tipo de pessoa para evitar conflito de validação
+  // form e initialData são estáveis e não precisam causar re-execução do efeito
   useEffect(() => {
     if (initialData?.legalType !== watchLegalType) {
       form.setValue("document", "");
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watchLegalType]);
 
   async function onSubmit(values: any) {

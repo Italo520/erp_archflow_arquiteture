@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -71,11 +71,7 @@ export default function ProjectFinancialTab({
     "pdf" | "excel" | null
   >(null);
 
-  useEffect(() => {
-    fetchFinancials();
-  }, [project.id]);
-
-  async function fetchFinancials() {
+  const fetchFinancials = useCallback(async () => {
     setIsLoading(true);
     try {
       const res = await getProjectFinancials(project.id);
@@ -91,7 +87,11 @@ export default function ProjectFinancialTab({
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [project.id]);
+
+  useEffect(() => {
+    fetchFinancials();
+  }, [fetchFinancials]);
 
   async function handleSaveBudget() {
     const val = Number(newBudgetVal);

@@ -53,6 +53,8 @@ export function ProjectFilter({ projects, className }: ProjectFilterProps) {
         router.push(`${pathname}${search ? `?${search}` : ""}`);
     }, [pathname, router, searchParams]);
 
+    const selectedSet = useMemo(() => new Set(selected), [selected]);
+
     const handleSelect = (projectId: string) => {
         const newSelected = selectedSet.has(projectId)
             ? selected.filter((id) => id !== projectId)
@@ -73,7 +75,6 @@ export function ProjectFilter({ projects, className }: ProjectFilterProps) {
         updateURL([]);
     };
 
-    const selectedSet = useMemo(() => new Set(selected), [selected]);
     const selectedProjects = projects.filter((p) => selectedSet.has(p.id));
 
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { listUsers } from "@/app/actions/user";
@@ -46,13 +46,13 @@ export default function ProjectTeamTab({ project }: { project: any }) {
     const router = useRouter();
     
     // Map architects from project.members
-    const architects = project.members?.map((m: any) => ({
+    const architects = useMemo(() => project.members?.map((m: any) => ({
         id: m.user.id,
         fullName: m.user.fullName,
         email: m.user.email,
         role: m.role,
         avatarUrl: m.user.avatarUrl
-    })) || [];
+    })) || [], [project.members]);
     
     const client = project.client;
 
