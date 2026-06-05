@@ -48,22 +48,23 @@ export function Timer({ projects }: TimerProps) {
 
                 // Calculate elapsed
                 if (data.startTime) {
-                    // Assuming startTime comes as ISO string or Date from server action
-                    const start = new Date(data.startTime); // Ensure it's date object
-                    // Note: Schema has @db.Time for startTime, so Prisma might return 1970-01-01 + time if simplistic, 
-                    // BUT usually it's full DateTime if mapped correctly or if we just store full timestamp.
-                    // Looking at schema: startTime DateTime? @map("start_time") @db.Time
-                    // Wait, @db.Time means it loses the Date part? That's dangerous for calculating duration across midnights or just generally. 
-                    // Ideally it should be DateTime. 
-                    // If it's pure Time, we must assume it's TODAY's time or reconstruct it.
-                    // Task 4.1 implementation set `startTime: new Date()` in action.
-                    // Let's assume for now it behaves as a Timestamp or we handle it.
-                    // If it IS just time, differenceInSeconds might be weird if day changed. 
-                    // Let's trust it's a valid JS Date for now.
-
-                    startTimeRef.current = start;
+                    const start = new Date(data.startTime);
                     const now = new Date();
-                    setElapsedSeconds(differenceInSeconds(now, start));
+                    
+                    // Reconstruir a data de início com o dia de hoje, já que @db.Time perde a data do calendário
+                    const startCorrected = new Date(now);
+                    startCorrected.setHours(start.getHours());
+                    startCorrected.setMinutes(start.getMinutes());
+                    startCorrected.setSeconds(start.getSeconds());
+                    startCorrected.setMilliseconds(start.getMilliseconds());
+                    
+                    // Se a data corrigida parecer estar no futuro por causa de fuso horário, ajustamos para o dia anterior
+                    if (startCorrected.getTime() > now.getTime()) {
+                        startCorrected.setDate(startCorrected.getDate() - 1);
+                    }
+
+                    startTimeRef.current = startCorrected;
+                    setElapsedSeconds(differenceInSeconds(now, startCorrected));
                 }
             } else {
                 // No running timer on server, check local storage for optimistic state?
@@ -91,7 +92,7 @@ export function Timer({ projects }: TimerProps) {
     // Actions
     const handleStart = async () => {
         if (!projectId) {
-            toast.error("Please select a project");
+            toast.error("Por favor, selecione um projeto");
             return;
         }
 
@@ -110,11 +111,11 @@ export function Timer({ projects }: TimerProps) {
 
         if (result.success && result.data) {
             setTimerId(result.data.id);
-            toast.success("Timer started");
+            toast.success("Cronômetro iniciado");
             router.refresh();
         } else {
             setIsRunning(false);
-            toast.error(result.error || "Failed to start");
+            toast.error(result.error || "Falha ao iniciar");
         }
     };
 
@@ -129,10 +130,10 @@ export function Timer({ projects }: TimerProps) {
             setElapsedSeconds(0);
             setDescription("");
             // Keep project selected for repeated tasks? Or clear? keeping it is usually better UX.
-            toast.success("Timer stopped");
+            toast.success("Cronômetro parado");
             router.refresh(); // Update table below
         } else {
-            toast.error(result.error || "Failed to stop");
+            toast.error(result.error || "Falha ao parar");
         }
     };
 
@@ -152,7 +153,7 @@ export function Timer({ projects }: TimerProps) {
             {/* Description Input */}
             <div className="flex-1 w-full">
                 <Input
-                    placeholder="What are you working on?"
+                    placeholder="No que você está trabalhando?"
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
                     className="border-0 shadow-none focus-visible:ring-0 px-0 text-lg font-medium placeholder:font-normal bg-transparent"
@@ -168,7 +169,7 @@ export function Timer({ projects }: TimerProps) {
                     disabled={isRunning}
                 >
                     <SelectTrigger className={!projectId ? "text-muted-foreground" : ""}>
-                        <SelectValue placeholder="Project..." />
+                        <SelectValue placeholder="Projeto..." />
                     </SelectTrigger>
                     <SelectContent>
                         {projects.map(p => (

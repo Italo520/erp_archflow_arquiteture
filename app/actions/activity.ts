@@ -32,10 +32,11 @@ export async function createActivity(data: z.infer<typeof activitySchema>): Prom
                 where: { id: result.data.clientId },
                 data: { lastInteractionAt: new Date() }
             });
-            revalidatePath(`/dashboard/clients/${result.data.clientId}`);
+            revalidatePath(`/clients/${result.data.clientId}`);
         }
 
-        revalidatePath("/dashboard/activities");
+        revalidatePath("/activities");
+        if (result.data.projectId) revalidatePath(`/projects/${result.data.projectId}`);
         return { ok: true, success: true, data: activity, message: "Atividade criada com sucesso" };
     } catch (error: any) {
         console.error("Failed to create activity:", error);
@@ -82,10 +83,11 @@ export async function updateActivity(id: string, data: z.infer<typeof updateActi
                 where: { id: activity.clientId },
                 data: { lastInteractionAt: new Date() }
             });
-            revalidatePath(`/dashboard/clients/${activity.clientId}`);
+            revalidatePath(`/clients/${activity.clientId}`);
         }
 
-        revalidatePath("/dashboard/activities");
+        revalidatePath("/activities");
+        if (activity.projectId) revalidatePath(`/projects/${activity.projectId}`);
         return { ok: true, success: true, data: activity, message: "Atividade atualizada com sucesso" };
     } catch (error: any) {
         console.error("Failed to update activity:", error);
@@ -99,8 +101,9 @@ export async function deleteActivity(id: string): Promise<ActionResponse> {
         const activity = await prisma.activity.delete({
             where: { id },
         });
-        revalidatePath("/dashboard/activities");
-        if (activity.clientId) revalidatePath(`/dashboard/clients/${activity.clientId}`);
+        revalidatePath("/activities");
+        if (activity.clientId) revalidatePath(`/clients/${activity.clientId}`);
+        if (activity.projectId) revalidatePath(`/projects/${activity.projectId}`);
         return { ok: true, success: true, message: "Atividade excluída com sucesso" };
     } catch (error: any) {
         console.error("Failed to delete activity:", error);
@@ -122,10 +125,11 @@ export async function completeActivity(id: string): Promise<ActionResponse> {
                 where: { id: activity.clientId },
                 data: { lastInteractionAt: new Date() }
             });
-            revalidatePath(`/dashboard/clients/${activity.clientId}`);
+            revalidatePath(`/clients/${activity.clientId}`);
         }
 
-        revalidatePath("/dashboard/activities");
+        revalidatePath("/activities");
+        if (activity.projectId) revalidatePath(`/projects/${activity.projectId}`);
         return { ok: true, success: true, data: activity, message: "Atividade concluída com sucesso" };
     } catch (error: any) {
         console.error("Failed to complete activity:", error);
@@ -147,7 +151,7 @@ export async function addParticipant(id: string, participantName: string): Promi
             data: { participants: uniqueParticipants },
         });
 
-        revalidatePath("/dashboard/activities");
+        revalidatePath("/activities");
         return { ok: true, success: true, data: updatedActivity, message: "Participante adicionado com sucesso" };
     } catch (error: any) {
         console.error("Failed to add participant:", error);
@@ -168,7 +172,7 @@ export async function removeParticipant(id: string, participantName: string): Pr
             data: { participants: updatedParticipants },
         });
 
-        revalidatePath("/dashboard/activities");
+        revalidatePath("/activities");
         return { ok: true, success: true, data: updatedActivity, message: "Participante removido com sucesso" };
     } catch (error: any) {
         console.error("Failed to remove participant:", error);

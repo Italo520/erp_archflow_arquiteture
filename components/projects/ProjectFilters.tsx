@@ -75,7 +75,7 @@ export default function ProjectFilters() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                 <Select value={status} onValueChange={setStatus}>
                     <SelectTrigger>
                         <SelectValue placeholder="Status do Projeto" />
@@ -113,7 +113,7 @@ export default function ProjectFilters() {
                     </SelectContent>
                 </Select>
 
-                <div className="flex gap-2 items-center text-sm">
+                <div className="flex gap-2 items-center text-sm sm:col-span-2 lg:col-span-2">
                     <Input
                         type="date"
                         value={startDate}

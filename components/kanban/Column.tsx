@@ -137,13 +137,13 @@ export function KanbanColumn({ stage, tasks, projectId, onTaskClick }: KanbanCol
         <div
             ref={setNodeRef}
             style={style}
-            className="w-80 flex-shrink-0 flex flex-col bg-gray-50/80 dark:bg-surface-dark rounded-xl border border-gray-200/60 dark:border-border-dark h-full max-h-full mr-4 transition-colors"
+            className="w-80 flex-shrink-0 flex flex-col bg-muted/40 rounded-xl border h-full max-h-full mr-4 transition-colors"
         >
             {/* Header */}
             <div
                 {...attributes}
                 {...listeners}
-                className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-border-dark bg-transparent rounded-t-xl cursor-grab active:cursor-grabbing hover:bg-gray-100/50 dark:hover:bg-slate-700/30 transition-colors group/header"
+                className="flex items-center justify-between p-4 border-b bg-transparent rounded-t-xl cursor-grab active:cursor-grabbing hover:bg-muted/60 transition-colors group/header"
             >
                 <div className={`flex items-center gap-2 flex-1 ${isPending ? 'opacity-50' : ''}`}>
                     {isEditingName ? (
@@ -191,7 +191,7 @@ export function KanbanColumn({ stage, tasks, projectId, onTaskClick }: KanbanCol
                             {stage.name}
                         </h3>
                     )}
-                    <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 shadow-sm">
+                    <span className="px-2 py-0.5 text-xs font-bold rounded-full bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 shadow-sm">
                         {tasks.length}
                     </span>
                 </div>

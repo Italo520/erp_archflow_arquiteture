@@ -86,7 +86,19 @@ export async function stopTimeLog(id: string): Promise<ActionResponse> {
 
         const endTime = new Date();
         const startTime = new Date(log.startTime);
-        const durationMs = endTime.getTime() - startTime.getTime();
+        
+        // Ajustar o startTime para ter o mesmo dia do endTime (evitando erro de ano 1970 do tipo TIME)
+        const startTimeCorrected = new Date(endTime);
+        startTimeCorrected.setHours(startTime.getHours());
+        startTimeCorrected.setMinutes(startTime.getMinutes());
+        startTimeCorrected.setSeconds(startTime.getSeconds());
+        startTimeCorrected.setMilliseconds(startTime.getMilliseconds());
+
+        let durationMs = endTime.getTime() - startTimeCorrected.getTime();
+        // Tratar caso o timer tenha cruzado a meia-noite
+        if (durationMs < 0) {
+            durationMs += 24 * 60 * 60 * 1000;
+        }
         const durationHours = durationMs / (1000 * 60 * 60);
 
         const updatedLog = await prisma.timeLog.update({

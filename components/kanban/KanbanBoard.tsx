@@ -276,8 +276,8 @@ export default function KanbanBoard({ project }) {
             onDragOver={handleDragOver}
             onDragEnd={handleDragEnd}
         >
-            <div className="flex flex-col h-full overflow-hidden bg-background-light dark:bg-background-dark">
-                <header className="h-16 flex-none bg-white dark:bg-surface-dark border-b border-gray-200 dark:border-border-dark flex items-center justify-between px-6 lg:px-10">
+            <div className="flex flex-col h-full overflow-hidden bg-transparent">
+                <header className="h-16 flex-none bg-muted/40 border border-border rounded-xl mb-4 flex items-center justify-between px-6">
                     <div className="flex flex-col">
                         <Link href="/dashboard" className="text-xs text-gray-500 hover:text-primary mb-1 flex items-center gap-1">
                             <ArrowLeft className="h-3.5 w-3.5" />

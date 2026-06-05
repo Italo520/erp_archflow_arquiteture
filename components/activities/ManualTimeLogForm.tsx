@@ -28,12 +28,12 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Loader2 } from "lucide-react";
 
 const manualLogSchema = z.object({
-    projectId: z.string().min(1, "Project is required").uuid("Project is required"),
+    projectId: z.string().min(1, "O projeto é obrigatório").uuid("O projeto é obrigatório"),
     description: z.string().optional(),
     category: z.nativeEnum(TimeLogCategory),
     date: z.string(), // YYYY-MM-DD
     startTime: z.string(), // HH:MM
-    duration: z.coerce.number().min(0.01, "Duration must be positive"), // hours
+    duration: z.coerce.number().min(0.01, "A duração deve ser positiva"), // hours
 });
 
 interface ManualTimeLogFormProps {
@@ -79,14 +79,14 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
         const result = await createTimeLog(payload);
 
         if (result.success) {
-            toast.success("Time log added");
+            toast.success("Registro de tempo adicionado");
             form.reset({
                 ...form.getValues(),
                 description: "", // clear description but keep date/project maybe?
             });
             router.refresh();
         } else {
-            toast.error("Failed to add log");
+            toast.error("Falha ao adicionar registro");
             console.error(result.error);
         }
     }
@@ -94,7 +94,7 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
     return (
         <Card>
             <CardHeader>
-                <CardTitle className="text-lg">Manual Entry</CardTitle>
+                <CardTitle className="text-lg">Entrada Manual</CardTitle>
             </CardHeader>
             <CardContent>
                 <Form {...form}>
@@ -105,11 +105,11 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
                                 name="projectId"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Project</FormLabel>
+                                        <FormLabel>Projeto</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select project" />
+                                                    <SelectValue placeholder="Selecione o projeto" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -127,11 +127,11 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
                                 name="category"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Category</FormLabel>
+                                        <FormLabel>Categoria</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Category" />
+                                                    <SelectValue placeholder="Categoria" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -151,9 +151,9 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Description</FormLabel>
+                                    <FormLabel>Descrição</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Work description..." {...field} />
+                                        <Input placeholder="Descrição do trabalho..." {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -166,7 +166,7 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
                                 name="date"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Date</FormLabel>
+                                        <FormLabel>Data</FormLabel>
                                         <FormControl>
                                             <Input type="date" {...field} />
                                         </FormControl>
@@ -179,7 +179,7 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
                                 name="startTime"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Start Time</FormLabel>
+                                        <FormLabel>Hora de Início</FormLabel>
                                         <FormControl>
                                             <Input type="time" {...field} />
                                         </FormControl>
@@ -192,7 +192,7 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
                                 name="duration"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Duration (hours)</FormLabel>
+                                        <FormLabel>Duração (horas)</FormLabel>
                                         <FormControl>
                                             <Input type="number" step="0.25" {...field} />
                                         </FormControl>
@@ -204,7 +204,7 @@ export function ManualTimeLogForm({ projects }: ManualTimeLogFormProps) {
 
                         <Button type="submit" disabled={isSubmitting}>
                             {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Add Entry
+                            Adicionar Registro
                         </Button>
                     </form>
                 </Form>

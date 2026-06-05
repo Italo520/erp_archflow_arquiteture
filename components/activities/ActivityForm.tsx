@@ -26,11 +26,19 @@ import { CalendarIcon, Loader2 } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { createActivity, updateActivity } from "@/app/actions/activity";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { ActivityType } from "@prisma/client";
+
+const activityTypeLabels: Record<string, string> = {
+    MEETING: "Reunião",
+    CALL: "Ligação",
+    SITE_VISIT: "Visita Técnica",
+    DESIGN: "Design",
+};
 
 // Use base schema (ZodObject) instead of refined schema (ZodEffects) for react-hook-form compatibility
 const formSchema = activityBaseSchema;
@@ -68,7 +76,7 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
             }
 
             if (result.success) {
-                toast.success(initialData ? "Activity updated" : "Activity created");
+                toast.success(initialData ? "Atividade atualizada com sucesso" : "Atividade criada com sucesso");
                 router.refresh(); // Refresh server data
                 if (onSuccess) onSuccess();
             } else {
@@ -77,12 +85,12 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                     toast.error(result.error);
                 } else {
                     // If field errors, we could map them back to form, simple alert for now
-                    toast.error("Validation failed. Please check fields.");
+                    toast.error("Falha na validação. Por favor, verifique os campos.");
                     console.error(result.error);
                 }
             }
         } catch (error) {
-            toast.error("Something went wrong");
+            toast.error("Algo deu errado");
             console.error(error);
         }
     }
@@ -98,17 +106,17 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                         name="type"
                         render={({ field }) => (
                             <FormItem className="w-[180px]">
-                                <FormLabel>Type</FormLabel>
+                                <FormLabel>Tipo</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select type" />
+                                            <SelectValue placeholder="Selecione o tipo" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
                                         {Object.values(ActivityType).map((type) => (
                                             <SelectItem key={type} value={type}>
-                                                {type}
+                                                {activityTypeLabels[type] || type}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -123,9 +131,9 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                         name="title"
                         render={({ field }) => (
                             <FormItem className="flex-1">
-                                <FormLabel>Title</FormLabel>
+                                <FormLabel>Título</FormLabel>
                                 <FormControl>
-                                    <Input placeholder="Activity title" {...field} />
+                                    <Input placeholder="Título da atividade" {...field} />
                                 </FormControl>
                                 <FormMessage />
                             </FormItem>
@@ -140,7 +148,7 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                         name="startTime"
                         render={({ field }) => (
                             <FormItem className="flex-1">
-                                <FormLabel>Start Time</FormLabel>
+                                <FormLabel>Hora de Início</FormLabel>
                                 <div className="flex gap-2">
                                     <Popover>
                                         <PopoverTrigger asChild>
@@ -153,9 +161,9 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                                                     )}
                                                 >
                                                     {field.value ? (
-                                                        format(field.value, "PPP HH:mm")
+                                                        format(field.value, "PPP HH:mm", { locale: ptBR })
                                                     ) : (
-                                                        <span>Pick a date</span>
+                                                        <span>Escolha uma data</span>
                                                     )}
                                                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                                 </Button>
@@ -192,7 +200,7 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                         name="endTime"
                         render={({ field }) => (
                             <FormItem className="flex-1">
-                                <FormLabel>End Time</FormLabel>
+                                <FormLabel>Hora de Término</FormLabel>
                                 <div className="flex gap-2">
                                     <Popover>
                                         <PopoverTrigger asChild>
@@ -205,9 +213,9 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                                                     )}
                                                 >
                                                     {field.value ? (
-                                                        format(field.value, "PPP HH:mm")
+                                                        format(field.value, "PPP HH:mm", { locale: ptBR })
                                                     ) : (
-                                                        <span>Pick a date</span>
+                                                        <span>Escolha uma data</span>
                                                     )}
                                                     <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                                 </Button>
@@ -247,11 +255,11 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                         name="projectId"
                         render={({ field }) => (
                             <FormItem className="flex-1">
-                                <FormLabel>Project (Optional)</FormLabel>
+                                <FormLabel>Projeto (Opcional)</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select project" />
+                                            <SelectValue placeholder="Selecione o projeto" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -270,11 +278,11 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                         name="clientId"
                         render={({ field }) => (
                             <FormItem className="flex-1">
-                                <FormLabel>Client (Optional)</FormLabel>
+                                <FormLabel>Cliente (Opcional)</FormLabel>
                                 <Select onValueChange={field.onChange} defaultValue={field.value || undefined}>
                                     <FormControl>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select client" />
+                                            <SelectValue placeholder="Selecione o cliente" />
                                         </SelectTrigger>
                                     </FormControl>
                                     <SelectContent>
@@ -294,10 +302,10 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
                     name="description"
                     render={({ field }) => (
                         <FormItem>
-                            <FormLabel>Description</FormLabel>
+                            <FormLabel>Descrição</FormLabel>
                             <FormControl>
                                 <Textarea
-                                    placeholder="Details about the activity..."
+                                    placeholder="Detalhes sobre a atividade..."
                                     className="resize-none"
                                     {...field}
                                     value={field.value || ""}
@@ -310,10 +318,10 @@ export function ActivityForm({ initialData, onSuccess, projects = [], clients = 
 
                 {/* Footer Actions */}
                 <div className="flex justify-end gap-2 pt-2">
-                    <Button variant="outline" type="button" onClick={onSuccess}>Cancel</Button>
+                    <Button variant="outline" type="button" onClick={onSuccess}>Cancelar</Button>
                     <Button type="submit" disabled={isSubmitting}>
                         {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        {initialData ? "Update Activity" : "Create Activity"}
+                        {initialData ? "Atualizar Atividade" : "Criar Atividade"}
                     </Button>
                 </div>
             </form>

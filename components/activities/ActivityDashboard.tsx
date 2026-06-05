@@ -26,39 +26,39 @@ export function ActivityDashboard({ metrics, distribution }: ActivityDashboardPr
             <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Hours (Month)</CardTitle>
+                        <CardTitle className="text-sm font-medium">Total de Horas (Mês)</CardTitle>
                         <Clock className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{metrics.totalHours.toFixed(1)} h</div>
                         <p className="text-xs text-muted-foreground">
-                            Total recorded time
+                            Tempo total registrado
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Billable Hours</CardTitle>
+                        <CardTitle className="text-sm font-medium">Horas Faturáveis</CardTitle>
                         <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                         <div className="text-2xl font-bold">{metrics.billableHours.toFixed(1)} h</div>
                         <p className="text-xs text-muted-foreground">
-                            {((metrics.billableHours / (metrics.totalHours || 1)) * 100).toFixed(0)}% of total
+                            {((metrics.billableHours / (metrics.totalHours || 1)) * 100).toFixed(0)}% do total
                         </p>
                     </CardContent>
                 </Card>
 
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Est. Value</CardTitle>
+                        <CardTitle className="text-sm font-medium">Valor Estimado</CardTitle>
                         <DollarSign className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold row-span-2">${metrics.estimatedValue.toFixed(0)}</div>
+                        <div className="text-2xl font-bold row-span-2">R$ {metrics.estimatedValue.toFixed(0)}</div>
                         <p className="text-xs text-muted-foreground">
-                            Based on standard rate
+                            Baseado na taxa padrão
                         </p>
                     </CardContent>
                 </Card>
@@ -68,7 +68,7 @@ export function ActivityDashboard({ metrics, distribution }: ActivityDashboardPr
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
                 <Card className="col-span-4">
                     <CardHeader>
-                        <CardTitle>Time Distribution by Category</CardTitle>
+                        <CardTitle>Distribuição de Tempo por Categoria</CardTitle>
                     </CardHeader>
                     <CardContent className="pl-2">
                         <div className="h-[300px] w-full">
@@ -95,7 +95,7 @@ export function ActivityDashboard({ metrics, distribution }: ActivityDashboardPr
                                 </ResponsiveContainer>
                             ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                                    No data available
+                                    Nenhum dado disponível
                                 </div>
                             )}
                         </div>

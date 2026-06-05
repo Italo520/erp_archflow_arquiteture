@@ -12,6 +12,7 @@ import ProjectFinancialTab from '@/components/projects/ProjectFinancialTab';
 import ProjectTeamTab from '@/components/projects/ProjectTeamTab';
 import ProjectAuditTab from '@/components/projects/ProjectAuditTab';
 import { ProjectOverview } from '@/components/projects/ProjectOverview';
+import { NewActivityButton } from '@/components/projects/NewActivityButton';
 
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
@@ -38,7 +39,7 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <h1 className="text-3xl font-bold">{project.name}</h1>
                     <p className="text-muted-foreground">{project.projectType || 'Projeto'}</p>
                 </div>
-                <Button>Nova Atividade</Button>
+                <NewActivityButton project={project} />
             </header>
 
             <Tabs defaultValue="activities" className="flex-1 flex flex-col">

@@ -28,7 +28,8 @@ export default async function ActivitiesPage({ searchParams }: PageProps) {
     const params = await searchParams;
     // 1. Resolve selected date (URL or Today)
     const selectedDateStr = params.date || format(new Date(), "yyyy-MM-dd");
-    const selectedDate = new Date(selectedDateStr);
+    const [year, month, day] = selectedDateStr.split("-").map(Number);
+    const selectedDate = new Date(year, month - 1, day);
 
     // 2. Determine date range for fetching (Month window for dots, specific date for list? 
     // Optimization: Fetch entire month to show dots on calendar, filtering list client-side or separate request.
@@ -54,9 +55,9 @@ export default async function ActivitiesPage({ searchParams }: PageProps) {
     return (
         <div className="flex flex-col h-full space-y-4 p-8 pt-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Activities</h2>
+                <h2 className="text-3xl font-bold tracking-tight">Atividades</h2>
                 <div className="flex items-center space-x-2">
-                    <QuickActivityModal date={selectedDate} />
+                    <QuickActivityModal dateStr={selectedDateStr} />
                 </div>
             </div>
 
@@ -65,14 +66,14 @@ export default async function ActivitiesPage({ searchParams }: PageProps) {
                 <div className="md:col-span-8 h-full">
                     <ActivityCalendar
                         activities={activities}
-                        selectedDate={selectedDate}
+                        selectedDateStr={selectedDateStr}
                     />
                 </div>
 
                 {/* List Section - Span 4 columns */}
                 <div className="md:col-span-4 h-full overflow-hidden">
                     <ActivityList
-                        date={selectedDate}
+                        dateStr={selectedDateStr}
                         activities={activities}
                     />
                 </div>

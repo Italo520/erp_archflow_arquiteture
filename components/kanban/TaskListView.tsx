@@ -25,10 +25,10 @@ export function TaskListView({ stages, onTaskClick }) {
     }
 
     return (
-        <div className="flex-1 overflow-auto p-6 bg-white dark:bg-background-dark">
-            <div className="max-w-6xl mx-auto border border-gray-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
-                    <thead className="bg-gray-50 dark:bg-slate-800/50 text-xs uppercase font-semibold text-slate-500 dark:text-slate-400">
+        <div className="flex-1 overflow-auto p-1 bg-transparent">
+            <div className="w-full border border-border rounded-xl overflow-hidden shadow-sm bg-card">
+                <table className="w-full text-left text-sm text-foreground">
+                    <thead className="bg-muted/50 text-xs uppercase font-semibold text-muted-foreground border-b border-border">
                         <tr>
                             <th className="px-4 py-3">Tarefa</th>
                             <th className="px-4 py-3 w-32">Status (Coluna)</th>
@@ -37,18 +37,18 @@ export function TaskListView({ stages, onTaskClick }) {
                             <th className="px-4 py-3 w-32">Prazo</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-slate-800">
+                    <tbody className="divide-y divide-border">
                         {allTasks.map(task => (
                             <tr 
                                 key={task.id} 
                                 onClick={() => onTaskClick(task)}
-                                className="hover:bg-slate-50 dark:hover:bg-slate-800/30 cursor-pointer transition-colors"
+                                className="hover:bg-muted/30 cursor-pointer transition-colors"
                             >
-                                <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-100">
+                                <td className="px-4 py-3 font-medium text-foreground">
                                     {task.title}
                                 </td>
                                 <td className="px-4 py-3">
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300">
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground border border-border/50">
                                         {task.stageName}
                                     </span>
                                 </td>

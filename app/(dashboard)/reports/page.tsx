@@ -185,7 +185,13 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
                     </p>
                 </div>
 
-                <ReportActions />
+                <ReportActions
+                    reportType={activeTab}
+                    period={period}
+                    from={params.from}
+                    to={params.to}
+                    projects={params.projects}
+                />
             </div>
 
             {/* Filters */}

@@ -15,8 +15,17 @@ jest.mock('lucide-react', () => ({
 describe('ProjectTeamTab', () => {
     const mockProject = {
         id: '1',
-        architects: [
-            { id: 'a1', fullName: 'Alice Architect', email: 'alice@archflow.com' }
+        members: [
+            {
+                id: 'm1',
+                role: 'EDITOR',
+                user: {
+                    id: 'a1',
+                    fullName: 'Alice Architect',
+                    email: 'alice@archflow.com',
+                    avatarUrl: ''
+                }
+            }
         ],
         client: { id: 'c1', name: 'Charlie Client', email: 'charlie@gmail.com' }
     };
@@ -25,7 +34,7 @@ describe('ProjectTeamTab', () => {
         render(<ProjectTeamTab project={mockProject} />);
 
         expect(screen.getByText('Alice Architect')).toBeInTheDocument();
-        expect(screen.getByText('Arquiteto')).toBeInTheDocument();
+        expect(screen.getByText('Editor')).toBeInTheDocument();
         expect(screen.getByText('Charlie Client')).toBeInTheDocument();
         expect(screen.getByText('Cliente')).toBeInTheDocument();
     });

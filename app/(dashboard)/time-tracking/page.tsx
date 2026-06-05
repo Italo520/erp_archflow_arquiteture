@@ -73,13 +73,13 @@ export default async function TimeTrackingPage({ searchParams }: PageProps) {
     return (
         <div className="flex flex-col space-y-8 p-8 pt-6">
             <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Time Tracking</h2>
+                <h2 className="text-3xl font-bold tracking-tight">Controle de Horas</h2>
             </div>
 
             <Tabs defaultValue="tracker" className="space-y-4">
                 <TabsList>
-                    <TabsTrigger value="tracker">Tracker & Timesheet</TabsTrigger>
-                    <TabsTrigger value="reports">Analysis & Reports</TabsTrigger>
+                    <TabsTrigger value="tracker">Cronômetro e Planilha</TabsTrigger>
+                    <TabsTrigger value="reports">Análise e Relatórios</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="tracker" className="space-y-6">
@@ -92,7 +92,7 @@ export default async function TimeTrackingPage({ searchParams }: PageProps) {
                         {/* Main Timesheet - 2 cols */}
                         <section className="lg:col-span-2 space-y-4">
                             <div className="flex items-center justify-between">
-                                <h3 className="text-lg font-medium">Recent activity</h3>
+                                <h3 className="text-lg font-medium">Atividade recente</h3>
                                 {/* Filter controls could go here */}
                             </div>
                             <TimesheetTable logs={logs} />

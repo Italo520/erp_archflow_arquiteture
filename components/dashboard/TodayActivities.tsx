@@ -21,6 +21,13 @@ interface Activity {
     participants: Participant[];
 }
 
+const typeTranslation: Record<string, string> = {
+    MEETING: "REUNIÃO",
+    CALL: "LIGAÇÃO",
+    SITE_VISIT: "VISITA TÉCNICA",
+    DESIGN: "DESIGN",
+};
+
 interface TodayActivitiesProps {
     activities: Activity[];
 }
@@ -84,7 +91,7 @@ export function TodayActivities({ activities }: TodayActivitiesProps) {
                                                     {format(activityTime, 'HH:mm')}
                                                 </span>
                                                 <span className="text-[10px] uppercase font-medium text-muted-foreground tracking-wider bg-muted px-1.5 py-0.5 rounded-sm">
-                                                    {activity.type}
+                                                    {typeTranslation[activity.type] || activity.type}
                                                 </span>
                                             </div>
 

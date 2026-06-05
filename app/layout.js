@@ -1,15 +1,15 @@
 import "./globals.css";
 import { Providers } from "@/components/Providers";
-import { Inter, Outfit } from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
 
-const inter = Inter({
+const plusJakarta = Plus_Jakarta_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-plus-jakarta",
 });
 
-const outfit = Outfit({
+const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
-  variable: "--font-outfit",
+  variable: "--font-jetbrains-mono",
 });
 
 export const metadata = {
@@ -19,7 +19,7 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="pt-BR" suppressHydrationWarning className={`${inter.variable} ${outfit.variable}`}>
+    <html lang="pt-BR" suppressHydrationWarning className={`${plusJakarta.variable} ${jetbrainsMono.variable}`}>
       <head>
         {/* eslint-disable-next-line @next/next/no-page-custom-font */}
         <link

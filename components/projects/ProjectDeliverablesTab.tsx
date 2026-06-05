@@ -30,7 +30,7 @@ export default function ProjectDeliverablesTab({ project }: { project: any }) {
             case 'DRAWING_2D':
                 return <FileImage className="h-10 w-10 text-blue-500" />;
             case 'RENDER_3D':
-                return <ImageIcon className="h-10 w-10 text-purple-500" />;
+                return <ImageIcon className="h-10 w-10 text-primary" />;
             case 'PDF':
             case 'DOCUMENT':
                 return <FileText className="h-10 w-10 text-red-500" />;

@@ -1,16 +1,16 @@
 import { deleteProjectDocument } from "@/app/actions/project";
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { mockDeep, DeepMockProxy } from "jest-mock-extended";
 import { PrismaClient } from "@prisma/client";
+import { requireProjectAccess } from "@/lib/server-utils";
 
 jest.mock("next/cache", () => ({
     revalidatePath: jest.fn(),
 }));
 
-jest.mock("@/auth", () => ({
-    auth: jest.fn(),
+jest.mock("@/lib/server-utils", () => ({
+    requireProjectAccess: jest.fn(),
 }));
 
 jest.mock("@/lib/prisma", () => {
@@ -22,7 +22,7 @@ jest.mock("@/lib/prisma", () => {
 });
 
 const mockPrisma = prisma as unknown as DeepMockProxy<PrismaClient>;
-const mockAuth = auth as jest.Mock;
+const mockRequireProjectAccess = requireProjectAccess as jest.Mock;
 
 describe("Project Document Actions", () => {
     beforeEach(() => {
@@ -31,21 +31,21 @@ describe("Project Document Actions", () => {
 
     describe("deleteProjectDocument", () => {
         it("should return Unauthorized if no session", async () => {
-            mockAuth.mockResolvedValue(null);
+            mockRequireProjectAccess.mockRejectedValue(new Error("Unauthorized"));
             const result = await deleteProjectDocument("proj-1", "doc-url");
-            expect(result).toEqual({ error: "Unauthorized" });
+            expect(result).toEqual({ success: false, ok: false, error: "Unauthorized", message: "Falha ao excluir documento: Unauthorized" });
         });
 
         it("should return Project not found if project doesn't exist", async () => {
-            mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+            mockRequireProjectAccess.mockResolvedValue({ user: { id: "user-1" } });
             mockPrisma.project.findUnique.mockResolvedValue(null);
 
             const result = await deleteProjectDocument("proj-1", "doc-url");
-            expect(result).toEqual({ error: "Project not found" });
+            expect(result).toEqual({ success: false, ok: false, error: "Projeto não encontrado", message: "Projeto não encontrado" });
         });
 
         it("should handle empty documents list", async () => {
-            mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+            mockRequireProjectAccess.mockResolvedValue({ user: { id: "user-1" } });
             mockPrisma.project.findUnique.mockResolvedValue({
                 id: "proj-1",
                 attachedDocuments: null
@@ -53,7 +53,7 @@ describe("Project Document Actions", () => {
 
             const result = await deleteProjectDocument("proj-1", "doc-url");
 
-            expect(result).toEqual({ success: true });
+            expect(result).toEqual({ ok: true, success: true, message: "Documento excluído com sucesso" });
             expect(mockPrisma.project.update).toHaveBeenCalledWith({
                 where: { id: "proj-1" },
                 data: { attachedDocuments: [] }
@@ -62,7 +62,7 @@ describe("Project Document Actions", () => {
 
         it("should not change list if document URL not found", async () => {
             const docs = [{ name: "Doc 1", url: "url-1" }];
-            mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+            mockRequireProjectAccess.mockResolvedValue({ user: { id: "user-1" } });
             mockPrisma.project.findUnique.mockResolvedValue({
                 id: "proj-1",
                 attachedDocuments: docs
@@ -70,7 +70,7 @@ describe("Project Document Actions", () => {
 
             const result = await deleteProjectDocument("proj-1", "url-2");
 
-            expect(result).toEqual({ success: true });
+            expect(result).toEqual({ ok: true, success: true, message: "Documento excluído com sucesso" });
             expect(mockPrisma.project.update).toHaveBeenCalledWith({
                 where: { id: "proj-1" },
                 data: { attachedDocuments: docs }
@@ -82,7 +82,7 @@ describe("Project Document Actions", () => {
                 { name: "Doc 1", url: "url-1" },
                 { name: "Doc 2", url: "url-2" }
             ];
-            mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+            mockRequireProjectAccess.mockResolvedValue({ user: { id: "user-1" } });
             mockPrisma.project.findUnique.mockResolvedValue({
                 id: "proj-1",
                 attachedDocuments: docs
@@ -90,20 +90,20 @@ describe("Project Document Actions", () => {
 
             const result = await deleteProjectDocument("proj-1", "url-1");
 
-            expect(result).toEqual({ success: true });
+            expect(result).toEqual({ ok: true, success: true, message: "Documento excluído com sucesso" });
             expect(mockPrisma.project.update).toHaveBeenCalledWith({
                 where: { id: "proj-1" },
                 data: { attachedDocuments: [{ name: "Doc 2", url: "url-2" }] }
             });
-            expect(revalidatePath).toHaveBeenCalledWith("/projects/proj-1");
+            expect(revalidatePath).toHaveBeenCalledWith("/dashboard/projects/proj-1");
         });
 
         it("should return error on database failure", async () => {
-            mockAuth.mockResolvedValue({ user: { id: "user-1" } });
+            mockRequireProjectAccess.mockResolvedValue({ user: { id: "user-1" } });
             mockPrisma.project.findUnique.mockRejectedValue(new Error("DB Error"));
 
             const result = await deleteProjectDocument("proj-1", "url-1");
-            expect(result).toEqual({ error: "Failed to delete document" });
+            expect(result).toEqual({ ok: false, success: false, error: "DB Error", message: "Falha ao excluir documento: DB Error" });
         });
     });
 });

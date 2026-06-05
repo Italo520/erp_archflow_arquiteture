@@ -26,21 +26,28 @@ interface ProductivityReportProps {
     }[];
 }
 
+const categoryLabels: Record<string, string> = {
+    MEETING: "Reunião",
+    CALL: "Ligação",
+    SITE_VISIT: "Visita Técnica",
+    DESIGN: "Design",
+};
+
 export function ProductivityReport({ trends, topProjects, clientBreakdown, categoryBreakdown }: ProductivityReportProps) {
 
     const handleExportPDF = () => {
         const doc = new jsPDF();
 
         doc.setFontSize(18);
-        doc.text("Productivity Report", 14, 22);
+        doc.text("Relatorio de Produtividade", 14, 22);
 
         doc.setFontSize(11);
-        doc.text(`Generated: ${new Date().toLocaleDateString()}`, 14, 30);
+        doc.text(`Gerado em: ${new Date().toLocaleDateString()}`, 14, 30);
 
         // Projects Table
         const projectData = topProjects.map(p => [p.name, p.hours.toFixed(2)]);
         autoTable(doc, {
-            head: [['Project', 'Hours']],
+            head: [['Projeto', 'Horas']],
             body: projectData,
             startY: 40,
         });
@@ -49,7 +56,7 @@ export function ProductivityReport({ trends, topProjects, clientBreakdown, categ
         if (clientBreakdown && clientBreakdown.length > 0) {
             const clientData = clientBreakdown.map(c => [c.name, c.hours.toFixed(2)]);
             autoTable(doc, {
-                head: [['Client', 'Hours']],
+                head: [['Cliente', 'Horas']],
                 body: clientData,
                 // @ts-ignore
                 startY: doc.lastAutoTable.finalY + 10,
@@ -58,23 +65,23 @@ export function ProductivityReport({ trends, topProjects, clientBreakdown, categ
 
         // Category Table
         if (categoryBreakdown && categoryBreakdown.length > 0) {
-            const categoryData = categoryBreakdown.map(c => [c.name, c.value.toFixed(2)]);
+            const categoryData = categoryBreakdown.map(c => [categoryLabels[c.name] || c.name, c.value.toFixed(2)]);
             autoTable(doc, {
-                head: [['Activity Type', 'Hours']],
+                head: [['Tipo de Atividade', 'Horas']],
                 body: categoryData,
                 // @ts-ignore
                 startY: doc.lastAutoTable.finalY + 10,
             });
         }
 
-        doc.save("productivity-report.pdf");
+        doc.save("relatorio-de-produtividade.pdf");
     };
 
     return (
         <div className="space-y-4">
             <div className="flex justify-end">
                 <Button variant="outline" onClick={handleExportPDF}>
-                    <Download className="mr-2 h-4 w-4" /> Export PDF
+                    <Download className="mr-2 h-4 w-4" /> Exportar PDF
                 </Button>
             </div>
 
@@ -83,8 +90,8 @@ export function ProductivityReport({ trends, topProjects, clientBreakdown, categ
                 {/* Bar Chart - Daily Trends */}
                 <Card className="col-span-4">
                     <CardHeader>
-                        <CardTitle>Daily Productivity</CardTitle>
-                        <CardDescription>Hours worked per day (Last 7 days)</CardDescription>
+                        <CardTitle>Produtividade Diária</CardTitle>
+                        <CardDescription>Horas trabalhadas por dia (Últimos 7 dias)</CardDescription>
                     </CardHeader>
                     <CardContent className="pl-2">
                         <div className="h-[300px] w-full">
@@ -115,7 +122,7 @@ export function ProductivityReport({ trends, topProjects, clientBreakdown, categ
                                 </ResponsiveContainer>
                             ) : (
                                 <div className="flex items-center justify-center h-full text-muted-foreground">
-                                    No data available
+                                    Nenhum dado disponível
                                 </div>
                             )}
                         </div>
@@ -125,15 +132,15 @@ export function ProductivityReport({ trends, topProjects, clientBreakdown, categ
                 {/* Top Projects List */}
                 <Card className="col-span-3">
                     <CardHeader>
-                        <CardTitle>Top Projects</CardTitle>
+                        <CardTitle>Principais Projetos</CardTitle>
                         <CardDescription>
-                            Where you spent the most time this month
+                            Onde você passou a maior parte do tempo este mês
                         </CardDescription>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
                             {topProjects.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">No data available.</p>
+                                <p className="text-sm text-muted-foreground">Nenhum dado disponível.</p>
                             ) : (
                                 topProjects.map((project, i) => (
                                     <div key={i} className="flex items-center">
@@ -163,7 +170,7 @@ export function ProductivityReport({ trends, topProjects, clientBreakdown, categ
                 <div className="grid gap-4 md:grid-cols-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle>Hours by Client</CardTitle>
+                            <CardTitle>Horas por Cliente</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
@@ -179,13 +186,13 @@ export function ProductivityReport({ trends, topProjects, clientBreakdown, categ
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>Hours By Activity Type</CardTitle>
+                            <CardTitle>Horas por Tipo de Atividade</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="space-y-2">
                                 {categoryBreakdown?.map((cat, i) => (
                                     <div key={i} className="flex justify-between items-center text-sm border-b pb-2 last:border-0">
-                                        <span className="capitalize">{cat.name.toLowerCase()}</span>
+                                        <span className="capitalize">{categoryLabels[cat.name] || cat.name}</span>
                                         <span className="font-mono">{cat.value.toFixed(1)}h</span>
                                     </div>
                                 ))}

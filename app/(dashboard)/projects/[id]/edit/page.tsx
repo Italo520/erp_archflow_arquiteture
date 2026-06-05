@@ -16,7 +16,7 @@ export default async function EditProjectPage({ params }: { params: Promise<{ id
     }
 
     return (
-        <div className="p-6 lg:p-10 max-w-[1400px] mx-auto min-h-screen">
+        <div className="p-6 lg:p-10 w-full min-h-screen">
             <div className="mb-6 flex flex-col gap-4">
                 <Link href={`/projects/${id}`} className="flex items-center text-sm text-muted-foreground hover:text-primary transition-colors">
                     <ArrowLeft className="mr-2 h-4 w-4" />

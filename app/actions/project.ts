@@ -192,7 +192,8 @@ export async function listProjects(filters?: { clientId?: string; status?: strin
             orderBy: { updatedAt: "desc" },
             include: {
                 client: { select: { name: true } },
-                owner: { select: { fullName: true } }
+                owner: { select: { fullName: true } },
+                currentColumn: true
             }
         });
         return { ok: true, success: true, data: serializeData(projects) };

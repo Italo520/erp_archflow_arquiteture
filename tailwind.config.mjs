@@ -42,6 +42,14 @@ const config = {
                     DEFAULT: "hsl(var(--card))",
                     foreground: "hsl(var(--card-foreground))",
                 },
+                success: {
+                    DEFAULT: "hsl(var(--success))",
+                    foreground: "hsl(var(--success-foreground))",
+                },
+                warning: {
+                    DEFAULT: "hsl(var(--warning))",
+                    foreground: "hsl(var(--warning-foreground))",
+                },
                 // Tokens de status de projeto
                 "status-todo":     "#E09D45",
                 "status-progress": "#4B91F7",
@@ -65,9 +73,10 @@ const config = {
                 "2xl": "calc(var(--radius) + 8px)",
             },
             fontFamily: {
-                display: ["Outfit", "sans-serif"],
-                body: ["Inter", "sans-serif"],
-                sans: ["Inter", "sans-serif"],
+                display: ["var(--font-plus-jakarta)", "ui-sans-serif", "sans-serif"],
+                body: ["var(--font-plus-jakarta)", "ui-sans-serif", "sans-serif"],
+                sans: ["var(--font-plus-jakarta)", "ui-sans-serif", "sans-serif"],
+                mono: ["var(--font-jetbrains-mono)", "ui-monospace", "monospace"],
             },
             boxShadow: {
                 "xs":     "0 1px 2px 0 rgb(0 0 0 / 0.04)",

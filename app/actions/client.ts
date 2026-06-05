@@ -49,7 +49,7 @@ export async function createClient(data: z.infer<typeof clientSchema>): Promise<
             },
         });
 
-        revalidatePath("/dashboard/clients");
+        revalidatePath("/clients");
         return { 
             ok: true, 
             success: true, 
@@ -132,8 +132,8 @@ export async function updateClient(id: string, data: z.infer<typeof updateClient
             },
         });
 
-        revalidatePath("/dashboard/clients");
-        revalidatePath(`/dashboard/clients/${id}`);
+        revalidatePath("/clients");
+        revalidatePath(`/clients/${id}`);
         return { 
             ok: true, 
             success: true, 
@@ -167,7 +167,7 @@ export async function softDeleteClient(id: string): Promise<ActionResponse> {
                 deletedAt: new Date(),
             },
         });
-        revalidatePath("/dashboard/clients");
+        revalidatePath("/clients");
         return { 
             ok: true, 
             success: true, 

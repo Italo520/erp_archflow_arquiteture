@@ -39,8 +39,9 @@
   --animate-slide-up: slide-up 0.35s ease-out;
   --animate-scale-in: scale-in 0.2s ease-out;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-outfit), sans-serif;
+  --font-sans: var(--font-plus-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-plus-jakarta), sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 
   @keyframes accordion-down {
     from { height: 0; }
@@ -95,69 +96,81 @@
 
 @layer base {
   :root {
-    /* ─── Light Mode: Warm Sand & Gold ─── */
+    /* ─── Light Mode: Ant Design System ─── */
 
-    --background:  30 33% 97%;          /* #FAF7F4 — areia muito clara      */
-    --foreground:  20 10% 11%;          /* #1C1917 — carvão quente           */
+    --background:  220 14% 96%;      /* #F3F4F6 */
+    --foreground:  221 39% 11%;      /* #111827 */
 
-    --card:        0 0% 100%;           /* #FFFFFF                           */
-    --card-foreground: 20 10% 11%;
+    --card:        0 0% 100%;        /* #FFFFFF */
+    --card-foreground: 221 39% 11%;
 
     --popover:     0 0% 100%;
-    --popover-foreground: 20 10% 11%;
+    --popover-foreground: 221 39% 11%;
 
-    --primary:     34 46% 60%;          /* #C9A96E — ouro/bege dourado       */
-    --primary-foreground: 0 0% 100%;    /* branco                            */
+    --primary:     215 100% 54%;     /* #1677ff */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary:   30 30% 92%;          /* #F0EBE3 — areia pastel            */
-    --secondary-foreground: 20 10% 25%;
+    --secondary:   210 40% 96.1%;    /* Slate 100 */
+    --secondary-foreground: 222.2 47.4% 11.2%;
 
-    --muted:       30 20% 94%;          /* #F5F1EC                           */
-    --muted-foreground: 20 8% 55%;      /* #8C867F                           */
+    --muted:       220 14% 96%;
+    --muted-foreground: 220 9% 46%;
 
-    --accent:      30 40% 87%;          /* #EBD9C4 — bege médio              */
-    --accent-foreground: 20 10% 20%;
+    --accent:      215 100% 96%;     /* very light blue */
+    --accent-foreground: 215 100% 54%;
 
-    --destructive: 4 86% 58%;           /* #E8432A                           */
+    --destructive: 0 72% 51%;        /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
 
-    --border:      30 20% 88%;          /* #E8E1D8 — borda suave             */
-    --input:       30 20% 91%;          /* #EDE7DF                           */
-    --ring:        34 46% 60%;          /* = primary                         */
+    --success:     142 76% 36%;      /* #16A34A */
+    --success-foreground: 0 0% 100%;
 
-    --radius: 0.75rem;
+    --warning:     38 92% 44%;       /* #D97706 */
+    --warning-foreground: 0 0% 100%;
+
+    --border:      220 13% 91%;      /* #E5E7EB */
+    --input:       220 13% 91%;      
+    --ring:        215 100% 54%;     /* = primary */
+
+    --radius: 0.5rem;
   }
 
   .dark {
-    /* ─── Dark Mode: Warm Charcoal & Gold ─── */
+    /* ─── Dark Mode: Modern Design System (Refined) ─── */
 
-    --background:  20 12%  6%;          /* #0E0C0A — preto quente            */
-    --foreground:  30 25% 95%;          /* #F5F1EB — creme claro             */
+    --background:  0 0% 7%;          /* #111111 */
+    --foreground:  0 0% 100%;        /* #ffffff */
 
-    --card:        20 10% 10%;          /* #1A1714 — carvão quente           */
-    --card-foreground: 30 25% 95%;
+    --card:        0 0% 10%;         /* #1A1A1A (Dark charcoal instead of purple) */
+    --card-foreground: 0 0% 100%;
 
-    --popover:     20 10% 10%;
-    --popover-foreground: 30 25% 95%;
+    --popover:     0 0% 10%;
+    --popover-foreground: 0 0% 100%;
 
-    --primary:     34 46% 60%;          /* #C9A96E — ouro (âncora de marca)  */
-    --primary-foreground: 20 12% 7%;
+    --primary:     215 100% 54%;      /* #1677ff (Blue instead of Purple) */
+    --primary-foreground: 0 0% 100%;
 
-    --secondary:   20 10% 14%;          /* #221E1A — carvão mais claro       */
-    --secondary-foreground: 30 20% 85%;
+    --secondary:   0 0% 14%;         /* #242424 */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted:       20 10% 14%;          /* #221E1A                           */
-    --muted-foreground: 30 12% 58%;     /* #9A9088 — legível sem ser branco  */
+    --muted:       0 0% 15%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent:      20 10% 17%;          /* #2B2520 — acento escuro           */
-    --accent-foreground: 30 22% 88%;
+    --accent:      0 0% 14%;      
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 4 75% 52%;
+    --destructive: 0 72% 51%;        /* #DC2626 */
     --destructive-foreground: 0 0% 100%;
 
-    --border:      20 10% 20%;          /* #332E28 — borda mais visível      */
-    --input:       20 10% 14%;          /* #221E1A                           */
-    --ring:        34 46% 60%;          /* = primary                         */
+    --success:     142 76% 36%;      /* #16A34A */
+    --success-foreground: 0 0% 100%;
+
+    --warning:     38 92% 44%;       /* #D97706 */
+    --warning-foreground: 0 0% 100%;
+
+    --border:      0 0% 15%;      
+    --input:       0 0% 15%;
+    --ring:        215 100% 54%;      
   }
 }
 

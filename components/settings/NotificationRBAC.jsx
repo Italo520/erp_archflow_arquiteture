@@ -74,12 +74,12 @@ const NotificationRBAC = () => {
     }
 
     return (
-        <div className="bg-white dark:bg-surface-dark rounded-2xl p-6 md:p-8 border border-gray-200 dark:border-transparent">
+        <div className="bg-card rounded-2xl p-6 md:p-8 border border-border">
             <div className="flex items-center gap-3 mb-6 border-b border-gray-200 dark:border-[#264532] pb-4">
                 <BellRing className="text-primary size-6" />
                 <div>
-                    <h3 className="text-slate-900 dark:text-white text-xl font-bold">Regras de Notificação (RBAC)</h3>
-                    <p className="text-gray-500 dark:text-text-secondary text-sm">Controle quais notificações cada perfil de usuário receberá pelo sistema.</p>
+                    <h3 className="text-foreground text-xl font-bold">Regras de Notificação (RBAC)</h3>
+                    <p className="text-muted-foreground text-sm">Controle quais notificações cada perfil de usuário receberá pelo sistema.</p>
                 </div>
             </div>
 

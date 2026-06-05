@@ -14,6 +14,7 @@ import {
     subMonths,
     isToday
 } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,12 +24,17 @@ import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/h
 
 interface ActivityCalendarProps {
     activities: Activity[]; // Passing all loaded activities to mark dots
-    selectedDate?: Date;
+    selectedDateStr: string;
 }
 
-export function ActivityCalendar({ activities, selectedDate = new Date() }: ActivityCalendarProps) {
+export function ActivityCalendar({ activities, selectedDateStr }: ActivityCalendarProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
+
+    // Parse the selected date locally in the client's timezone to avoid timezone shifts
+    const [year, month, day] = selectedDateStr.split("-").map(Number);
+    const selectedDate = new Date(year, month - 1, day);
+
     const [currentMonth, setCurrentMonth] = useState(startOfMonth(selectedDate));
 
     // Handlers for navigation
@@ -62,14 +68,14 @@ export function ActivityCalendar({ activities, selectedDate = new Date() }: Acti
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b">
                 <h2 className="font-semibold text-lg capitalize">
-                    {format(currentMonth, "MMMM yyyy")}
+                    {format(currentMonth, "MMMM 'de' yyyy", { locale: ptBR })}
                 </h2>
                 <div className="flex items-center gap-1">
                     <Button variant="ghost" size="icon" onClick={prevMonth}>
                         <ChevronLeft className="w-4 h-4" />
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => setCurrentMonth(new Date())}>
-                        Today
+                    <Button variant="ghost" size="sm" className="px-3" onClick={() => setCurrentMonth(new Date())}>
+                        Hoje
                     </Button>
                     <Button variant="ghost" size="icon" onClick={nextMonth}>
                         <ChevronRight className="w-4 h-4" />
@@ -79,7 +85,7 @@ export function ActivityCalendar({ activities, selectedDate = new Date() }: Acti
 
             {/* Weekdays */}
             <div className="grid grid-cols-7 border-b bg-muted/30">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
+                {["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"].map((day) => (
                     <div key={day} className="py-2 text-center text-xs font-medium text-muted-foreground uppercase tracking-wide">
                         {day}
                     </div>
@@ -147,10 +153,10 @@ export function ActivityCalendar({ activities, selectedDate = new Date() }: Acti
 // Move this to a shared helper later or import
 function getActivityColor(type: string) {
     switch (type) {
-        case 'MEETING': return 'bg-blue-500';
-        case 'CALL': return 'bg-green-500';
-        case 'SITE_VISIT': return 'bg-red-500';
-        case 'DESIGN': return 'bg-purple-500';
+        case 'MEETING': return 'bg-primary';
+        case 'CALL': return 'bg-success';
+        case 'SITE_VISIT': return 'bg-destructive';
+        case 'DESIGN': return 'bg-primary';
         default: return 'bg-gray-400';
     }
 }

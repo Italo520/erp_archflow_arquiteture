@@ -302,7 +302,7 @@ function KanbanColumn({ id, title: initialTitle, projects, color, onDelete }: {
     return (
         <div 
             ref={setNodeRef} 
-            className={`flex h-full w-80 min-w-[320px] flex-col rounded-xl border bg-slate-50/50 dark:bg-slate-900/30 p-4 transition-colors ${isOver ? 'ring-2 ring-primary bg-slate-100 dark:bg-slate-800' : ''}`}
+            className={`flex h-full w-80 min-w-[320px] flex-col rounded-xl border bg-muted/40 p-4 transition-colors ${isOver ? 'ring-2 ring-primary bg-muted/80' : ''}`}
         >
             <div className="mb-4 flex items-center justify-between">
                 <div className="flex items-center gap-2 flex-1">
@@ -318,7 +318,7 @@ function KanbanColumn({ id, title: initialTitle, projects, color, onDelete }: {
                         />
                     ) : (
                         <h3 
-                            className="font-bold text-sm uppercase tracking-wider text-slate-600 dark:text-slate-400 cursor-pointer hover:text-primary transition-colors"
+                            className="font-bold text-sm uppercase tracking-wider text-slate-700 dark:text-slate-300 cursor-pointer hover:text-primary transition-colors"
                             onClick={() => setIsEditing(true)}
                         >
                             {title}
@@ -424,13 +424,13 @@ function ProjectCard({
     };
 
     return (
-        <Card className={`group relative bg-white dark:bg-[#1a1a1a] border-[#e5e7eb] dark:border-[#2a2a2a] shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 cursor-grab active:cursor-grabbing overflow-hidden ${isOverlay ? 'shadow-2xl ring-2 ring-primary scale-[1.02] rotate-1 z-50' : ''}`}>
+        <Card className={`group relative bg-card border-border shadow-sm hover:shadow-md hover:border-primary/50 transition-all duration-300 cursor-grab active:cursor-grabbing overflow-hidden ${isOverlay ? 'shadow-2xl ring-2 ring-primary scale-[1.02] rotate-1 z-50' : ''}`}>
             {/* Glossy Overlay (Pro Max) */}
             <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
             
             <CardHeader className="p-4 pb-2 space-y-2 relative z-10">
                 <div className="flex justify-between items-start">
-                    <CardTitle className="text-[14px] font-display font-bold text-[#0F172A] dark:text-slate-100 leading-tight group-hover:text-primary transition-colors pr-6">
+                    <CardTitle className="text-base font-display font-bold text-card-foreground leading-tight group-hover:text-primary transition-colors pr-6">
                         {project.name}
                     </CardTitle>
                     <DropdownMenu>
@@ -453,7 +453,7 @@ function ProjectCard({
                     </DropdownMenu>
                 </div>
                 {project.client && (
-                    <div className="flex items-center gap-1.5 text-[11px] font-body text-slate-500 dark:text-slate-400 font-medium">
+                    <div className="flex items-center gap-1.5 text-sm font-body text-muted-foreground font-medium">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
                         {project.client.name}
                     </div>
@@ -461,23 +461,23 @@ function ProjectCard({
             </CardHeader>
             
             <CardContent className="p-4 pt-0 relative z-10">
-                <div className="flex items-center justify-between pt-3 border-t border-slate-50 dark:border-slate-800/50">
+                <div className="flex items-center justify-between pt-3 border-t border-border/50">
                     {project.owner && (
                         <div className="flex items-center gap-2">
-                            <div className="h-7 w-7 rounded-lg bg-primary/20 text-[#0F172A] dark:text-white text-[10px] flex items-center justify-center font-bold shadow-sm" title={`Dono: ${project.owner.fullName}`}>
+                            <div className="h-7 w-7 rounded-lg bg-primary/20 text-foreground text-xs flex items-center justify-center font-bold shadow-sm" title={`Dono: ${project.owner.fullName}`}>
                                 {project.owner.fullName.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2)}
                             </div>
-                            <span className="text-[10px] font-body font-semibold text-slate-400 capitalize truncate max-w-[80px]">
+                            <span className="text-xs font-body font-semibold text-muted-foreground capitalize truncate max-w-[80px]">
                                 {project.owner.fullName.split(' ')[0]}
                             </span>
                         </div>
                     )}
                     <Link 
                         href={`/projects/${project.id}`} 
-                        className="text-[10px] font-bold text-primary flex items-center gap-1 hover:underline"
+                        className="text-xs font-bold text-primary flex items-center gap-1 hover:underline"
                     >
                         Ver Detalhes
-                        <Plus className="h-2.5 w-2.5 rotate-45" />
+                        <Plus className="h-3 w-3 rotate-45" />
                     </Link>
                 </div>
             </CardContent>

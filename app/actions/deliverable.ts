@@ -125,20 +125,13 @@ export async function deleteDeliverable(id: string): Promise<ActionResponse> {
             return { ok: false, success: false, error: "Not found", message: "Entregável não encontrado." };
         }
 
+        // Apenas OWNER ou EDITOR podem arquivar
         await requireProjectAccess(existing.projectId, [Role.OWNER, Role.EDITOR]);
 
-        // Restrição da máquina de estados
-        if (existing.status === DeliverableStatus.APPROVED || existing.status === DeliverableStatus.DELIVERED) {
-            return { 
-                ok: false, 
-                success: false, 
-                error: "Locked", 
-                message: "Este entregável está aprovado/entregue e não pode ser excluído." 
-            };
-        }
-
-        await prisma.deliverable.delete({
+        // Soft delete — registra data de remoção, mantém o registro no banco
+        await prisma.deliverable.update({
             where: { id },
+            data: { deletedAt: new Date() },
         });
 
         await logAudit({
@@ -149,13 +142,63 @@ export async function deleteDeliverable(id: string): Promise<ActionResponse> {
             changes: { old: existing }
         });
 
-        revalidatePath(`/dashboard/projects/${existing.projectId}`);
-        return { ok: true, success: true, message: "Entregável técnico excluído com sucesso" };
+        revalidatePath(`/projects/${existing.projectId}`);
+        revalidatePath('/documents');
+        return { ok: true, success: true, message: "Documento excluído com sucesso." };
     } catch (error: any) {
         console.error("Failed to delete deliverable:", error);
-        return { ok: false, success: false, error: error.message, message: "Falha ao excluir entregável." };
+        return { ok: false, success: false, error: error.message, message: "Falha ao excluir documento." };
     }
 }
+
+export async function archiveDeliverable(id: string): Promise<ActionResponse> {
+    try {
+        const existing = await prisma.deliverable.findUnique({ where: { id } });
+        if (!existing) {
+            return { ok: false, success: false, error: "Not found", message: "Entregável não encontrado." };
+        }
+        await requireProjectAccess(existing.projectId, [Role.OWNER, Role.EDITOR]);
+
+        const currentMetadata = (existing.metadata as any) || {};
+
+        await prisma.deliverable.update({
+            where: { id },
+            data: { metadata: { ...currentMetadata, isArchived: true } },
+        });
+
+        revalidatePath(`/projects/${existing.projectId}`);
+        revalidatePath('/documents');
+        return { ok: true, success: true, message: "Documento enviado para a lixeira." };
+    } catch (error: any) {
+        console.error("Failed to archive deliverable:", error);
+        return { ok: false, success: false, error: error.message, message: "Falha ao arquivar documento." };
+    }
+}
+
+export async function restoreDeliverable(id: string): Promise<ActionResponse> {
+    try {
+        const existing = await prisma.deliverable.findUnique({ where: { id } });
+        if (!existing) {
+            return { ok: false, success: false, error: "Not found", message: "Entregável não encontrado." };
+        }
+        await requireProjectAccess(existing.projectId, [Role.OWNER, Role.EDITOR]);
+
+        const currentMetadata = (existing.metadata as any) || {};
+
+        await prisma.deliverable.update({
+            where: { id },
+            data: { metadata: { ...currentMetadata, isArchived: false } },
+        });
+
+        revalidatePath(`/projects/${existing.projectId}`);
+        revalidatePath('/documents');
+        return { ok: true, success: true, message: "Documento restaurado com sucesso." };
+    } catch (error: any) {
+        console.error("Failed to restore deliverable:", error);
+        return { ok: false, success: false, error: error.message, message: "Falha ao restaurar documento." };
+    }
+}
+
 
 export async function listDeliverables(projectId: string) {
     try {

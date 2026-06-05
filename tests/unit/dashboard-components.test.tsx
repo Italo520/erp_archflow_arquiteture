@@ -219,7 +219,7 @@ describe('TodayActivities Component', () => {
 
     it('renders activity type badges', () => {
         render(<TodayActivities activities={mockActivities} />);
-        expect(screen.getByText('MEETING')).toBeInTheDocument();
+        expect(screen.getByText('REUNIÃO')).toBeInTheDocument();
         expect(screen.getByText('REVIEW')).toBeInTheDocument();
     });
 

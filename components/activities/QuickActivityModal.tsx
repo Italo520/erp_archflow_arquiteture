@@ -36,20 +36,24 @@ import { useRouter } from "next/navigation";
 
 // Simplified schema for quick add
 const quickActivitySchema = z.object({
-    title: z.string().min(2, "Title is required"),
+    title: z.string().min(2, "O título é obrigatório"),
     type: z.nativeEnum(ActivityType),
     startTime: z.string(), // HTML Time input returns string HH:MM
     duration: z.coerce.number().min(15).default(60),
 });
 
 interface QuickActivityModalProps {
-    date: Date; // Pre-selected date from calendar
+    dateStr: string; // Pre-selected date from calendar (YYYY-MM-DD)
     trigger?: React.ReactNode;
 }
 
-export function QuickActivityModal({ date, trigger }: QuickActivityModalProps) {
+export function QuickActivityModal({ dateStr, trigger }: QuickActivityModalProps) {
     const [open, setOpen] = useState(false);
     const router = useRouter();
+
+    // Parse the date locally in the client's timezone to avoid timezone shifts
+    const [year, month, day] = dateStr.split("-").map(Number);
+    const date = new Date(year, month - 1, day);
 
     const form = useForm<any>({
         resolver: zodResolver(quickActivitySchema) as any,
@@ -83,7 +87,7 @@ export function QuickActivityModal({ date, trigger }: QuickActivityModalProps) {
         try {
             const result = await createActivity(payload);
             if (result.success) {
-                toast.success("Activity scheduled");
+                toast.success("Atividade agendada com sucesso");
                 setOpen(false);
                 form.reset();
                 router.refresh();
@@ -91,11 +95,11 @@ export function QuickActivityModal({ date, trigger }: QuickActivityModalProps) {
                 if (typeof result.error === 'string') {
                     toast.error(result.error);
                 } else {
-                    toast.error("Validation failed");
+                    toast.error("Falha na validação");
                 }
             }
         } catch (error) {
-            toast.error("Failed to create activity");
+            toast.error("Falha ao criar atividade");
         }
     }
 
@@ -105,13 +109,13 @@ export function QuickActivityModal({ date, trigger }: QuickActivityModalProps) {
                 {trigger || (
                     <Button size="sm">
                         <Plus className="w-4 h-4 mr-2" />
-                        Quick Add
+                        Adição Rápida
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
                 <DialogHeader>
-                    <DialogTitle>Quick Add Activity</DialogTitle>
+                    <DialogTitle>Adicionar Atividade Rápida</DialogTitle>
                 </DialogHeader>
 
                 <Form {...form}>
@@ -122,9 +126,9 @@ export function QuickActivityModal({ date, trigger }: QuickActivityModalProps) {
                             name="title"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Title</FormLabel>
+                                    <FormLabel>Título</FormLabel>
                                     <FormControl>
-                                        <Input placeholder="Client meeting..." {...field} />
+                                        <Input placeholder="Reunião com o cliente..." {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -137,18 +141,18 @@ export function QuickActivityModal({ date, trigger }: QuickActivityModalProps) {
                                 name="type"
                                 render={({ field }) => (
                                     <FormItem className="flex-1">
-                                        <FormLabel>Type</FormLabel>
+                                        <FormLabel>Tipo</FormLabel>
                                         <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Type" />
+                                                    <SelectValue placeholder="Selecione o tipo" />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="MEETING">Meeting</SelectItem>
-                                                <SelectItem value="CALL">Call</SelectItem>
-                                                <SelectItem value="SITE_VISIT">Site Visit</SelectItem>
-                                                <SelectItem value="DESIGN">Design Block</SelectItem>
+                                                <SelectItem value="MEETING">Reunião</SelectItem>
+                                                <SelectItem value="CALL">Ligação</SelectItem>
+                                                <SelectItem value="SITE_VISIT">Visita Técnica</SelectItem>
+                                                <SelectItem value="DESIGN">Bloco de Design</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -161,7 +165,7 @@ export function QuickActivityModal({ date, trigger }: QuickActivityModalProps) {
                                 name="startTime"
                                 render={({ field }) => (
                                     <FormItem className="w-[100px]">
-                                        <FormLabel>Time</FormLabel>
+                                        <FormLabel>Horário</FormLabel>
                                         <FormControl>
                                             <Input type="time" {...field} />
                                         </FormControl>
@@ -176,7 +180,7 @@ export function QuickActivityModal({ date, trigger }: QuickActivityModalProps) {
                             name="duration"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Duration (min)</FormLabel>
+                                    <FormLabel>Duração (min)</FormLabel>
                                     <FormControl>
                                         <Input type="number" step="15" {...field} />
                                     </FormControl>
@@ -188,7 +192,7 @@ export function QuickActivityModal({ date, trigger }: QuickActivityModalProps) {
                         <div className="flex justify-end pt-4">
                             <Button type="submit" disabled={isSubmitting}>
                                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                Schedule
+                                Agendar
                             </Button>
                         </div>
                     </form>

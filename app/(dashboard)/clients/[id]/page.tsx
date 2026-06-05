@@ -80,7 +80,7 @@ export default async function ClientDetailsPage({ params }: { params: Promise<{ 
     }, 0);
 
     return (
-        <div className="flex-1 space-y-8 p-8 pt-6 max-w-7xl mx-auto">
+        <div className="flex-1 space-y-8 p-8 pt-6 w-full">
             {/* Header premium do CRM */}
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 bg-white dark:bg-[#151f28] p-8 rounded-3xl border border-gray-100 dark:border-slate-800 shadow-xl relative overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>

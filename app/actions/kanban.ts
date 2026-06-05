@@ -160,9 +160,28 @@ export async function updateProjectStatus(projectId: string, statusId: string): 
     try {
         await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR]);
 
+        let targetColumnId = statusId;
+        const canonicalTitles: Record<string, string> = {
+            PLANNING: 'Planejamento',
+            IN_PROGRESS: 'Em Andamento',
+            ON_HOLD: 'Pausado',
+            COMPLETED: 'Concluído',
+            CANCELLED: 'Cancelado'
+        };
+
+        const targetTitle = canonicalTitles[statusId];
+        if (targetTitle) {
+            const column = await prisma.projectKanbanColumn.findFirst({
+                where: { projectId, title: targetTitle }
+            });
+            if (column) {
+                targetColumnId = column.id;
+            }
+        }
+
         const project = await prisma.project.update({
             where: { id: projectId },
-            data: { currentColumnId: statusId }
+            data: { currentColumnId: targetColumnId }
         });
 
         // BUG 9: Caminhos padronizados com /dashboard/

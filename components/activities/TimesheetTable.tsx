@@ -1,6 +1,8 @@
 "use client";
 
+import React from "react";
 import { format, parseISO } from "date-fns";
+import { ptBR } from "date-fns/locale";
 import { Badge } from "@/components/ui/badge";
 import {
     Table,
@@ -76,10 +78,10 @@ export function TimesheetTable({ logs }: TimesheetTableProps) {
         if (!deleteId) return;
         const result = await deleteTimeLog(deleteId);
         if (result.success) {
-            toast.success("Log deleted");
+            toast.success("Registro de tempo excluído");
             router.refresh();
         } else {
-            toast.error("Failed to delete log");
+            toast.error("Falha ao excluir o registro de tempo");
         }
         setDeleteId(null);
     }
@@ -93,13 +95,13 @@ export function TimesheetTable({ logs }: TimesheetTableProps) {
                     <TableHeader>
                         <TableRow>
                             {/* Date is grouped, so maybe we don't need a date column for every row, but let's keep it clean */}
-                            <TableHead className="w-[100px]">Start</TableHead>
-                            <TableHead className="w-[100px]">End</TableHead>
-                            <TableHead>Project / Task</TableHead>
-                            <TableHead>Description</TableHead>
-                            <TableHead className="w-[100px]">Category</TableHead>
-                            <TableHead className="text-center w-[80px]">Billable</TableHead>
-                            <TableHead className="text-right w-[100px]">Duration</TableHead>
+                            <TableHead className="w-[100px]">Início</TableHead>
+                            <TableHead className="w-[100px]">Fim</TableHead>
+                            <TableHead>Projeto / Tarefa</TableHead>
+                            <TableHead>Descrição</TableHead>
+                            <TableHead className="w-[100px]">Categoria</TableHead>
+                            <TableHead className="text-center w-[80px]">Faturável</TableHead>
+                            <TableHead className="text-right w-[100px]">Duração</TableHead>
                             <TableHead className="w-[50px]"></TableHead>
                         </TableRow>
                     </TableHeader>
@@ -107,19 +109,19 @@ export function TimesheetTable({ logs }: TimesheetTableProps) {
                         {Object.keys(groupedLogs).length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={8} className="text-center h-32 text-muted-foreground">
-                                    No time logs found.
+                                    Nenhum registro de tempo encontrado.
                                 </TableCell>
                             </TableRow>
                         ) : (
                             // Sort dates descending
                             Object.keys(groupedLogs).sort((a, b) => b.localeCompare(a)).map((date) => (
-                                <>
+                                <React.Fragment key={`group-${date}`}>
                                     {/* Date Header Row */}
-                                    <TableRow key={`header-${date}`} className="bg-muted/50 hover:bg-muted/50">
+                                    <TableRow className="bg-muted/50 hover:bg-muted/50">
                                         <TableCell colSpan={6} className="font-semibold py-2">
-                                            <div className="flex items-center">
+                                            <div className="flex items-center capitalize">
                                                 <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
-                                                {format(parseISO(date), "EEEE, MMM d, yyyy")}
+                                                {format(parseISO(date), "EEEE, d 'de' MMMM 'de' yyyy", { locale: ptBR })}
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-right font-bold py-2">
@@ -127,7 +129,7 @@ export function TimesheetTable({ logs }: TimesheetTableProps) {
                                         </TableCell>
                                         <TableCell></TableCell>
                                     </TableRow>
-
+ 
                                     {/* Logs for this date */}
                                     {groupedLogs[date].map((log) => (
                                         <TableRow key={log.id}>
@@ -139,8 +141,8 @@ export function TimesheetTable({ logs }: TimesheetTableProps) {
                                             </TableCell>
                                             <TableCell>
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium text-sm">{log.project?.name || "No Project"}</span>
-                                                    {log.taskId && <span className="text-xs text-muted-foreground">Task: {log.taskId} {/* Would resolve relations if present */}</span>}
+                                                    <span className="font-medium text-sm">{log.project?.name || "Sem Projeto"}</span>
+                                                    {log.taskId && <span className="text-xs text-muted-foreground">Tarefa: {log.taskId} {/* Would resolve relations if present */}</span>}
                                                 </div>
                                             </TableCell>
                                             <TableCell className="text-sm max-w-[200px] truncate" title={log.description || ""}>
@@ -153,9 +155,9 @@ export function TimesheetTable({ logs }: TimesheetTableProps) {
                                             </TableCell>
                                             <TableCell className="text-center">
                                                 {log.billable ? (
-                                                    <span className="text-green-600 font-bold text-xs">Yes</span>
+                                                    <span className="text-green-600 font-bold text-xs">Sim</span>
                                                 ) : (
-                                                    <span className="text-muted-foreground text-xs">No</span>
+                                                    <span className="text-muted-foreground text-xs">Não</span>
                                                 )}
                                             </TableCell>
                                             <TableCell className="text-right font-mono font-medium">
@@ -165,51 +167,51 @@ export function TimesheetTable({ logs }: TimesheetTableProps) {
                                                 <DropdownMenu>
                                                     <DropdownMenuTrigger asChild>
                                                         <Button variant="ghost" className="h-8 w-8 p-0">
-                                                            <span className="sr-only">Open menu</span>
+                                                            <span className="sr-only">Abrir menu</span>
                                                             <MoreHorizontal className="h-4 w-4" />
                                                         </Button>
                                                     </DropdownMenuTrigger>
                                                     <DropdownMenuContent align="end">
-                                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                        <DropdownMenuItem onClick={() => { /* Edit logic */ toast.info("Edit not implemented yet") }}>
-                                                            <Pencil className="mr-2 h-4 w-4" /> Edit
+                                                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                                                        <DropdownMenuItem onClick={() => { /* Edit logic */ toast.info("Edição não implementada ainda") }}>
+                                                            <Pencil className="mr-2 h-4 w-4" /> Editar
                                                         </DropdownMenuItem>
                                                         <DropdownMenuItem
                                                             className="text-red-600 focus:text-red-600"
                                                             onClick={() => setDeleteId(log.id)}
                                                         >
-                                                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                                            <Trash2 className="mr-2 h-4 w-4" /> Excluir
                                                         </DropdownMenuItem>
                                                     </DropdownMenuContent>
                                                 </DropdownMenu>
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                </>
+                                </React.Fragment>
                             ))
                         )}
                     </TableBody>
                 </Table>
-
+ 
                 {/* Footer / Summary */}
                 <div className="flex items-center justify-end p-4 border-t gap-4 bg-muted/20 rounded-b-md">
-                    <span className="text-sm font-medium text-muted-foreground">Total Period Hours:</span>
+                    <span className="text-sm font-medium text-muted-foreground">Horas no Período:</span>
                     <span className="text-2xl font-bold tabular-nums text-primary">{totalPeriod.toFixed(2)} h</span>
                 </div>
             </div>
-
+ 
             <AlertDialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete this time log.
+                            Esta ação não pode ser desfeita. Isso excluirá permanentemente este registro de tempo.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90">
-                            Delete
+                            Excluir
                         </AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>

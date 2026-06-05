@@ -104,11 +104,11 @@ export function ProjectForm({ initialData, isEditing = false }: ProjectFormProps
                 </TabsList>
 
                 <TabsContent value="basic">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Dados Gerais</CardTitle>
+                    <Card className="shadow-sm overflow-hidden">
+                        <CardHeader className="border-b bg-muted/30 pb-4">
+                            <CardTitle className="text-lg font-medium text-foreground">Dados Gerais</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-6">
+                        <CardContent className="p-6 space-y-6">
                             <div className="flex flex-col gap-2">
                                 <Label>Imagem de Capa / Thumbnail</Label>
                                 <ImageUpload
@@ -172,11 +172,11 @@ export function ProjectForm({ initialData, isEditing = false }: ProjectFormProps
                 </TabsContent>
 
                 <TabsContent value="architecture">
-                    <Card>
-                        <CardHeader>
-                            <CardTitle>Especificações Técnicas</CardTitle>
+                    <Card className="shadow-sm overflow-hidden">
+                        <CardHeader className="border-b bg-muted/30 pb-4">
+                            <CardTitle className="text-lg font-medium text-foreground">Especificações Técnicas</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-6">
+                        <CardContent className="p-6 space-y-6">
                             <div className="grid gap-6 md:grid-cols-2">
                                 <div className="space-y-2">
                                     <Label>Estilo Arquitetônico</Label>

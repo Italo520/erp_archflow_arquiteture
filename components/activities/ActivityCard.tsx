@@ -22,9 +22,9 @@ export function ActivityCard({ activity, className, onClick }: ActivityCardProps
             className={cn(
                 "hover:bg-accent/50 transition-colors cursor-pointer border-l-4",
                 "border-l-transparent", // Default border
-                activity.type === 'MEETING' && "border-l-blue-500",
-                activity.type === 'SITE_VISIT' && "border-l-green-500",
-                activity.type === 'DESIGN' && "border-l-purple-500",
+                activity.type === 'MEETING' && "border-l-primary",
+                activity.type === 'SITE_VISIT' && "border-l-success",
+                activity.type === 'DESIGN' && "border-l-primary",
                 // Add more specific left borders if desired, or rely on Icon color
                 className
             )}
@@ -67,7 +67,7 @@ export function ActivityCard({ activity, className, onClick }: ActivityCardProps
                             <span>{activity.client.name}</span>
                         )}
                         {!activity.project && !activity.client && (
-                            <span>{activity.description || "No description"}</span>
+                            <span>{activity.description || "Sem descrição"}</span>
                         )}
                     </div>
                 </div>

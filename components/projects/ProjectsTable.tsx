@@ -198,7 +198,7 @@ export default function ProjectsTable({ projects }: { projects: Project[] }) {
                                     <div className="flex flex-col text-xs">
                                         {deadline ? (
                                             <>
-                                                <span className="font-medium">{format(new Date(deadline), "bd 'de' MMM", { locale: ptBR })}</span>
+                                                <span className="font-medium">{format(new Date(deadline), "d 'de' MMM", { locale: ptBR })}</span>
                                                 <span className="text-muted-foreground">{new Date(deadline).getFullYear()}</span>
                                             </>
                                         ) : "-"}
