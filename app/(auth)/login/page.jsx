@@ -149,7 +149,7 @@ const Login = () => {
                     )}
 
                     {/* Formulário */}
-                    <form className="space-y-4" onSubmit={handleLogin}>
+                    <form noValidate className="space-y-4" onSubmit={handleLogin}>
 
                         {/* E-mail */}
                         <div className="space-y-1.5">

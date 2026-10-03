@@ -4,7 +4,6 @@ import { prisma } from "@/lib/prisma";
 import { deliverableSchema, updateDeliverableSchema } from "@/lib/validations";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { auth } from "@/auth";
 import { DeliverableStatus, Role } from "@prisma/client";
 import { requireProjectAccess } from "@/lib/server-utils";
 import nodeCrypto from "crypto";

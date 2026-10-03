@@ -29,7 +29,7 @@ export async function generateReportExcel(data: ExcelReportData): Promise<Blob> 
     workbook.lastModifiedBy = data.metadata?.author || 'ArchFlow ERP';
     workbook.created = data.metadata?.createdAt || new Date();
     workbook.modified = data.metadata?.createdAt || new Date();
-    workbook.title = data.metadata?.title || 'Relatório ArchFlow';
+    (workbook as any).title = data.metadata?.title || 'Relatório ArchFlow';
 
     // Create sheets
     for (const sheetData of data.sheets) {

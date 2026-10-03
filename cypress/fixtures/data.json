@@ -1,0 +1,49 @@
+{
+  "user": {
+    "id": "u-mock-1",
+    "name": "Carlos Eduardo Arquiteto",
+    "email": "carlos@archflow.com",
+    "role": "OWNER"
+  },
+  "clients": [
+    {
+      "id": "cli-1",
+      "name": "Construtora Horizonte Azul Ltda",
+      "email": "contato@horizonte.com.br",
+      "phone": "(11) 98765-4321",
+      "legalType": "PJ",
+      "document": "12.345.678/0001-90",
+      "razaoSocial": "Horizonte Azul Empreendimentos Imobiliários S/A",
+      "category": "COMMERCIAL",
+      "status": "ACTIVE"
+    },
+    {
+      "id": "cli-2",
+      "name": "Dra. Mariana Vasconcelos",
+      "email": "mariana.vasconcelos@gmail.com",
+      "phone": "(11) 91234-5678",
+      "legalType": "PF",
+      "document": "123.456.789-00",
+      "category": "RESIDENTIAL",
+      "status": "PROSPECT"
+    }
+  ],
+  "projects": [
+    {
+      "id": "proj-1",
+      "name": "Residência Contemporânea Villa Lobos",
+      "clientName": "Dra. Mariana Vasconcelos",
+      "clientId": "cli-2",
+      "architecturalStyle": "CONTEMPORANEO",
+      "constructionType": "CONCRETO_ARMADO",
+      "totalArea": 450.5,
+      "numberOfFloors": 2,
+      "numberOfRooms": 4,
+      "hasBasement": false,
+      "hasGarage": true,
+      "parkingSpots": 3,
+      "plannedCost": 120000.00,
+      "visibility": "TEAM"
+    }
+  ]
+}

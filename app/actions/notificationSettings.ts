@@ -2,7 +2,6 @@
 
 import { prisma } from '@/lib/prisma';
 import { requireAuth } from '@/lib/server-utils';
-import { Role } from '@prisma/client';
 
 export type NotificationRule = {
     role: string;

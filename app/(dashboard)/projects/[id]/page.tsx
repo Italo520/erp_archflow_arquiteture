@@ -11,6 +11,7 @@ import ProjectDocumentsTab from '@/components/projects/ProjectDocumentsTab';
 import ProjectFinancialTab from '@/components/projects/ProjectFinancialTab';
 import ProjectTeamTab from '@/components/projects/ProjectTeamTab';
 import ProjectAuditTab from '@/components/projects/ProjectAuditTab';
+import ProjectInspectionsTab from '@/components/projects/ProjectInspectionsTab';
 import { ProjectOverview } from '@/components/projects/ProjectOverview';
 import { NewActivityButton } from '@/components/projects/NewActivityButton';
 
@@ -59,6 +60,9 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
                     <TabsTrigger value="documents" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
                         Documentos
                     </TabsTrigger>
+                    <TabsTrigger value="inspections" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
+                        Vistorias & Obra
+                    </TabsTrigger>
                     <TabsTrigger value="team" className="rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent">
                         Equipe
                     </TabsTrigger>
@@ -81,6 +85,10 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
 
                 <TabsContent value="documents" className="flex-1">
                     <ProjectDocumentsTab project={project} />
+                </TabsContent>
+
+                <TabsContent value="inspections" className="flex-1">
+                    <ProjectInspectionsTab project={project} />
                 </TabsContent>
 
                 <TabsContent value="financial" className="flex-1">

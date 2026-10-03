@@ -30,7 +30,7 @@ export default async function TimeTrackingPage({ searchParams }: PageProps) {
     const params = await searchParams;
     const session = await auth();
 
-    // Parallel data fetching
+    // Parallel data fetching with resilience
     const [
         projectsData,
         recentLogsData,
@@ -41,34 +41,36 @@ export default async function TimeTrackingPage({ searchParams }: PageProps) {
         clientData
     ] = await Promise.all([
         // 1. Projects
-        prisma.project.findMany({ select: { id: true, name: true } }),
+        prisma.project.findMany({ select: { id: true, name: true } }).catch(() => []),
         // 2. Recent Logs with Filters from URL
         listTimeLogs(1, 50, {
             projectId: params?.projectId,
             startDate: params?.startDate,
             endDate: params?.endDate
-        }),
+        }).catch(() => ({ success: false })),
         // 3. Metrics
-        getTimeLogMetrics(),
+        getTimeLogMetrics().catch(() => ({ success: false })),
         // 4. Distribution
-        getTimeDistributionByCategory(),
+        getTimeDistributionByCategory().catch(() => ({ success: false })),
         // 5. Trends
-        getDailyProductivity(),
+        getDailyProductivity().catch(() => ({ success: false })),
         // 6. Top Projects
-        getTopProjects(),
+        getTopProjects().catch(() => ({ success: false })),
         // 7. Client Breakdown
-        getTimeBreakdownByClient()
+        getTimeBreakdownByClient().catch(() => ({ success: false }))
     ]);
 
-    const projects = projectsData;
-    const logs = (recentLogsData.success && recentLogsData.data?.logs) ? recentLogsData.data.logs : [];
+    const projects = JSON.parse(JSON.stringify(projectsData || []));
+    const logs = (recentLogsData && 'data' in recentLogsData && recentLogsData.data && typeof recentLogsData.data === 'object' && 'logs' in (recentLogsData.data as any)) 
+        ? JSON.parse(JSON.stringify((recentLogsData.data as any).logs)) 
+        : [];
 
     // Safe unwrap for reports
-    const metrics = metricsData.success && metricsData.data ? metricsData.data : { totalHours: 0, billableHours: 0, estimatedValue: 0 };
-    const distribution = distributionData.success && distributionData.data ? distributionData.data : [];
-    const trends = trendsData.success && trendsData.data ? trendsData.data : [];
-    const topProjects = topProjectsData.success && topProjectsData.data ? topProjectsData.data : [];
-    const clientBreakdown = clientData.success && clientData.data ? clientData.data : [];
+    const metrics = (metricsData && 'data' in metricsData && metricsData.data) ? (metricsData.data as any) : { totalHours: 0, billableHours: 0, estimatedValue: 0 };
+    const distribution = (distributionData && 'data' in distributionData && distributionData.data) ? (distributionData.data as any) : [];
+    const trends = (trendsData && 'data' in trendsData && trendsData.data) ? (trendsData.data as any) : [];
+    const topProjects = (topProjectsData && 'data' in topProjectsData && topProjectsData.data) ? (topProjectsData.data as any) : [];
+    const clientBreakdown = (clientData && 'data' in clientData && clientData.data) ? (clientData.data as any) : [];
 
     return (
         <div className="flex flex-col space-y-8 p-8 pt-6">

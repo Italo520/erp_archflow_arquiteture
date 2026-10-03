@@ -2,7 +2,7 @@ import React from 'react';
 import { render } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { Toaster } from '@/components/ui/sonner';
-import { ThemeProvider } from 'next-themes';
+import { ThemeProvider } from '@/components/ThemeProvider';
 
 // Mock matchMedia to prevent sonner/radix from failing in JSDOM
 Object.defineProperty(window, 'matchMedia', {

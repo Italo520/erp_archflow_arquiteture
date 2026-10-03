@@ -281,8 +281,8 @@ export async function getReportPreview(
 // --- CONSOLIDATED USER ANALYTICS ACTIONS (FORMERLY IN report.ts) ---
 
 export async function getTimeLogMetrics() {
-    const session = await auth();
-    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+    const user = await getCurrentUser();
+    if (!user?.id) return { ok: false, success: false, error: "Unauthorized" };
 
     const startDate = startOfMonth(new Date());
     const endDate = endOfMonth(new Date());
@@ -291,7 +291,7 @@ export async function getTimeLogMetrics() {
         const aggregation = await prisma.timeLog.aggregate({
             _sum: { duration: true },
             where: {
-                userId: session.user.id,
+                userId: user.id,
                 date: { gte: startDate, lte: endDate }
             }
         });
@@ -299,7 +299,7 @@ export async function getTimeLogMetrics() {
         const billableAggregation = await prisma.timeLog.aggregate({
             _sum: { duration: true },
             where: {
-                userId: session.user.id,
+                userId: user.id,
                 date: { gte: startDate, lte: endDate },
                 billable: true
             }
@@ -323,8 +323,8 @@ export async function getTimeLogMetrics() {
 }
 
 export async function getTimeDistributionByCategory() {
-    const session = await auth();
-    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+    const user = await getCurrentUser();
+    if (!user?.id) return { ok: false, success: false, error: "Unauthorized" };
 
     const startDate = startOfMonth(new Date());
     const endDate = endOfMonth(new Date());
@@ -333,7 +333,7 @@ export async function getTimeDistributionByCategory() {
         const distribution = await prisma.timeLog.groupBy({
             by: ["category"],
             where: {
-                userId: session.user.id,
+                userId: user.id,
                 date: { gte: startDate, lte: endDate }
             },
             _sum: { duration: true }
@@ -352,8 +352,8 @@ export async function getTimeDistributionByCategory() {
 }
 
 export async function getDailyProductivity(days: number = 7) {
-    const session = await auth();
-    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+    const user = await getCurrentUser();
+    if (!user?.id) return { ok: false, success: false, error: "Unauthorized" };
 
     const startDate = subDays(new Date(), days);
 
@@ -361,7 +361,7 @@ export async function getDailyProductivity(days: number = 7) {
         const trends = await prisma.timeLog.groupBy({
             by: ["date"],
             where: {
-                userId: session.user.id,
+                userId: user.id,
                 date: { gte: startDate }
             },
             _sum: { duration: true },
@@ -381,8 +381,8 @@ export async function getDailyProductivity(days: number = 7) {
 }
 
 export async function getTopProjects() {
-    const session = await auth();
-    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+    const user = await getCurrentUser();
+    if (!user?.id) return { ok: false, success: false, error: "Unauthorized" };
 
     const startDate = startOfMonth(new Date());
 
@@ -390,7 +390,7 @@ export async function getTopProjects() {
         const topProjects = await prisma.timeLog.groupBy({
             by: ["projectId"],
             where: {
-                userId: session.user.id,
+                userId: user.id,
                 date: { gte: startDate }
             },
             _sum: { duration: true },
@@ -421,8 +421,8 @@ export async function getTopProjects() {
 }
 
 export async function getTimeBreakdownByClient() {
-    const session = await auth();
-    if (!session?.user?.id) return { ok: false, success: false, error: "Unauthorized" };
+    const user = await getCurrentUser();
+    if (!user?.id) return { ok: false, success: false, error: "Unauthorized" };
 
     const startDate = startOfMonth(new Date());
 
@@ -430,7 +430,7 @@ export async function getTimeBreakdownByClient() {
         const grouped = await prisma.timeLog.groupBy({
             by: ["clientId"],
             where: {
-                userId: session.user.id,
+                userId: user.id,
                 date: { gte: startDate }
             },
             _sum: { duration: true },

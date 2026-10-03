@@ -5,11 +5,11 @@ import { TaskCard } from './TaskCard';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export function TaskListView({ stages, onTaskClick }) {
+export function TaskListView({ stages, onTaskClick }: { stages: any[]; onTaskClick?: (task: any) => void }) {
     const allTasks = useMemo(() => {
-        const tasks = [];
-        stages.forEach(stage => {
-            stage.tasks.forEach(task => {
+        const tasks: any[] = [];
+        stages?.forEach(stage => {
+            stage.tasks?.forEach((task: any) => {
                 tasks.push({ ...task, stageName: stage.name });
             });
         });
@@ -41,7 +41,7 @@ export function TaskListView({ stages, onTaskClick }) {
                         {allTasks.map(task => (
                             <tr 
                                 key={task.id} 
-                                onClick={() => onTaskClick(task)}
+                                onClick={() => onTaskClick?.(task)}
                                 className="hover:bg-muted/30 cursor-pointer transition-colors"
                             >
                                 <td className="px-4 py-3 font-medium text-foreground">

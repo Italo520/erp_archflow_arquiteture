@@ -309,7 +309,7 @@ async function generateExcel(data: Awaited<ReturnType<typeof getReportData>>, re
     const HEADER_FONT = { name: "Calibri", bold: true, size: 11, color: { argb: "FFFFFFFF" } };
     const TITLE_FONT = { name: "Calibri", bold: true, size: 14, color: { argb: "FF0F172A" } };
 
-    function autoWidth(sheet: ExcelJS.Worksheet) {
+    function autoWidth(sheet: any) {
         sheet.columns.forEach((col) => {
             let maxLen = 10;
             col.eachCell?.({ includeEmpty: false }, (cell) => {

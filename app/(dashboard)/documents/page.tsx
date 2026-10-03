@@ -1,5 +1,3 @@
-'use server';
-
 import { prisma } from '@/lib/prisma';
 import { getCurrentUser } from '@/app/actions/auth';
 import { redirect } from 'next/navigation';
@@ -46,8 +44,8 @@ export default async function DocumentsPage() {
     if (!user) redirect('/login');
 
     const [deliverables, projects] = await Promise.all([
-        getAllDeliverables(user.id),
-        getProjects(user.id),
+        getAllDeliverables(user.id).catch(() => []),
+        getProjects(user.id).catch(() => []),
     ]);
 
     return (

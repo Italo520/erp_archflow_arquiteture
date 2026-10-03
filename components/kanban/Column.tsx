@@ -12,7 +12,7 @@ import {
     Loader2,
     Trash2
 } from 'lucide-react';
-import { deleteStage } from '@/app/actions/stage';
+import { deleteStage, updateStage } from '@/app/actions/stage';
 
 interface Task {
     id: string;

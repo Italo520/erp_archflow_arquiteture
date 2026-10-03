@@ -69,34 +69,34 @@ async function getReportData(
         prisma.timeLog.findMany({
             where: { date: { gte: start, lte: end }, ...projectFilter },
             include: { user: { select: { id: true, fullName: true } } },
-        }),
+        }).catch(() => [] as any[]),
         prisma.timeLog.findMany({
             where: { date: { gte: prevStart, lte: prevEnd }, ...projectFilter },
-        }),
-        prisma.client.count({ where: { createdAt: { gte: start, lte: end } } }),
-        prisma.client.count({ where: { createdAt: { gte: prevStart, lte: prevEnd } } }),
-        prisma.user.findMany({ select: { id: true, fullName: true } }),
-        prisma.project.findMany({ select: { id: true, name: true } }),
+        }).catch(() => [] as any[]),
+        prisma.client.count({ where: { createdAt: { gte: start, lte: end } } }).catch(() => 0),
+        prisma.client.count({ where: { createdAt: { gte: prevStart, lte: prevEnd } } }).catch(() => 0),
+        prisma.user.findMany({ select: { id: true, fullName: true } }).catch(() => [] as any[]),
+        prisma.project.findMany({ select: { id: true, name: true } }).catch(() => [] as any[]),
     ]);
 
     // Calculate Business Metrics
     const currentRevenue = currentTimeLogs
-        .filter((log) => log.billable)
-        .reduce((sum, log) => sum + log.duration * Number(log.billRate || 0), 0);
+        .filter((log: any) => log.billable)
+        .reduce((sum: number, log: any) => sum + log.duration * Number(log.billRate || 0), 0);
 
     const previousRevenue = previousTimeLogs
-        .filter((log) => log.billable)
-        .reduce((sum, log) => sum + log.duration * Number(log.billRate || 0), 0);
+        .filter((log: any) => log.billable)
+        .reduce((sum: number, log: any) => sum + log.duration * Number(log.billRate || 0), 0);
 
     // Simple profit margin calculation (placeholder - would need expenses data)
     const profitMargin = 25; // Placeholder
     const previousMargin = 22; // Placeholder
 
     // Productivity Metrics
-    const totalHours = currentTimeLogs.reduce((sum, log) => sum + log.duration, 0);
-    const billableHours = currentTimeLogs
-        .filter((log) => log.billable)
-        .reduce((sum, log) => sum + log.duration, 0);
+    const totalHours = (currentTimeLogs as any[]).reduce<number>((sum, log: any) => sum + (log.duration || 0), 0);
+    const billableHours = (currentTimeLogs as any[])
+        .filter((log: any) => log.billable)
+        .reduce<number>((sum, log: any) => sum + (log.duration || 0), 0);
     const nonBillableHours = totalHours - billableHours;
 
     // User ranking

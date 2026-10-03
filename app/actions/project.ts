@@ -107,8 +107,18 @@ export async function getProjectById(id: string) {
                     }
                 },
                 owner: true,
+                siteInspections: {
+                    include: {
+                        inspector: { select: { fullName: true } },
+                        items: true
+                    },
+                    orderBy: { date: 'desc' }
+                },
+                punchListItems: {
+                    orderBy: { createdAt: 'desc' }
+                },
                 _count: {
-                    select: { tasks: true, deliverables: true, timeLogs: true },
+                    select: { tasks: true, deliverables: true, timeLogs: true, siteInspections: true },
                 },
             },
         });
