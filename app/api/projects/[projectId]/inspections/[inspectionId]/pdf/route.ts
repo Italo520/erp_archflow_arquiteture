@@ -6,10 +6,10 @@ import { Role } from "@prisma/client";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: Promise<{ id: string; inspectionId: string }> }
+  { params }: { params: Promise<{ projectId: string; inspectionId: string }> }
 ) {
   try {
-    const { id: projectId, inspectionId } = await params;
+    const { projectId, inspectionId } = await params;
     await requireProjectAccess(projectId, [Role.OWNER, Role.EDITOR, Role.VIEWER]);
 
     const inspection = await prisma.siteInspection.findUnique({
