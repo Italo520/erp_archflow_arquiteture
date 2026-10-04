@@ -52,3 +52,4 @@ testsprite_tests\tmp\config.json
 commit_msg.txt
 pr_message.txt
 *.tmp
+/.storage/
