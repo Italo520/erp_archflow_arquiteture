@@ -1,0 +1,155 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* ─── Light Mode: Ant Design System ─── */
+    --background: 220 14% 96%;        /* #F3F4F6 */
+    --foreground: 221 39% 11%;        /* #111827 */
+
+    --card: 0 0% 100%;                /* #FFFFFF */
+    --card-foreground: 221 39% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 221 39% 11%;
+
+    --primary: 215 100% 54%;          /* #1677ff Ant Design Blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 40% 96.1%;       /* Slate 100 */
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 220 14% 94%;
+    --muted-foreground: 220 9% 46%;
+
+    --accent: 215 100% 96%;           /* Light blue accent */
+    --accent-foreground: 215 100% 54%;
+
+    --destructive: 0 72% 51%;         /* #DC2626 */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;           /* #16A34A */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 44%;            /* #D97706 */
+    --warning-foreground: 0 0% 100%;
+
+    --border: 220 13% 90%;           /* #E5E7EB */
+    --input: 220 13% 90%;
+    --ring: 215 100% 54%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    /* ─── Dark Mode: Modern Design System ─── */
+    --background: 0 0% 7%;            /* #111111 */
+    --foreground: 0 0% 100%;          /* #ffffff */
+
+    --card: 0 0% 10%;                 /* #1A1A1A */
+    --card-foreground: 0 0% 100%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
+
+    --primary: 215 100% 54%;          /* #1677ff */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 14%;            /* #242424 */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 0 0% 14%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;         /* #DC2626 */
+    --destructive-foreground: 0 0% 100%;
+
+    --success: 142 76% 36%;           /* #16A34A */
+    --success-foreground: 0 0% 100%;
+
+    --warning: 38 92% 44%;            /* #D97706 */
+    --warning-foreground: 0 0% 100%;
+
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 215 100% 54%;
+  }
+
+  /* Paleta Verde Sálvia (Arquitetônica) */
+  .theme-sage:not(.dark) {
+    --primary: 130 18% 38%;           /* Forest Sage */
+    --primary-foreground: 0 0% 100%;
+    --accent: 120 15% 94%;
+    --accent-foreground: 130 18% 38%;
+    --ring: 130 18% 38%;
+  }
+
+  .theme-sage.dark {
+    --primary: 93 14% 65%;            /* Sage Glow #CDD5C6 */
+    --primary-foreground: 0 0% 10%;
+    --accent: 140 10% 18%;
+    --accent-foreground: 93 14% 80%;
+    --ring: 93 14% 65%;
+  }
+
+  /* Paleta Azul Legado */
+  .theme-blue {
+    --primary: 215 100% 54%;
+    --primary-foreground: 0 0% 100%;
+    --ring: 215 100% 54%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+    margin: 0;
+  }
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: hsl(var(--card) / 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border));
+}
+
+.glass-card {
+  background: hsl(var(--card) / 0.9);
+  backdrop-filter: blur(8px);
+  border: 1px solid hsl(var(--border));
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+  border-color: hsl(var(--primary) / 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px hsl(var(--foreground) / 0.05);
+}

@@ -14,20 +14,23 @@ Este documento acompanha a evolução do desenvolvimento do projeto em tempo rea
 
 ---
 
-## Milestone Ativa: Milestone 6 - Hardening, Notificações, Auditoria e Deploy (Fase 4)
-- **Status**: Concluído
+## Milestone Ativa: Migração Monorepo Desacoplado (Java 21 + TypeScript) & Seed de Dados
+- **Status**: Concluído e Homologado
 - **Progresso da Milestone**: 100%
 
-### Checklist da Milestone Ativa
-- [x] **Phase 1: helpers de Autorização em Actions**: Proteger todas as ações verificando sessão e cargo por projeto. [REQ-006, REQ-007, REQ-008, REQ-009]
-- [x] **Phase 2: Painel de Notificações**: Configurar os disparadores e tela de notificações reativas para profissionais e clientes. [REQ-033]
-- [x] **Phase 3: Trilha de Auditoria Física**: Gravar logs detalhados de eventos de alta sensibilidade no banco. [REQ-034]
-- [x] **Phase 4: Garantias de Testes**: Implementar e executar a suíte mínima de testes unitários e de integração das Server Actions críticas.
-- [x] **Phase 5: Blindagem do Build**: Validar a compilação final em modo de produção do Next.js sem erros de lint e TypeScript.
+### Checklist da Milestone
+- [x] **Setup Monorepo e Core & Auth**: Java 21 LTS, Spring Boot 3.4, JWT Stateless, BCrypt, ProblemDetail RFC 7807, Flyway V1.
+- [x] **Módulo de Clientes**: Flyway V2, regras de validação PF/PJ, unificação de documentos, status machine, testes formais.
+- [x] **Módulo de Projetos & Kanban**: Flyway V3, criação automática de colunas Kanban arquitetônicas, testes formais.
+- [x] **Módulo de Vistorias Técnicas & Punch List**: Flyway V4, ciclo Draft/Completed, severidades visuais, testes formais.
+- [x] **Módulo de Atividades & Time Tracking**: Flyway V5, faturamento em tempo real, JaCoCo >= 85%.
+- [x] **Frontend SPA TypeScript**: React 19, Vite, Tailwind CSS, 5 views completas integradas via proxy.
+- [x] **Carga de Dados Fictícios (Seed V6)**: 4 usuários, 5 clientes, 4 projetos, tarefas, vistorias e horas coerentes.
+- [x] **Compatibilidade de Sessão**: Correção do payload JWT e sanitização de localStorage.
 
 ---
 
 ## Último Checkpoint
-- **Data**: 28 de Maio de 2026
-- **Ação**: Início do Milestone 6 de forma autônoma. Milestones 4 e 5 já finalizadas em sessões anteriores (Armazenamento, Versionamento e Dashboard Financeiro consolidados).
-- **Situação**: O sistema está pronto para a blindagem de segurança, auditoria, notificações e testes finais para Deploy.
+- **Data**: 04 de Outubro de 2026
+- **Ação**: Pausa do trabalho via `/gsd-pause-work`.
+- **Situação**: Backend ativo na porta 8085, Frontend ativo na porta 3000, PostgreSQL ativo na porta 5436. Handoff registrado em `.planning/HANDOFF.json` e `.planning/.continue-here.md`.

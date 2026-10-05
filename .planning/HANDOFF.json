@@ -1,35 +1,95 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-04T16:22:00-03:00",
-  "phase": "8",
-  "phase_name": "QA Completo e Testes E2E",
-  "phase_dir": "",
-  "plan": 0,
-  "task": 4,
+  "timestamp": "2026-10-04T00:37:00-03:00",
+  "phase": "06",
+  "phase_name": "migracao-monorepo-java-typescript-e-seed",
+  "phase_dir": ".planning",
+  "plan": 6,
+  "task": 6,
   "total_tasks": 6,
   "status": "paused",
+  "branch": "feat/migracao-java-typescript",
   "completed_tasks": [
-    {"id": 1, "name": "Onda 1: Autenticação & Layout Global", "status": "done"},
-    {"id": 2, "name": "Onda 2: Dashboard Principal", "status": "done"},
-    {"id": 3, "name": "Onda 3: Gestão de Clientes", "status": "done"},
-    {"id": 4, "name": "Onda 4: Gestão de Projetos & Kanban", "status": "done"}
+    {
+      "id": 1,
+      "name": "Estruturação Monorepo e Core & Auth (Java 21, Spring Boot 3.4, JWT, RFC 7807, Flyway V1)",
+      "status": "done"
+    },
+    {
+      "id": 2,
+      "name": "Módulo de Clientes (Flyway V2, ClientService, regras PF/PJ, testes formais)",
+      "status": "done"
+    },
+    {
+      "id": 3,
+      "name": "Módulo de Projetos & Kanban (Flyway V3, ProjectService, 6 colunas padrão, testes formais)",
+      "status": "done"
+    },
+    {
+      "id": 4,
+      "name": "Módulo de Vistorias Técnicas & Punch List (Flyway V4, InspectionService, testes formais)",
+      "status": "done"
+    },
+    {
+      "id": 5,
+      "name": "Módulo de Atividades & Time Tracking (Flyway V5, ActivityService, rates, JaCoCo >= 85%)",
+      "status": "done"
+    },
+    {
+      "id": 6,
+      "name": "Frontend SPA TypeScript (Vite + React 19 + Tailwind, views completas, correção de auth JWT e seed V6)",
+      "status": "done"
+    }
   ],
   "remaining_tasks": [
-    {"id": 5, "name": "Onda 5: Atividades & Time Tracking", "status": "not_started"},
-    {"id": 6, "name": "Onda 6: Relatórios", "status": "not_started"}
+    {
+      "id": 7,
+      "name": "Testes E2E Cypress no Frontend com a API Java ativa",
+      "status": "not_started"
+    },
+    {
+      "id": 8,
+      "name": "Deploy / Pipeline CI/CD com Coolify / Docker Compose",
+      "status": "not_started"
+    }
   ],
   "blockers": [],
-  "human_actions_pending": [],
+  "human_actions_pending": [
+    {
+      "action": "Recarregar navegador (Ctrl+F5) em http://localhost:3000 e logar com admin@archflow.com / Admin@123456",
+      "context": "Limpar localStorage antigo que continha archflow_token como string literal 'undefined'",
+      "blocking": false
+    },
+    {
+      "action": "Autorizar commit e push quando desejar salvar na branch feat/migracao-java-typescript",
+      "context": "Regra estrita do usuário proíbe commits e push automáticos sem autorização prévia",
+      "blocking": false
+    }
+  ],
   "decisions": [
     {
-      "decision": "Soft Delete de Projetos validado direto no banco",
-      "rationale": "Verificado que o projeto duplicado excluído teve a coluna deletedAt corretamente preenchida, confirmando o comportamento de exclusão lógica",
-      "phase": "8"
+      "decision": "Adicionar token, id, name, email e role no root do AuthResponse no backend",
+      "rationale": "Garante retrocompatibilidade perfeita com o frontend antigo e qualquer cliente REST",
+      "phase": "06"
+    },
+    {
+      "decision": "Criar migration Flyway V6 com dados fictícios estruturados de escritório de alto padrão",
+      "rationale": "Possibilita homologação imediata com 4 usuários, 5 clientes PF/PJ, 4 projetos, kanban, vistorias e horas",
+      "phase": "06"
+    },
+    {
+      "decision": "Adicionar CAST(:searchTerm AS string) nas buscas JPQL com LOWER(CONCAT('%', ...))",
+      "rationale": "Evita que o PostgreSQL infira o parâmetro nulo como tipo bytea gerando erro lower(bytea)",
+      "phase": "06"
     }
   ],
   "uncommitted_files": [
-    "verify-project-delete.ts"
+    ".gitignore",
+    "backend/",
+    "frontend/",
+    "docs/superpowers/plans/2026-10-03-migracao-fase1-monorepo-core-auth.md",
+    "docs/superpowers/plans/2026-10-04-migracao-monorepo-fases-2-a-6.md"
   ],
-  "next_action": "Retomar testes E2E iniciando pela Onda 5 (Atividades & Time Tracking)",
-  "context_notes": "Concluímos com sucesso todos os testes E2E da Onda 4 (Projetos e Kanban), validando desde a visualização e persistência de layout até criação, duplicação, abas de detalhes e soft delete de projetos. Identificamos bugs importantes como a exibição de UUID de status em vez do nome amigável e problemas de validação de data no form. O próximo agente deve iniciar os testes da Onda 5 em /activities."
+  "next_action": "Acessar http://localhost:3000 após Ctrl+F5 e logar para validar a visualização de todos os cards e gráficos com dados",
+  "context_notes": "Ecossistema totalmente funcional: Backend Spring Boot porta 8085, Frontend Vite porta 3000, PostgreSQL Docker porta 5436. 134 testes de backend verdes com cobertura >= 85%."
 }
