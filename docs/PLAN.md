@@ -1,67 +1,56 @@
 ---
 artifact_type: implementation_plan
-summary: Plano de orquestração para execução da arquitetura do ArchFlow ERP via DAG, integrando contexto do repositório remoto.
+summary: Plano mestre de governança, blindagem de qualidade e evolução contínua do ArchFlow ERP.
 ---
 
-# 🎼 Plano de Orquestração: Projeto ArchFlow ERP
+# 🎼 Plano Mestre de Governança & Evolução Contínua: ArchFlow ERP
 
-Este plano detalha a estratégia para passar o contexto do repositório existente para o agente "Jules" e executar as tarefas pendentes via DAG.
-
-## 👥 Agentes Envolvidos (Mínimo 3)
-1. **Explorer Agent**: Mapeamento da base de código legada e identificação de padrões. (Já realizado)
-2. **Project Planner**: Decomposição de tarefas e criação deste plano. (Em progresso)
-3. **Senior Fullstack (Jules)**: Executor das tarefas via motor de DAG.
-4. **Security Auditor**: Validação de RBAC e middleware de autenticação.
-5. **Backend Specialist**: Refinamento de Server Actions e integrações Prisma.
+Este documento estabelece o modelo de governança, o ciclo de blindagem de qualidade (4D) e as diretrizes de desenvolvimento para os próximos passos do **ArchFlow ERP**.
 
 ---
 
-## 📅 Fase 1: Preparação de Contexto (ATUAL)
+## 🧭 1. Ciclo 4D de Governança (Metodologia Aplicada)
 
-### 1.1 Consolidação de Conhecimento
-- **Tecnologias**: Next.js 14 (App Router), Prisma (Postgres), NextAuth, Tailwind.
-- **Entidades**: User, Client, Project, Stage, Task, TimeLog, AuditLog.
-- **Padrões**: Server Actions em `app/actions`, componentes em `components/`, validações em `lib/validations.ts`.
-- **Status**: O repositório já possui o Schema Prisma completo e estrutura básica de diretórios.
+Cada módulo do sistema foi e continuará sendo desenvolvido sob o ciclo de quatro etapas:
 
-### 1.2 Criação do Dossiê de Contexto
-Gerar o arquivo `docs/CONTEXT.md` que servirá de "memória de longo prazo" para cada sessão iniciada pelo Jules.
-
----
-
-## 🚀 Fase 2: Execução das Tarefas via DAG
-
-As tarefas serão executadas conforme o arquivo `dag_tasks.json`, respeitando as dependências:
-
-| ID Tarefa | Descrição Resumida | Dependência |
-|-----------|--------------------|-------------|
-| `auth_01` | RBAC & Middleware | - |
-| `schema_01`| Validações Zod | - |
-| `api_01` | CRUD Clientes | `schema_01`, `auth_01` |
-| `ui_01` | Integração UI Clientes | `api_01` |
-| `api_02` | CRUD Projetos | `schema_01`, `auth_01` |
-| ... | ... | ... |
-
-### Estratégia de Contexto para "Jules":
-O motor de DAG (`.agent/skills/dag-orchestrator/index.ts`) será configurado para injetar o conteúdo de `docs/CONTEXT.md` em cada prompt de tarefa, garantindo que o agente saiba:
-1. Onde os arquivos já existem.
-2. Quais os nomes das tabelas e enums do Prisma.
-3. Como os erros são tratados (padrão Sonner/Toast).
+```
+[1. Discover]  --> Mapear contratos, regras de negócio e histórias de usuário (BDD/Gherkin).
+[2. Diagnose]  --> Identificar casos de borda, restrições de segurança e gaps de paridade.
+[3. Defend]    --> Implementar testes formais unitários/integração no Backend e Frontend.
+[4. Document]  --> Registrar métricas, rastreabilidade e DoD em dossiês vivos em docs/auditoria/.
+```
 
 ---
 
-## ✅ Critérios de Aceite e Verificação
+## 📊 2. Status Consolidado das Fatias Verticais (100% Concluído)
 
-### Testes Automáticos
-- Executar `npx playwright test` para validar fluxos E2E após cada merge crítico.
-- Rodar `npx prisma validate` a cada alteração de schema.
-
-### Segurança
-- Auditoria manual de `lib/permissions.ts` para garantir que o RBAC não tenha furos.
+| Fase | Módulo Funcional | Backend | Frontend | Dossiê Vivo |
+| :---: | :--- | :---: | :---: | :--- |
+| **01** | Autenticação, RBAC & Usuários | 17 testes | 9 testes | [`01-auth-rbac.md`](file:///c:/Users/italo/Desktop/Projects/erp_archflow_arquiteture/docs/auditoria/01-auth-rbac.md) |
+| **02** | Clientes & CRM Arquitetônico | 21 testes | 8 testes | [`02-clientes-crm.md`](file:///c:/Users/italo/Desktop/Projects/erp_archflow_arquiteture/docs/auditoria/02-clientes-crm.md) |
+| **03** | Projetos, Etapas & Kanban | 26 testes | 12 testes | [`03-projetos-kanban.md`](file:///c:/Users/italo/Desktop/Projects/erp_archflow_arquiteture/docs/auditoria/03-projetos-kanban.md) |
+| **04** | Atividades & Time Tracking Faturável | 32 testes | 14 testes | [`04-atividades-timetracking.md`](file:///c:/Users/italo/Desktop/Projects/erp_archflow_arquiteture/docs/auditoria/04-atividades-timetracking.md) |
+| **05** | Vistorias de Obra & Punch List | 20 testes | 11 testes | [`05-vistorias-punchlist.md`](file:///c:/Users/italo/Desktop/Projects/erp_archflow_arquiteture/docs/auditoria/05-vistorias-punchlist.md) |
+| **06** | Armazenamento & Documentos Técnicos | 6 testes | 4 testes | [`06-armazenamento-documentos.md`](file:///c:/Users/italo/Desktop/Projects/erp_archflow_arquiteture/docs/auditoria/06-armazenamento-documentos.md) |
+| **07** | Dashboards & Relatórios Financeiros | 4 testes | 10 testes | [`07-dashboards-relatorios.md`](file:///c:/Users/italo/Desktop/Projects/erp_archflow_arquiteture/docs/auditoria/07-dashboards-relatorios.md) |
+| **08** | Notificações SSE & Configurações | 5 testes | 8 testes | [`08-notificacoes-configuracoes.md`](file:///c:/Users/italo/Desktop/Projects/erp_archflow_arquiteture/docs/auditoria/08-notificacoes-configuracoes.md) |
+| **TOTAL**| **8 Módulos 100% Blindados** | **147 testes** | **79 testes** | **226 testes automatizados verdes** |
 
 ---
 
-## ⏸️ Aguardando Aprovação
-✅ Plano criado: `docs/PLAN.md`
+## 🚀 3. Próximo Ciclo: Evolução Contínua e Expansão
 
-Você aprova este plano para prosseguirmos com a criação do `docs/CONTEXT.md` e o início do `/run-dag`?
+Com a blindagem das 8 fatias verticais essenciais concluída, o projeto passa para o ciclo de expansão funcional conforme mapeado no [GAP_ANALYSIS_ROADMAP.md](file:///c:/Users/italo/Desktop/Projects/erp_archflow_arquiteture/docs/GAP_ANALYSIS_ROADMAP.md):
+
+1. **Pilar 1: Módulo Financeiro Completo e Tesouraria** (Contas a Pagar/Receber, Fluxo de Caixa e DRE).
+2. **Pilar 2: Motor de Exportação Binária** (Geração de PDFs oficiais e planilhas com iText/OpenPDF/Apache POI).
+3. **Pilar 3: Notificações Omnichannel e Envio Real de E-mails** (Spring Mail, templates de laudo e recuperação de senha).
+4. **Pilar 4: Portal do Cliente & Aprovação Externa** (Área restrita do contratante para revisão de pranchas).
+
+---
+
+## ✅ 4. Critérios de Aceite e Regras Operacionais
+
+- **Zero Regressão:** Qualquer nova funcionalidade deve manter verdes os 226 testes existentes.
+- **Testes Obrigatórios:** Todo novo controller, service ou componente deve acompanhar sua suíte de testes.
+- **Política de Git:** Commits e pushes somente mediante solicitação e autorização expressa do usuário.

@@ -142,6 +142,7 @@ VALUES
     ),
     (
         'n0000002-0000-0000-0000-000000000002',
+        '07ad7cab-eed3-4cb6-98cb-40bc5f51ef8f',
         'Vistoria Técnica de Obra Agendada',
         'Vistoria de concretagem da laje e teste de estanqueidade programada para amanhã às 10:00.',
         'INFO',
@@ -153,6 +154,7 @@ VALUES
     ),
     (
         'n0000003-0000-0000-0000-000000000003',
+        '07ad7cab-eed3-4cb6-98cb-40bc5f51ef8f',
         'Prazo Próximo de Entrega de Fase',
         'A fase de Compatibilização do Retrofit Horizon Faria Lima vence em 5 dias.',
         'WARNING',

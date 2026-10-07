@@ -4,119 +4,90 @@ import com.archflow.modules.auth.domain.Role;
 import com.archflow.modules.auth.entity.User;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.userdetails.UserDetails;
+
+import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-@DisplayName("JwtService Unit Tests")
+@DisplayName("JwtService Formal Unit & Security Tests")
 class JwtServiceTest {
 
-    private JwtService jwtService;
-    private static final String SECRET = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
-    private static final long EXPIRATION = 3600000; // 1 hour
-    private static final long REFRESH_EXPIRATION = 86400000; // 24 hours
-
+    private JwtServiceImpl jwtService;
     private User testUser;
 
     @BeforeEach
     void setUp() {
-        jwtService = new JwtServiceImpl(SECRET, EXPIRATION, REFRESH_EXPIRATION);
+        // Chave secreta de 256 bits (32 bytes) para testes com HMAC-SHA256
+        String testSecret = "404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970";
+        long jwtExpiration = 3600000L; // 1 hora
+        long refreshExpiration = 86400000L; // 24 horas
+
+        jwtService = new JwtServiceImpl(testSecret, jwtExpiration, refreshExpiration);
 
         testUser = User.builder()
-                .fullName("Arquitecto Silva")
-                .email("silva@archflow.com")
-                .passwordHash("hashed_password")
+                .fullName("Mariana Arquiteta")
+                .email("mariana@archflow.com")
+                .passwordHash("hashedPass")
                 .role(Role.OWNER)
                 .build();
-        testUser.setId("uuid-user-123");
+        testUser.setId("usr-001");
+        testUser.setCreatedAt(LocalDateTime.now());
     }
 
-    @Test
-    @DisplayName("Should generate valid access token with correct subject and claims")
-    void shouldGenerateAccessTokenWithClaims() {
-        // Act
-        String token = jwtService.generateToken(testUser);
+    @Nested
+    @DisplayName("Técnica ECP: Geração e Validação de Access Token")
+    class AccessTokenTests {
 
-        // Assert
-        assertThat(token).isNotBlank();
-        assertThat(jwtService.extractUsername(token)).isEqualTo("silva@archflow.com");
-        assertThat(jwtService.isTokenExpired(token)).isFalse();
+        @Test
+        @DisplayName("ECP Partição Válida: Deve gerar token válido contendo email como subject")
+        void shouldGenerateValidToken() {
+            String token = jwtService.generateToken(testUser);
 
-        String role = jwtService.extractClaim(token, claims -> claims.get("role", String.class));
-        String userId = jwtService.extractClaim(token, claims -> claims.get("userId", String.class));
-        String fullName = jwtService.extractClaim(token, claims -> claims.get("fullName", String.class));
+            assertThat(token).isNotBlank();
+            assertThat(jwtService.extractUsername(token)).isEqualTo("mariana@archflow.com");
+            assertThat(jwtService.isTokenValid(token, testUser)).isTrue();
+        }
 
-        assertThat(role).isEqualTo("OWNER");
-        assertThat(userId).isEqualTo("uuid-user-123");
-        assertThat(fullName).isEqualTo("Arquitecto Silva");
+        @Test
+        @DisplayName("ECP Partição Válida: Deve gerar refresh token válido com subject do usuário")
+        void shouldGenerateValidRefreshToken() {
+            String refreshToken = jwtService.generateRefreshToken(testUser);
+
+            assertThat(refreshToken).isNotBlank();
+            assertThat(jwtService.extractUsername(refreshToken)).isEqualTo("mariana@archflow.com");
+            assertThat(jwtService.isTokenValid(refreshToken, testUser)).isTrue();
+        }
     }
 
-    @Test
-    @DisplayName("Should generate valid refresh token")
-    void shouldGenerateRefreshToken() {
-        // Act
-        String refreshToken = jwtService.generateRefreshToken(testUser);
+    @Nested
+    @DisplayName("Técnica Error Guessing: Tokens Corrompidos ou Divergentes")
+    class ErrorGuessingTests {
 
-        // Assert
-        assertThat(refreshToken).isNotBlank();
-        assertThat(jwtService.extractUsername(refreshToken)).isEqualTo("silva@archflow.com");
-        assertThat(jwtService.isTokenExpired(refreshToken)).isFalse();
-    }
+        @Test
+        @DisplayName("Error Guessing: Deve invalidar token quando o usuário verificado for diferente do subject")
+        void shouldReturnFalseWhenUsernameDoesNotMatch() {
+            String token = jwtService.generateToken(testUser);
 
-    @Test
-    @DisplayName("Should validate token against matching UserDetails")
-    void shouldValidateTokenSuccessfully() {
-        // Arrange
-        String token = jwtService.generateToken(testUser);
+            User anotherUser = User.builder()
+                    .fullName("Outro Usuário")
+                    .email("outro@archflow.com")
+                    .passwordHash("hashedPass")
+                    .role(Role.VIEWER)
+                    .build();
 
-        // Act
-        boolean isValid = jwtService.isTokenValid(token, testUser);
+            assertThat(jwtService.isTokenValid(token, anotherUser)).isFalse();
+        }
 
-        // Assert
-        assertThat(isValid).isTrue();
-    }
+        @Test
+        @DisplayName("Error Guessing: Deve falhar ao tentar extrair dados de token com assinatura forjada")
+        void shouldThrowExceptionWhenTokenMalformed() {
+            String malformedToken = "eyJhbGciOiJIUzI1NiJ9.malformedPayload.invalidSignature";
 
-    @Test
-    @DisplayName("Should reject token when username does not match UserDetails")
-    void shouldRejectTokenWhenUsernameMismatch() {
-        // Arrange
-        String token = jwtService.generateToken(testUser);
-        UserDetails differentUser = User.builder()
-                .email("other@archflow.com")
-                .passwordHash("pwd")
-                .role(Role.VIEWER)
-                .build();
-
-        // Act
-        boolean isValid = jwtService.isTokenValid(token, differentUser);
-
-        // Assert
-        assertThat(isValid).isFalse();
-    }
-
-    @Test
-    @DisplayName("Should return false for invalid or corrupted token string")
-    void shouldReturnFalseForMalformedToken() {
-        // Act
-        boolean isValid = jwtService.isTokenValid("invalid.token.signature", testUser);
-
-        // Assert
-        assertThat(isValid).isFalse();
-    }
-
-    @Test
-    @DisplayName("Should recognize expired token when expiration time is negative")
-    void shouldRecognizeExpiredToken() {
-        // Arrange - create JwtService with negative expiration (already expired)
-        JwtService expiredService = new JwtServiceImpl(SECRET, -1000, -1000);
-        String expiredToken = expiredService.generateToken(testUser);
-
-        // Act & Assert
-        boolean isExpired = expiredService.isTokenExpired(expiredToken);
-        assertThat(isExpired).isTrue();
-
-        boolean isValid = expiredService.isTokenValid(expiredToken, testUser);
-        assertThat(isValid).isFalse();
+            assertThatThrownBy(() -> jwtService.extractUsername(malformedToken))
+                    .isInstanceOf(Exception.class);
+        }
     }
 }

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useLocation } from "@tanstack/react-router";
+import { Link, useLocation, Navigate } from "@tanstack/react-router";
 import {
   Menu,
   X,
@@ -20,6 +20,7 @@ import {
 import { ModeToggle } from "../ui/ModeToggle";
 import { NotificationBell } from "./NotificationBell";
 import { GlobalSearch } from "./GlobalSearch";
+import { useAuth } from "../../context/AuthContext";
 
 export interface NavItem {
   to: string;
@@ -43,8 +44,23 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const location = useLocation();
+  const { user, isAuthenticated, isLoading, logout } = useAuth();
 
   const currentPath = location.pathname;
+
+  if (currentPath === "/login") {
+    return <>{children}</>;
+  }
+
+  // Enquanto valida localStorage do AuthContext
+  if (isLoading) {
+    return null;
+  }
+
+  // Redireciona para login suavemente se não autenticado (evita loop e chamadas sem token)
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
   const getPageTitle = (path: string) => {
     const item = navItems.find((i) => i.to === path || (i.to !== "/dashboard" && path.startsWith(i.to)));
@@ -136,17 +152,26 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
           <div className="border-t border-border pt-3 mt-2">
             <div className={`flex items-center ${isCollapsed ? "justify-center" : "gap-3 px-2"} py-2`}>
               <div className="size-8 rounded-full bg-primary/20 text-primary font-bold text-xs flex items-center justify-center shrink-0">
-                AF
+                {user?.name ? user.name.slice(0, 2).toUpperCase() : "AF"}
               </div>
               {!isCollapsed && (
                 <div className="flex flex-col min-w-0 flex-1">
                   <span className="text-xs font-semibold text-foreground truncate">
-                    Arquiteto Responsável
+                    {user?.name || "Usuário"}
                   </span>
                   <span className="text-[10px] text-muted-foreground truncate">
-                    admin@archflow.com
+                    {user?.email || "usuario@archflow.com"}
                   </span>
                 </div>
+              )}
+              {!isCollapsed && (
+                <button
+                  onClick={logout}
+                  className="size-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                  title="Sair do sistema"
+                >
+                  <LogOut className="size-3.5" />
+                </button>
               )}
             </div>
           </div>
@@ -211,12 +236,19 @@ export function AppLayout({ children }: { children?: React.ReactNode }) {
             <div className="border-t border-border pt-3 mt-auto">
               <div className="flex items-center gap-3 px-2 py-2">
                 <div className="size-8 rounded-full bg-primary/20 text-primary font-bold text-xs flex items-center justify-center">
-                  AF
+                  {user?.name ? user.name.slice(0, 2).toUpperCase() : "AF"}
                 </div>
                 <div className="flex flex-col min-w-0 flex-1">
-                  <span className="text-xs font-semibold text-foreground truncate">Arquiteto</span>
-                  <span className="text-[10px] text-muted-foreground truncate">admin@archflow.com</span>
+                  <span className="text-xs font-semibold text-foreground truncate">{user?.name || "Usuário"}</span>
+                  <span className="text-[10px] text-muted-foreground truncate">{user?.email || "usuario@archflow.com"}</span>
                 </div>
+                <button
+                  onClick={logout}
+                  className="size-7 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0"
+                  title="Sair do sistema"
+                >
+                  <LogOut className="size-3.5" />
+                </button>
               </div>
             </div>
           </div>

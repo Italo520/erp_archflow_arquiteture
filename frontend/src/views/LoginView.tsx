@@ -1,15 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { Compass, Lock, Mail, User as UserIcon, ArrowRight, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const LoginView: React.FC = () => {
-  const { login, register } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
+  const navigate = useNavigate();
   const [isRegister, setIsRegister] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('admin@archflow.com');
   const [password, setPassword] = useState('Admin@123456');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate({ to: '/dashboard' });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -22,6 +30,7 @@ export const LoginView: React.FC = () => {
       } else {
         await login({ email, password });
       }
+      navigate({ to: '/dashboard' });
     } catch (err: any) {
       const msg = err.response?.data?.detail || err.response?.data?.title || 'Credenciais inválidas. Verifique os dados.';
       setError(msg);

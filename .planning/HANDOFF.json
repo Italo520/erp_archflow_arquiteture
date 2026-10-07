@@ -1,95 +1,61 @@
 {
   "version": "1.0",
-  "timestamp": "2026-10-04T00:37:00-03:00",
-  "phase": "06",
-  "phase_name": "migracao-monorepo-java-typescript-e-seed",
+  "timestamp": "2026-10-07T00:43:00-03:00",
+  "phase": "brainstorming-inovacao-roadmap",
+  "phase_name": "Brainstorming de Inovação e Roadmap para Pequenas Equipes de Arquitetura",
   "phase_dir": ".planning",
-  "plan": 6,
-  "task": 6,
+  "plan": 1,
+  "task": 4,
   "total_tasks": 6,
   "status": "paused",
-  "branch": "feat/migracao-java-typescript",
   "completed_tasks": [
     {
       "id": 1,
-      "name": "Estruturação Monorepo e Core & Auth (Java 21, Spring Boot 3.4, JWT, RFC 7807, Flyway V1)",
+      "name": "Blindagem Completa das 8 Fatias Verticais do Core (226 Testes Automatizados 100% Verdes)",
       "status": "done"
     },
     {
       "id": 2,
-      "name": "Módulo de Clientes (Flyway V2, ClientService, regras PF/PJ, testes formais)",
+      "name": "Diagnóstico de Aderência do ArchFlow ERP a Pequenas Equipes de Arquitetura",
       "status": "done"
     },
     {
       "id": 3,
-      "name": "Módulo de Projetos & Kanban (Flyway V3, ProjectService, 6 colunas padrão, testes formais)",
+      "name": "Mapeamento dos Pontos de Fricção e Melhoria nos Módulos Existentes",
       "status": "done"
     },
     {
       "id": 4,
-      "name": "Módulo de Vistorias Técnicas & Punch List (Flyway V4, InspectionService, testes formais)",
-      "status": "done"
-    },
-    {
-      "id": 5,
-      "name": "Módulo de Atividades & Time Tracking (Flyway V5, ActivityService, rates, JaCoCo >= 85%)",
-      "status": "done"
-    },
-    {
-      "id": 6,
-      "name": "Frontend SPA TypeScript (Vite + React 19 + Tailwind, views completas, correção de auth JWT e seed V6)",
+      "name": "Catálogo de 8 Features Inovadoras salvo em docs/LEVANTAMENTO_IDEIAS_E_INOVACOES.md",
       "status": "done"
     }
   ],
   "remaining_tasks": [
     {
-      "id": 7,
-      "name": "Testes E2E Cypress no Frontend com a API Java ativa",
+      "id": 5,
+      "name": "Alinhamento e Escolha com o Usuário da Inovação / Pilar Prioritário para o Próximo Ciclo",
       "status": "not_started"
     },
     {
-      "id": 8,
-      "name": "Deploy / Pipeline CI/CD com Coolify / Docker Compose",
+      "id": 6,
+      "name": "Elaboração da Especificação de Design e Plano de Implementação da Feature Selecionada",
       "status": "not_started"
     }
   ],
   "blockers": [],
-  "human_actions_pending": [
-    {
-      "action": "Recarregar navegador (Ctrl+F5) em http://localhost:3000 e logar com admin@archflow.com / Admin@123456",
-      "context": "Limpar localStorage antigo que continha archflow_token como string literal 'undefined'",
-      "blocking": false
-    },
-    {
-      "action": "Autorizar commit e push quando desejar salvar na branch feat/migracao-java-typescript",
-      "context": "Regra estrita do usuário proíbe commits e push automáticos sem autorização prévia",
-      "blocking": false
-    }
-  ],
+  "human_actions_pending": [],
   "decisions": [
     {
-      "decision": "Adicionar token, id, name, email e role no root do AuthResponse no backend",
-      "rationale": "Garante retrocompatibilidade perfeita com o frontend antigo e qualquer cliente REST",
-      "phase": "06"
-    },
-    {
-      "decision": "Criar migration Flyway V6 com dados fictícios estruturados de escritório de alto padrão",
-      "rationale": "Possibilita homologação imediata com 4 usuários, 5 clientes PF/PJ, 4 projetos, kanban, vistorias e horas",
-      "phase": "06"
-    },
-    {
-      "decision": "Adicionar CAST(:searchTerm AS string) nas buscas JPQL com LOWER(CONCAT('%', ...))",
-      "rationale": "Evita que o PostgreSQL infira o parâmetro nulo como tipo bytea gerando erro lower(bytea)",
-      "phase": "06"
+      "decision": "Documentação formal do levantamento em docs/LEVANTAMENTO_IDEIAS_E_INOVACOES.md",
+      "rationale": "Preserva todas as ideias de valor de negócio, inovação e análise de mercado para arquitetos, servindo de base para o próximo ciclo de desenvolvimento",
+      "phase": "brainstorming"
     }
   ],
   "uncommitted_files": [
-    ".gitignore",
-    "backend/",
-    "frontend/",
-    "docs/superpowers/plans/2026-10-03-migracao-fase1-monorepo-core-auth.md",
-    "docs/superpowers/plans/2026-10-04-migracao-monorepo-fases-2-a-6.md"
+    "docs/LEVANTAMENTO_IDEIAS_E_INOVACOES.md",
+    ".planning/HANDOFF.json",
+    ".planning/.continue-here.md"
   ],
-  "next_action": "Acessar http://localhost:3000 após Ctrl+F5 e logar para validar a visualização de todos os cards e gráficos com dados",
-  "context_notes": "Ecossistema totalmente funcional: Backend Spring Boot porta 8085, Frontend Vite porta 3000, PostgreSQL Docker porta 5436. 134 testes de backend verdes com cobertura >= 85%."
+  "next_action": "Retomar a conversa para definir qual das ideias de inovação (Trava Anti-Refação, Pinpoint Review de Pranchas, Calculadora de Honorários CAU, Diário de Obra via Áudio, ou os 4 pilares do GAP_ANALYSIS_ROADMAP) será desenvolvida primeiro.",
+  "context_notes": "O projeto está com 100% de paridade técnica e blindagem em testes. O levantamento de necessidades para pequenas equipes de arquitetos está documentado e pronto para subsidiar a próxima sprint."
 }

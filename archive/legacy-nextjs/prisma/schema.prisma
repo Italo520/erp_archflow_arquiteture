@@ -28,6 +28,7 @@ enum ClientLegalType {
 enum ClientCategory {
   RESIDENTIAL
   COMMERCIAL
+  CORPORATE
   INSTITUTIONAL
   INDUSTRIAL
   DESIGNER
@@ -44,6 +45,7 @@ enum ContactPreference {
   EMAIL
   PHONE
   WHATSAPP
+  IN_PERSON
 }
 
 enum ActivityType {
@@ -65,6 +67,8 @@ enum ActivityStatus {
 }
 
 enum DeliverableType {
+  PLANTS
+  MODEL_3D @map("3D_MODEL")
   SKETCH
   RENDER_3D
   DRAWING_2D
@@ -72,11 +76,13 @@ enum DeliverableType {
   PDF
   VIDEO
   PHOTO
+  SPECIFICATIONS
   OTHER
 }
 
 enum DeliverableStatus {
   DRAFT
+  IN_REVIEW
   PENDING_REVIEW
   APPROVED
   APPROVED_WITH_CHANGES
@@ -90,6 +96,7 @@ enum TimeLogCategory {
   MEETING
   ADMIN
   DELIVERY
+  SITE_VISIT
   OTHER
 }
 
@@ -104,6 +111,7 @@ enum BudgetStatus {
   DRAFT
   APPROVED
   ACTIVE
+  IN_EXECUTION
   EXCEEDED
   COMPLETED
 }
@@ -128,6 +136,7 @@ enum AuditAction {
   DELETE
   APPROVE
   REJECT
+  STATUS_CHANGE
 }
 
 enum RelatedEntityType {
@@ -136,6 +145,8 @@ enum RelatedEntityType {
   CLIENT
   ACTIVITY
   DELIVERABLE
+  INSPECTION
+  PUNCH_LIST_ITEM
 }
 
 // Models
@@ -224,6 +235,7 @@ model Project {
   deliveryDate DateTime? @map("delivery_date")
   totalArea    Float?    @map("total_area")
   projectType  String?   @map("project_type")
+  status       ProjectStatus @default(CONCEPTUAL)
 
   // Phase 3: Architectural Fields
   architecturalStyle           ArchitecturalStyle? @map("architectural_style")
@@ -275,6 +287,17 @@ model Project {
 }
 
 // Phase 3: New Enums
+enum ProjectStatus {
+  PLANNING
+  CONCEPTUAL
+  PRELIMINARY
+  EXECUTIVE
+  CONSTRUCTION
+  COMPLETED
+  ARCHIVED
+  CANCELLED
+}
+
 enum ArchitecturalStyle {
   MODERNISTA
   CLASSICO
@@ -348,7 +371,7 @@ model Task {
   // Kanban Fields
   position       Int     @default(0)
   metadata       Json?
-  approvalStatus String? @default("PENDING")
+  approvalStatus String?   @default("PENDING") @map("approval_status")
 
   // Relations
   activities   Activity[]
@@ -381,7 +404,7 @@ model Activity {
   createdById String @map("created_by_id")
   createdBy   User   @relation("ActivityCreator", fields: [createdById], references: [id])
 
-  attachments Json[]
+  attachments  Json?
   notes       String?        @db.Text
   status      ActivityStatus @default(SCHEDULED)
   createdAt   DateTime       @default(now()) @map("created_at")
@@ -405,8 +428,8 @@ model Deliverable {
   version     Int               @default(1)
   status      DeliverableStatus @default(DRAFT)
 
-  taskId String @map("task_id")
-  task   Task   @relation(fields: [taskId], references: [id])
+  taskId String? @map("task_id")
+  task   Task?   @relation(fields: [taskId], references: [id])
 
   projectId String  @map("project_id")
   project   Project @relation(fields: [projectId], references: [id])
@@ -417,9 +440,9 @@ model Deliverable {
   approvedById String? @map("approved_by_id")
   approvedBy   User?   @relation("DeliverableApprover", fields: [approvedById], references: [id])
 
-  reviewComments Json[]    @map("review_comments")
+  reviewComments Json?     @map("review_comments")
   revisionCount  Int       @default(0) @map("revision_count")
-  dueDates       String[]  @map("due_dates")
+  dueDates       DateTime? @map("due_dates")
   tags           String[]
   metadata       Json?
   createdAt      DateTime  @default(now()) @map("created_at")
@@ -506,7 +529,7 @@ model Budget {
 
 model ProjectMember {
   id       String   @id @default(uuid())
-  role     Role     @default(VIEWER)
+  role     String   @default("VIEWER")
   joinedAt DateTime @default(now()) @map("joined_at")
 
   userId String @map("user_id")
@@ -584,7 +607,7 @@ model ProjectKanbanColumn {
   id        String   @id @default(uuid())
   title     String
   color     String?  // hex or tailwind class
-  order     Int      @default(0)
+  order     Int      @default(0) @map("column_order")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -650,7 +673,7 @@ model SiteInspection {
   title            String
   date             DateTime         @default(now())
   status           InspectionStatus @default(DRAFT)
-  generalNotes     String?          @db.Text
+  generalNotes     String?          @map("general_notes") @db.Text
   weatherCondition String?          @map("weather_condition")
   
   projectId        String           @map("project_id")

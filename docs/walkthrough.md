@@ -1,65 +1,75 @@
-# Walkthrough - Gestão de Projetos (Fase 3)
+# 🚀 Walkthrough Executivo & Técnico: ArchFlow ERP
 
-Este documento descreve as implementações realizadas na Fase 3 do ArchFlow, focada na gestão completa de projetos arquitetônicos.
-
-## 🚀 Funcionalidades Implementadas
-
-### 1. Dashboard de Projetos
-- Listagem avançada com filtros por status e cliente.
-- Cards informativos com progresso visual e métricas rápidas.
-- Ações rápidas: Edição, Duplicação e Deleção.
-
-### 2. Gestão de Fluxo (Fases e Tarefas)
-- Visualização de cronograma por fases.
-- Sistema de checklist de tarefas integrado.
-- Atualização de status em tempo real via Server Actions.
-
-### 3. Gestão de Documentos e Entregáveis
-- Upload de arquivos associados ao projeto.
-- Categorização de documentos.
-- Histórico de versões e datas de entrega.
-
-### 4. Administração e Financeiro
-- Gestão de equipe (Arquitetos associados).
-- Controle de orçamento (Orçado vs Realizado).
-- Métricas de rentabilidade e horas consumidas.
-
-### 5. Segurança e Autenticação (Recuperação de Senha)
-- Fluxo completo de "Esqueci minha senha" com envio de link seguro.
-- Geração de tokens de uso único com expiração de 1 hora.
-- Interface dedicada para redefinição de senha com validação.
-
-
-## 🛠️ Detalhes Técnicos
-
-### Server Actions Padronizadas
-Todas as ações em `app/actions/project.ts` seguem o padrão:
-```typescript
-{ success: boolean; data?: any; error?: string }
-```
-
-### 🧪 Garantia de Qualidade
-
-### Testes de Integração (Finalizados)
-Todos os testes de integração do módulo de Projetos foram validados conectando diretamente ao banco de dados remoto (Supabase).
-
-- [x] **Criação de Projetos**: Validado com retorno de objeto e persistência.
-- [x] **Listagem e Filtros**: Validado carregamento de relações (Client, Owner).
-- [x] **Atualização de Dados**: Validado patch de informações básicas.
-- [x] **Fluxo de Duplicação**: Validado clone de configurações e fases.
-- [x] **Deleção Lógica**: Validado soft-delete via `deletedAt`.
-
-```bash
-# Execução final dos testes de integração
-npm test tests/integration/projects.test.ts
-```
+Este documento consolida a demonstração operacional e técnica de todas as funcionalidades entregues, testadas e blindadas no **ArchFlow ERP**.
 
 ---
 
-## 📈 Conclusão da Fase 3
-A Fase 3 foi concluída com sucesso, entregando um sistema de gestão de projetos robusto, escalável e totalmente testado.
+## 🏛️ 1. Visão Geral do Sistema
 
-- **Componentes**: 10+ componentes de UI específicos para projetos.
-- **Server Actions**: 15+ ações de backend com Zod e Prisma.
-- **Segurança**: RLS e validação de sessão em todas as operações.
-- **Performance**: Revalidação de cache (`revalidatePath`) otimizada.
+O **ArchFlow ERP** é uma plataforma full-stack especialista para escritórios de arquitetura, integrando CRM, pipeline de projetos, time tracking faturável, vistorias de campo, armazenamento técnico e inteligência de negócios.
+
+---
+
+## 📱 2. Módulos Operacionais e Fluxos de Uso
+
+### 🔐 2.1 Autenticação & RBAC
+- Login seguro com geração e validação de tokens JWT.
+- Papéis de acesso baseados em funções: `ADMIN`, `ARCHITECT` e `VIEWER`.
+- Sessão mantida no frontend com interceptor de autorização automático.
+
+### 👥 2.2 CRM & Gestão de Clientes
+- Cadastro completo de clientes Pessoas Físicas (CPF) e Pessoas Jurídicas (CNPJ).
+- Classificação por categoria: Residencial, Comercial, Corporativo, etc.
+- Ciclo de vida do relacionamento: `PROSPECT`, `ACTIVE`, `INACTIVE`.
+- Filtros por texto, categoria e paginação integrada com soft delete.
+
+### 📊 2.3 Projetos & Quadro Kanban Arquitetônico
+- Criação de projetos com atributos especializados: estilo arquitetônico, tipo construtivo, área em m², número de pavimentos e cômodos.
+- Pipeline com 5 colunas arquitetônicas padrão: Estudo Preliminar, Anteprojeto, Executivo, Compatibilização e Em Obra.
+- Gestão de tarefas, prazos e controle orçamentário previsto vs realizado.
+- Movimentação fluida via Drag-and-Drop ou controle manual de posições.
+
+### ⏱️ 2.4 Atividades & Time Tracking Faturável
+- Registro de tarefas do dia a dia do arquiteto (desenho de plantas, modelagem 3D, reuniões de briefing).
+- Apontamento de horas faturáveis (`billable`) e não-faturáveis.
+- Sumário de produtividade consolidado por projeto.
+- Calendário interativo de compromissos (`ScheduleView`).
+
+### 🏗️ 2.5 Vistorias Técnicas de Obra & Punch List
+- Emissão de laudos de vistoria de campo com localização e condições climáticas.
+- Gestão de itens de Punch List (não-conformidades e pendências executivas).
+- Classificação por severidade: Baixa, Média, Alta, Crítica.
+- Fluxo de resolução com registro de evidência fotográfica e data de conclusão.
+
+### 📁 2.6 Armazenamento de Arquivos Técnicos
+- Central de documentos com suporte a pranchas executivas (`.dwg`, `.pdf`, `.ifc`, `.jpg`).
+- Upload multipart com identificador UUID único para evitar colisões.
+- Download seguro com proteção rigorosa contra Directory Traversal.
+- Filtragem dinâmica por categorias (Plantas, Modelagem 3D, Contratos, Vistorias, Renders).
+
+### 📈 2.7 Dashboards & Relatórios Financeiros
+- Dashboard com 4 KPIs operacionais em tempo real e navegação rápida.
+- Gráficos Recharts: Evolução financeira dos últimos 6 meses (Orçado vs Realizado) e distribuição por fases do Kanban.
+- Relatórios analíticos com margem líquida por contrato, seletor de períodos (Mês, Trimestre, Ano) e badges de conformidade orçamentária.
+
+### 🔔 2.8 Notificações em Tempo Real & Configurações
+- Canal Server-Sent Events (SSE) nativo para alertas instantâneos de prazos e aprovações.
+- Componente de sino com popover, contador de pendências e marcação individual/lote de leitura.
+- Central de configurações com alternância de temas (Claro, Escuro, Sistema), paletas arquitetônicas ("Azul Ant Design" e "Verde Sálvia") e preferências do escritório.
+
+---
+
+## 🧪 3. Verificação & Execução dos Testes
+
+Para validar a integridade de todas as camadas do sistema:
+
+```bash
+# 1. Executar todos os testes do Backend (147 testes)
+mvn -f backend/pom.xml test
+
+# 2. Executar todos os testes do Frontend (79 testes)
+npm run test --prefix frontend
+
+# 3. Compilar o build de produção do Frontend
+npm run build --prefix frontend
+```

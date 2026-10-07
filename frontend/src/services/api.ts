@@ -4,6 +4,7 @@ import { Client, CreateClientRequest } from '../types/client';
 import { Project, CreateProjectRequest, ProjectKanbanColumn, Task } from '../types/project';
 import { SiteInspection, CreateSiteInspectionRequest, PunchListItem, CreatePunchListItemRequest, ResolvePunchListItemRequest } from '../types/inspection';
 import { Activity, CreateActivityRequest, TimeLog, CreateTimeLogRequest, TimeSummaryResponse } from '../types/activity';
+import { DashboardMetricsResponse } from '../types/dashboard';
 
 const api = axios.create({
   baseURL: '/api/v1',
@@ -27,11 +28,10 @@ api.interceptors.response.use(
   (response) => response,
   (error: AxiosError<ProblemDetail>) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
-      const currentToken = localStorage.getItem('archflow_token');
-      if (!currentToken || currentToken === 'undefined' || currentToken === 'null') {
-        localStorage.removeItem('archflow_token');
-        localStorage.removeItem('archflow_user');
-        window.location.reload();
+      localStorage.removeItem('archflow_token');
+      localStorage.removeItem('archflow_user');
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);
@@ -174,6 +174,14 @@ export const activityApi = {
   },
   deleteTimeLog: async (id: string): Promise<void> => {
     await api.delete(`/time-logs/${id}`);
+  },
+};
+
+// --- Dashboard Endpoints ---
+export const dashboardApi = {
+  getMetrics: async (): Promise<DashboardMetricsResponse> => {
+    const res = await api.get<DashboardMetricsResponse>('/dashboard/metrics');
+    return res.data;
   },
 };
 
