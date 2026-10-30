@@ -1,6 +1,4 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
-# dependencies
+# Dependencies
 /node_modules
 /.pnp
 .pnp.*
@@ -10,45 +8,73 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
-/coverage
-
-# next.js
+# Next.js build & runtime
 /.next/
 /out/
-
-# production
 /build
 
-# misc
-.DS_Store
-*.pem
+# Testing & Coverage
+/coverage/
+/playwright-report/
+/test-results/
+playwright/.cache/
 
-# debug
+# TestSprite Outputs & Reports
+/testsprite_tests/tmp/
+/testsprite_tests/*.html
+/testsprite_tests/*.log
+/testsprite_tests/*report*
+
+# Local Disk Storage (Uploaded runtime files)
+/.storage/*
+!/.storage/.gitkeep
+
+# Environment variables
+.env
+.env*.local
+.env.development
+.env.test
+.env.production
+!.env.example
+
+# Vercel & Production
+.vercel
+
+# TypeScript & Generated Prisma
+*.tsbuildinfo
+next-env.d.ts
+/lib/generated/prisma
+
+# Logs & Debugging
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
+.debug/
 
-# env files (can opt-in for committing if needed)
-.env*
+# OS and Editor junk
+.DS_Store
+Thumbs.db
+*.pem
+*.swp
+*.swo
+*~
+*.tmp
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-/lib/generated/prisma
-
-.agent
-.debug
-.github
-
-testsprite_tests\tmp\config.json
-
-# Arquivos temporários de processo (não devem ser versionados)
+# Agent workspaces, scratch scripts and temporary files
+.agent/
 commit_msg.txt
 pr_message.txt
-*.tmp
+benchmark.js
+test-*.js
+test-*.ts
+verify-*.ts
+*_SKILL.md
+.planning/.continue-here.md
+.planning/HANDOFF.json
+.planning/INGEST-CONFLICTS.md
